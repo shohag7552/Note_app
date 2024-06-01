@@ -91,7 +91,7 @@ class _EditNotePageState extends State<EditNotePage> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          controller.updateNote(controller.notes[i].id!, controller.notes[i].dateTimeCreated!, controller.notes[i].isFavorite??false);
+          controller.updateNote(controller.notes[i].id!, controller.notes[i].dateTimeCreated!, controller.notes[i].isFavorite??0);
         },
         label: Text(
           "Save Note",

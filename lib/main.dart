@@ -3,8 +3,10 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:notes_app/routing/app_pages.dart';
 import 'package:notes_app/routing/app_routes.dart';
+import 'helper/dependency.dart' as di;
 
-main() {
+main() async {
+  await di.init();
   runApp(const MyApp());
 }
 

@@ -4,7 +4,7 @@ class Note {
   String? content;
   String? dateTimeEdited;
   String? dateTimeCreated;
-  bool? isFavorite;
+  int? isFavorite;
   String? color;
 
   Note({

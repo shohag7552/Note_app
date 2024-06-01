@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:notes_app/helper/color_extension.dart';
 import 'package:notes_app/routing/app_routes.dart';
 import 'package:notes_app/screens/search_screen.dart';
 import 'package:notes_app/utils/font_size.dart';
@@ -8,6 +9,7 @@ import 'package:notes_app/utils/images.dart';
 import 'package:notes_app/utils/padding_size.dart';
 import 'package:notes_app/utils/radius_size.dart';
 import 'package:notes_app/utils/style.dart';
+import 'package:notes_app/widgets/note_card.dart';
 import '../controller/note_controller.dart';
 import '../widgets/alert_dialog.dart';
 
@@ -19,80 +21,97 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final controller = Get.put(NoteController());
+  // final controller = Get.put(NoteController());
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Notes", style: fontStyleLarge.copyWith(fontSize: FontSize.large)),
-        backgroundColor: Colors.white,
-        iconTheme: const IconThemeData(color: Colors.black),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () {
-              showSearch(context: context, delegate: Search());
-            },
-          ),
-          PopupMenuButton(
-            onSelected: (val) {
-              if (val == 0) {
-                showDialog(
-                  context: context,
-                  builder: (context) {
-                    return AlertDialogWidget(
-                      headingText: "Are you sure you want to delete all notes?",
-                      contentText: "This will delete all notes permanently. You cannot undo this action.",
-                      confirmFunction: () {
-                        controller.deleteAllNotes();
-                        Get.back();
-                      },
-                      declineFunction: () {
-                        Get.back();
+    return GetBuilder<NoteController>(
+      builder: (controller) {
+        return Scaffold(
+          appBar: AppBar(
+            title: Text("Notes", style: fontStyleLarge.copyWith(fontSize: FontSize.large)),
+            backgroundColor: Colors.white,
+            iconTheme: const IconThemeData(color: Colors.black),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.search),
+                onPressed: () {
+                  showSearch(context: context, delegate: Search());
+                },
+              ),
+              PopupMenuButton(
+                onSelected: (val) {
+                  if (val == 0) {
+                    showDialog(
+                      context: context,
+                      builder: (context) {
+                        return AlertDialogWidget(
+                          headingText: "Are you sure you want to delete all notes?",
+                          contentText: "This will delete all notes permanently. You cannot undo this action.",
+                          confirmFunction: () {
+                            controller.deleteAllNotes();
+                            Get.back();
+                          },
+                          declineFunction: () {
+                            Get.back();
+                          },
+                        );
                       },
                     );
-                  },
-                );
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 0,
-                child: Text(
-                  "Delete All Notes",
-                  style: TextStyle(
-                    fontWeight: FontWeight.normal,
-                  ),
-                ),
-              )
+                  }
+                },
+                itemBuilder: (context) => [
+                  const PopupMenuItem(
+                    value: 0,
+                    child: Text(
+                      "Delete All Notes",
+                      style: TextStyle(
+                        fontWeight: FontWeight.normal,
+                      ),
+                    ),
+                  )
+                ],
+              ),
             ],
+            systemOverlayStyle: SystemUiOverlayStyle.dark,
           ),
-        ],
-        systemOverlayStyle: SystemUiOverlayStyle.dark,
-      ),
-      body: GetBuilder<NoteController>(
-        builder: (_) => controller.isEmpty() ? emptyNotes() : viewNotes(),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => Get.toNamed(AppRoute.ADD_NEW_NOTE),
-        label: Text(
-          "Add new note", textAlign: TextAlign.center,
-          style: fontStyleMedium.copyWith(color: Theme.of(context).textTheme.bodyMedium!.color, fontSize: FontSize.medium),
-        ),
-        icon: const Icon(Icons.add),
-      ),
+          body: GetBuilder<NoteController>(
+            builder: (_) => controller.isEmpty() ? emptyNotes() : viewNotes(controller),
+          ),
+          floatingActionButton: FloatingActionButton.extended(
+            onPressed: () => Get.toNamed(AppRoute.ADD_NEW_NOTE),
+            label: Text(
+              "Add new note", textAlign: TextAlign.center,
+              style: fontStyleMedium.copyWith(color: Theme.of(context).textTheme.bodyMedium!.color, fontSize: FontSize.medium),
+            ),
+            icon: const Icon(Icons.add),
+          ),
+        );
+      }
     );
   }
 
-  Widget viewNotes() {
+  Widget viewNotes(NoteController controller) {
     return Scrollbar(
       child: Container(
         padding: const EdgeInsets.only(top: PaddingSize.small, right: PaddingSize.small, left: PaddingSize.small),
-        child: ListView.builder(
+        child: GridView.builder(
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            childAspectRatio: 1,
+            crossAxisCount: 2,
+            mainAxisSpacing: 7,
+            crossAxisSpacing: 7
+          ),
+            itemCount: controller.notes.length,
+            itemBuilder: (context, index) {
+              return NoteCart(note: controller.notes[index], index: index);
+          },
+        ),
+        /*child: ListView.builder(
           shrinkWrap: false,
           itemCount: controller.notes.length,
           itemBuilder: (context, index) {
+            return NoteCart();
             return GestureDetector(
               onTap: () => Get.toNamed(AppRoute.NOTE_DETAILS, arguments: index),
               onLongPress: () {
@@ -114,7 +133,7 @@ class _HomePageState extends State<HomePage> {
                 padding: const EdgeInsets.symmetric(vertical: 5),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Theme.of(context).disabledColor,
+                    color: controller.notes[index].color!.toColor(),
                     borderRadius: BorderRadius.circular(RadiusSize.medium),
                   ),
                   padding: const EdgeInsets.all(PaddingSize.medium),
@@ -164,7 +183,7 @@ class _HomePageState extends State<HomePage> {
               ),
             );
           },
-        ),
+        ),*/
       ),
     );
   }

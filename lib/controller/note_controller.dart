@@ -11,7 +11,7 @@ class NoteController extends GetxController {
   final titleController = TextEditingController();
   final contentController = TextEditingController();
 
-  var notes = <Note>[].obs;
+  var notes = <Note>[];
 
   @override
   void onInit() {
@@ -31,9 +31,10 @@ class NoteController extends GetxController {
       content: content,
       dateTimeEdited: DateFormat("dd-MM-yyyy hh:mm a").format(DateTime.now()),
       dateTimeCreated: DateFormat("dd-MM-yyyy hh:mm a").format(DateTime.now()),
-      isFavorite: false,
+      isFavorite: 0,
       color: color,
     );
+    print('=====> ${note.toJson()}');
     await DatabaseHelper.instance.addNote(note);
     titleController.text = "";
     contentController.text = "";
@@ -41,7 +42,7 @@ class NoteController extends GetxController {
     Get.back();
   }
 
-  void updateNote(int id, String dTCreated, bool isFavourite) async {
+  void updateNote(int id, String dTCreated, int isFavourite) async {
     final title = titleController.text;
     final content = contentController.text;
     Note note = Note(
@@ -69,10 +70,10 @@ class NoteController extends GetxController {
 
   void favoriteNote(int id) async {
     Note note = notes.firstWhere((note) => note.id == id);
-    if (note.isFavorite == true) {
-      note.isFavorite = false; // Mark as not favorite
+    if (note.isFavorite == 1) {
+      note.isFavorite = 0; // Mark as not favorite
     } else {
-      note.isFavorite = true; // Mark as favorite
+      note.isFavorite = 1; // Mark as favorite
     }
     await DatabaseHelper.instance.updateNote(note);
     getAllNotes();
@@ -84,7 +85,7 @@ class NoteController extends GetxController {
   }
 
   void getAllNotes() async {
-    notes.value = await DatabaseHelper.instance.getNoteList();
+    notes = await DatabaseHelper.instance.getNoteList();
     update();
   }
 

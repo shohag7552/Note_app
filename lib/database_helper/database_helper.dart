@@ -29,13 +29,13 @@ class DatabaseHelper {
   void _onCreate(Database db, int version) async {
     await db.execute('''
       CREATE TABLE $_tableName(
-        id INTEGER PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         title TEXT NOT NULL,
         content TEXT NOT NULL,
         dateTimeEdited TEXT NOT NULL,
         dateTimeCreated TEXT NOT NULL,
         isFavorite INTEGER NOT NULL DEFAULT 0,
-        color TEXT NOT NULL,
+        color TEXT NOT NULL
       )
       ''');
   }
@@ -86,7 +86,8 @@ class DatabaseHelper {
           content: maps[index]["content"],
           dateTimeEdited: maps[index]["dateTimeEdited"],
           dateTimeCreated: maps[index]["dateTimeCreated"],
-          isFavorite: maps[index]["isFavorite"] == 1 ? true : false,
+          isFavorite: maps[index]["isFavorite"],
+          color: maps[index]["color"],
         );
       },
     );
