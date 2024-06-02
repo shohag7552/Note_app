@@ -17,6 +17,16 @@ class Note {
     this.color = '#FFA0A4A8',
   });
 
+  Note.fromJson(Map<String, dynamic> json) {
+    id = json['id'];
+    title = json['title'];
+    content = json['content'];
+    dateTimeEdited = json['dateTimeEdited'];
+    dateTimeCreated = json['dateTimeCreated'];
+    isFavorite = json['isFavorite'];
+    color = json['color'];
+  }
+
   Map<String, dynamic> toJson() {
     return {
       "id": id,

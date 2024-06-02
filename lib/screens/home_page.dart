@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:notes_app/helper/color_extension.dart';
 import 'package:notes_app/routing/app_routes.dart';
 import 'package:notes_app/screens/search_screen.dart';
 import 'package:notes_app/utils/font_size.dart';
 import 'package:notes_app/utils/images.dart';
 import 'package:notes_app/utils/padding_size.dart';
-import 'package:notes_app/utils/radius_size.dart';
 import 'package:notes_app/utils/style.dart';
 import 'package:notes_app/widgets/note_card.dart';
 import '../controller/note_controller.dart';
@@ -78,13 +76,34 @@ class _HomePageState extends State<HomePage> {
           body: GetBuilder<NoteController>(
             builder: (_) => controller.isEmpty() ? emptyNotes() : viewNotes(controller),
           ),
-          floatingActionButton: FloatingActionButton.extended(
+          // floatingActionButton: FloatingActionButton.extended(
+          //   onPressed: () => Get.toNamed(AppRoute.ADD_NEW_NOTE),
+          //   label: Text(
+          //     "Add new note", textAlign: TextAlign.center,
+          //     style: fontStyleMedium.copyWith(color: Theme.of(context).textTheme.bodyMedium!.color, fontSize: FontSize.medium),
+          //   ),
+          //   icon: const Icon(Icons.add),
+          // ),
+          floatingActionButton: FloatingActionButton(
             onPressed: () => Get.toNamed(AppRoute.ADD_NEW_NOTE),
-            label: Text(
-              "Add new note", textAlign: TextAlign.center,
-              style: fontStyleMedium.copyWith(color: Theme.of(context).textTheme.bodyMedium!.color, fontSize: FontSize.medium),
+            backgroundColor: Theme.of(context).cardColor,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(500)),
+            child: const Icon(Icons.add),
+          ),
+          floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+          bottomNavigationBar: Container(
+            height: 80,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Theme.of(context).cardColor,
+              boxShadow: [BoxShadow(color: Colors.grey[300]!, blurRadius: 10)],
             ),
-            icon: const Icon(Icons.add),
+            // child: Center(
+            //   child: FloatingActionButton(
+            //     isExtended: true,
+            //     onPressed: (){},
+            //   ),
+            // ),
           ),
         );
       }

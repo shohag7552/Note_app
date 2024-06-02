@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:notes_app/model/note_model.dart';
 import 'package:notes_app/routing/app_routes.dart';
 import 'package:notes_app/utils/font_size.dart';
 import 'package:notes_app/utils/padding_size.dart';
@@ -10,18 +11,20 @@ import '../controller/note_controller.dart';
 import '../widgets/alert_dialog.dart';
 
 class NoteDetailPage extends StatefulWidget {
-  const NoteDetailPage({super.key});
+  final Note note;
+  const NoteDetailPage({super.key, required this.note});
 
   @override
   State<NoteDetailPage> createState() => _NoteDetailPageState();
 }
 
 class _NoteDetailPageState extends State<NoteDetailPage> {
-  final NoteController controller = Get.find();
+  // final NoteController controller = Get.find();
 
   @override
   Widget build(BuildContext context) {
-    final int i = ModalRoute.of(context)?.settings.arguments as int;
+    // final int i = ModalRoute.of(context)?.settings.arguments as int;
+    // print('=======index is : $i');
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
@@ -31,11 +34,11 @@ class _NoteDetailPageState extends State<NoteDetailPage> {
           PopupMenuButton(
             onSelected: (val) {
               if (val == 0) {
-                editNote(i);
+                Get.toNamed(AppRoute.getEditNotePage(widget.note));
               } else if (val == 1) {
-                deleteNote(context, i);
+                deleteNote(context, widget.note.id!);
               } else if (val == 2) {
-                shareNote(i);
+                Get.find<NoteController>().shareNote(widget.note.title!, widget.note.content!);
               }
             },
             itemBuilder: (BuildContext bc) {
@@ -59,7 +62,7 @@ class _NoteDetailPageState extends State<NoteDetailPage> {
         systemOverlayStyle: SystemUiOverlayStyle.dark,
       ),
       body: GetBuilder<NoteController>(
-        builder: (_) => Scrollbar(
+        builder: (controller) => Scrollbar(
           child: Container(
             padding: const EdgeInsets.only(top: PaddingSize.medium, left: PaddingSize.medium, right: PaddingSize.medium),
             child: SingleChildScrollView(
@@ -67,19 +70,19 @@ class _NoteDetailPageState extends State<NoteDetailPage> {
                 const SizedBox(height: PaddingSize.small),
 
                 SelectableText(
-                  controller.notes[i].title!,
+                  widget.note.title!,
                   style: fontStyleExtraLarge.copyWith(fontSize: FontSize.large),
                 ),
                 const SizedBox(height: PaddingSize.medium),
 
                 Text(
-                  "Last Edited : ${controller.notes[i].dateTimeEdited}",
+                  "Last Edited : ${widget.note.dateTimeEdited}",
                   style: fontStyleBold.copyWith(fontSize: FontSize.medium),
                 ),
                 const SizedBox(height: PaddingSize.medium),
 
                 SelectableText(
-                  controller.notes[i].content!,
+                  widget.note.content!,
                   style: fontStyleNormal.copyWith(fontSize: FontSize.mediumLarge),
                 ),
 
@@ -92,11 +95,7 @@ class _NoteDetailPageState extends State<NoteDetailPage> {
     );
   }
 
-  void editNote(int i) async {
-    Get.toNamed(AppRoute.EDIT_NOTE, arguments: i);
-  }
-
-  void deleteNote(BuildContext context, int i) async {
+  void deleteNote(BuildContext context, int id) async {
     showDialog(
       context: context,
       builder: (context) {
@@ -104,7 +103,7 @@ class _NoteDetailPageState extends State<NoteDetailPage> {
           headingText: "Are you sure you want to delete this note?",
           contentText: "This will delete the note permanently. You cannot undo this action.",
           confirmFunction: () {
-            controller.deleteNote(controller.notes[i].id!);
+            Get.find<NoteController>().deleteNote(id);
             Get.offAllNamed(AppRoute.HOME);
           },
           declineFunction: () => Get.back(),
@@ -113,10 +112,7 @@ class _NoteDetailPageState extends State<NoteDetailPage> {
     );
   }
 
-  void shareNote(int i) async {
-    controller.shareNote(
-      controller.notes[i].title!,
-      controller.notes[i].content!,
-    );
+  void shareNote(String title, String content) async {
+    Get.find<NoteController>().shareNote( title, content);
   }
 }

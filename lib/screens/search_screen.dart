@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:notes_app/routing/app_routes.dart';
 import 'package:notes_app/utils/font_size.dart';
 import 'package:notes_app/utils/padding_size.dart';
 import 'package:notes_app/utils/radius_size.dart';
@@ -54,7 +55,7 @@ class Search extends SearchDelegate {
         itemCount: suggestionList.length,
         itemBuilder: (context, index) {
           return GestureDetector(
-            onTap: () => Get.to(const NoteDetailPage(), arguments: index),
+            onTap: () => Get.toNamed(AppRoute.getNoteDetailsPage(suggestionList[index])),
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 5),
               child: Container(

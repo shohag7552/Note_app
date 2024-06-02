@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:notes_app/routing/app_pages.dart';
 import 'package:notes_app/routing/app_routes.dart';
 import 'helper/dependency.dart' as di;
 
@@ -22,7 +21,7 @@ class MyApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         title: "Note App by flutter",
         initialRoute: AppRoute.HOME,
-        getPages: getRoutes,
+        getPages: AppRoute.getRoutes,
     );
   }
 }

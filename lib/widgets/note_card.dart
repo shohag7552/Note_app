@@ -1,9 +1,7 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:notes_app/controller/note_controller.dart';
-import 'package:notes_app/helper/color_extension.dart';
+import 'package:notes_app/helper/date_converter.dart';
 import 'package:notes_app/model/note_model.dart';
 import 'package:notes_app/routing/app_routes.dart';
 import 'package:notes_app/utils/font_size.dart';
@@ -19,7 +17,7 @@ class NoteCart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => Get.toNamed(AppRoute.NOTE_DETAILS, arguments: index),
+      onTap: () => Get.toNamed(AppRoute.getNoteDetailsPage(note)),
       onLongPress: () {
         showDialog(context: context, builder: (context) {
           return AlertDialogWidget(
@@ -47,7 +45,7 @@ class NoteCart extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(children: [
+            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
               Flexible(
                 child: Text(
                   note.title!,
@@ -75,21 +73,71 @@ class NoteCart extends StatelessWidget {
             Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
               Flexible(
                 child: Text(
-                  note.dateTimeEdited!, maxLines: 1, overflow: TextOverflow.ellipsis,
+                  // note.dateTimeEdited!,
+                  DateConverter.dateTimeStringToDateOnly(note.dateTimeEdited!),
+                  maxLines: 1, overflow: TextOverflow.ellipsis,
                   style: fontStyleNormal.copyWith(fontSize: FontSize.small),
                 ),
               ),
 
-              const Icon(Icons.more_horiz),
+              _createActions(context, note),
             ]),
-
-            // Text(
-            //   controller.notes[index].color??'',
-            //   style: fontStyleNormal.copyWith(fontSize: FontSize.small),
-            // ),
           ],
         ),
       ),
+    );
+  }
+
+  PopupMenuButton _createActions(BuildContext context, Note note) {
+    return PopupMenuButton(
+      elevation: 6,
+      padding: EdgeInsets.zero,
+      onSelected: (value) async {
+        switch (value) {
+          case 0:
+            Get.toNamed(AppRoute.getEditNotePage(note));
+            break;
+          case 1:
+            _deleteNote(context, note.id!);
+            break;
+          case 2:
+            Get.find<NoteController>().shareNote(note.title!, note.content!);
+            break;
+          default:
+            break;
+        }
+      },
+      itemBuilder: (context) => const [
+        PopupMenuItem(
+          value: 0,
+          child: Text("Edit Note", style: fontStyleNormal),
+        ),
+        PopupMenuItem(
+          value: 1,
+          child: Text("Delete Note", style: fontStyleNormal),
+        ),
+        PopupMenuItem(
+          value: 2,
+          child: Text("Share Note", style: fontStyleNormal),
+        )
+      ],
+    );
+  }
+
+  void _deleteNote(BuildContext context, int id) async {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialogWidget(
+          headingText: "Are you sure you want to delete this note?",
+          contentText: "This will delete the note permanently. You cannot undo this action.",
+          confirmFunction: () {
+            Get.find<NoteController>().deleteNote(id);
+            Get.offAllNamed(AppRoute.HOME);
+          },
+          declineFunction: () => Get.back(),
+        );
+      },
     );
   }
 }

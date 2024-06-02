@@ -1,30 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:notes_app/model/note_model.dart';
 import 'package:notes_app/utils/style.dart';
 
 import '../controller/note_controller.dart';
 
 class EditNotePage extends StatefulWidget {
-  const EditNotePage({super.key});
+  final Note note;
+  const EditNotePage({super.key, required this.note});
 
   @override
   State<EditNotePage> createState() => _EditNotePageState();
 }
 
 class _EditNotePageState extends State<EditNotePage> {
-  final NoteController controller = Get.find();
+  // final NoteController controller = Get.find();
 
   @override
   void initState() {
     super.initState();
+
+    Get.find<NoteController>().titleController.text = widget.note.title!;
+    Get.find<NoteController>().contentController.text = widget.note.content!;
   }
 
   @override
   Widget build(BuildContext context) {
-    final int i = ModalRoute.of(context)?.settings.arguments as int;
-    controller.titleController.text = controller.notes[i].title!;
-    controller.contentController.text = controller.notes[i].content!;
+    // final int i = ModalRoute.of(context)?.settings.arguments as int;
+    // controller.titleController.text = controller.notes[i].title!;
+    // controller.contentController.text = controller.notes[i].content!;
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
@@ -49,7 +54,7 @@ class _EditNotePageState extends State<EditNotePage> {
           child: Column(
             children: [
               TextField(
-                controller: controller.titleController,
+                controller: Get.find<NoteController>().titleController,
                 style: const TextStyle(
                   fontSize: 27,
                   fontWeight: FontWeight.bold,
@@ -73,7 +78,7 @@ class _EditNotePageState extends State<EditNotePage> {
                 ),
                 cursorColor: Colors.black,
                 enableInteractiveSelection: false,
-                controller: controller.contentController,
+                controller: Get.find<NoteController>().contentController,
                 decoration: const InputDecoration(
                   hintText: "Content",
                   hintStyle: TextStyle(
@@ -91,7 +96,7 @@ class _EditNotePageState extends State<EditNotePage> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          controller.updateNote(controller.notes[i].id!, controller.notes[i].dateTimeCreated!, controller.notes[i].isFavorite??0);
+          Get.find<NoteController>().updateNote(widget.note.id!, widget.note.dateTimeCreated!, widget.note.isFavorite??0);
         },
         label: Text(
           "Save Note",
