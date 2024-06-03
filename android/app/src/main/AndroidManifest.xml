@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="Flutter Notes\n App"
+        android:label="Notes\n App"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

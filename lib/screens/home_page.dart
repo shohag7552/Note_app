@@ -84,11 +84,14 @@ class _HomePageState extends State<HomePage> {
           //   ),
           //   icon: const Icon(Icons.add),
           // ),
-          floatingActionButton: FloatingActionButton(
-            onPressed: () => Get.toNamed(AppRoute.ADD_NEW_NOTE),
-            backgroundColor: Theme.of(context).cardColor,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(500)),
-            child: const Icon(Icons.add),
+          floatingActionButton: Material(
+            child: FloatingActionButton(
+              elevation: 6,
+              onPressed: () => Get.toNamed(AppRoute.ADD_NEW_NOTE),
+              backgroundColor: Theme.of(context).cardColor,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(500)),
+              child: Icon(Icons.add, color: Theme.of(context).textTheme.bodyMedium!.color,),
+            ),
           ),
           floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
           bottomNavigationBar: Container(

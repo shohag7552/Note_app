@@ -10,7 +10,7 @@ ThemeData light = ThemeData(
   cardColor: Colors.white,
   shadowColor: Colors.black.withOpacity(0.03),
   textButtonTheme: TextButtonThemeData(style: TextButton.styleFrom(foregroundColor: const Color(0xFF3B3B3B))),
-  colorScheme: const ColorScheme.light(primary: Color(0xFF2A9849), secondary: Color(0xFF2A9849), background: Color(0xFFF6FBFF)).copyWith(error: const Color(0xFFE84D4F)),
+  colorScheme: const ColorScheme.light(primary: Color(0xFF2A9849), secondary: Color(0xFF2A9849), surface: Color(0xFFF6FBFF)).copyWith(error: const Color(0xFFE84D4F)),
   popupMenuTheme: const PopupMenuThemeData(color: Colors.white, surfaceTintColor: Colors.white),
   dialogTheme: const DialogTheme(surfaceTintColor: Colors.white),
   // floatingActionButtonTheme: FloatingActionButtonThemeData(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(500))),

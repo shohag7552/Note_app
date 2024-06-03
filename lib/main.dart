@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:notes_app/routing/app_routes.dart';
+import 'package:notes_app/theme/light_theme.dart';
 import 'helper/dependency.dart' as di;
 
 main() async {
@@ -20,6 +21,7 @@ class MyApp extends StatelessWidget {
     return GetMaterialApp(
         debugShowCheckedModeBanner: false,
         title: "Note App by flutter",
+        theme: light,
         initialRoute: AppRoute.HOME,
         getPages: AppRoute.getRoutes,
     );
