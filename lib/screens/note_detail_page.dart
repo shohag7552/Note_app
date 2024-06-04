@@ -1,11 +1,15 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_quill/flutter_quill.dart';
 import 'package:get/get.dart';
 import 'package:notes_app/model/note_model.dart';
 import 'package:notes_app/routing/app_routes.dart';
 import 'package:notes_app/utils/font_size.dart';
 import 'package:notes_app/utils/padding_size.dart';
 import 'package:notes_app/utils/style.dart';
+import 'package:notes_app/widgets/text_edit_widget.dart';
 
 import '../controller/note_controller.dart';
 import '../widgets/alert_dialog.dart';
@@ -20,11 +24,15 @@ class NoteDetailPage extends StatefulWidget {
 
 class _NoteDetailPageState extends State<NoteDetailPage> {
   // final NoteController controller = Get.find();
+  // final json = jsonDecode(r'{"insert":"hello\n"}');
+
+  // _controller.document = Document.fromJson(json);
 
   @override
   Widget build(BuildContext context) {
     // final int i = ModalRoute.of(context)?.settings.arguments as int;
-    // print('=======index is : $i');
+    // print('=======index is : $i'); final doc = Document.fromDelta(DeltaHtmlExt.fromHtml(widget.inputText));
+    // print('====s>>> ${Document.fromJson(jsonDecode(widget.note.content!))}');
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
@@ -61,7 +69,9 @@ class _NoteDetailPageState extends State<NoteDetailPage> {
         ],
         systemOverlayStyle: SystemUiOverlayStyle.dark,
       ),
-      body: GetBuilder<NoteController>(
+      body: TextEditWidget(readOnly: true, content: Document.fromJson(jsonDecode(widget.note.content!)), isAddNote: true),
+
+      /*body: GetBuilder<NoteController>(
         builder: (controller) => Scrollbar(
           child: Container(
             padding: const EdgeInsets.only(top: PaddingSize.medium, left: PaddingSize.medium, right: PaddingSize.medium),
@@ -91,7 +101,7 @@ class _NoteDetailPageState extends State<NoteDetailPage> {
             ),
           ),
         ),
-      ),
+      ),*/
     );
   }
 

@@ -23,9 +23,9 @@ class NoteController extends GetxController {
     return notes.isEmpty;
   }
 
-  void addNoteToDatabase(String? color) async {
-    String title = titleController.text;
-    String content = contentController.text;
+  void addNoteToDatabase({required String title, required String content, String? color}) async {
+    // String title = titleController.text;
+    // String content = contentController.text;
     Note note = Note(
       title: title,
       content: content,
@@ -42,17 +42,18 @@ class NoteController extends GetxController {
     Get.back();
   }
 
-  void updateNote(int id, String dTCreated, int isFavourite) async {
-    final title = titleController.text;
-    final content = contentController.text;
-    Note note = Note(
-      id: id,
-      title: title,
-      content: content,
-      dateTimeEdited: DateFormat("dd-MM-yyyy hh:mm a").format(DateTime.now()),
-      dateTimeCreated: dTCreated,
-      isFavorite: isFavourite,
-    );
+  void updateNote(Note note) async {
+    // final title = titleController.text;
+    // final content = contentController.text;
+    // Note note = Note(
+    //   id: id,
+    //   title: title,
+    //   content: content,
+    //   dateTimeEdited: DateFormat("dd-MM-yyyy hh:mm a").format(DateTime.now()),
+    //   dateTimeCreated: dTCreated,
+    //   isFavorite: isFavourite,
+    // );
+    print('=====ff====gg===> ${note.toJson()}');
     await DatabaseHelper.instance.updateNote(note);
     titleController.text = "";
     contentController.text = "";
@@ -86,6 +87,9 @@ class NoteController extends GetxController {
 
   void getAllNotes() async {
     notes = await DatabaseHelper.instance.getNoteList();
+    for (var note in notes) {
+      print('===${notes.indexOf(note)}==> ${note.toJson()}');
+    }
     update();
   }
 

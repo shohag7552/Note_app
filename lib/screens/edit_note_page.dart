@@ -1,8 +1,12 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_quill/flutter_quill.dart';
 import 'package:get/get.dart';
 import 'package:notes_app/model/note_model.dart';
 import 'package:notes_app/utils/style.dart';
+import 'package:notes_app/widgets/text_edit_widget.dart';
 
 import '../controller/note_controller.dart';
 
@@ -44,7 +48,8 @@ class _EditNotePageState extends State<EditNotePage> {
         ),
         systemOverlayStyle: SystemUiOverlayStyle.dark,
       ),
-      body: SingleChildScrollView(
+      body: TextEditWidget(readOnly: false, content: Document.fromJson(jsonDecode(widget.note.content!)), isAddNote: false, note: widget.note),
+      /*body: SingleChildScrollView(
         child: Container(
           padding: const EdgeInsets.only(
             top: 15,
@@ -93,8 +98,8 @@ class _EditNotePageState extends State<EditNotePage> {
             ],
           ),
         ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
+      ),*/
+      /*floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           Get.find<NoteController>().updateNote(widget.note.id!, widget.note.dateTimeCreated!, widget.note.isFavorite??0);
         },
@@ -105,7 +110,7 @@ class _EditNotePageState extends State<EditNotePage> {
         ),
         icon: const Icon(Icons.save),
         // backgroundColor: AppColor.buttonColor,
-      ),
+      ),*/
     );
   }
 }

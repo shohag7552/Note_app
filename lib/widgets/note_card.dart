@@ -1,4 +1,8 @@
+import 'dart:convert';
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_quill/flutter_quill.dart';
 import 'package:get/get.dart';
 import 'package:notes_app/controller/note_controller.dart';
 import 'package:notes_app/helper/date_converter.dart';
@@ -16,6 +20,9 @@ class NoteCart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final QuillController controller = QuillController.basic();
+    controller.document = Document.fromJson(jsonDecode(note.content!));
+
     return GestureDetector(
       onTap: () => Get.toNamed(AppRoute.getNoteDetailsPage(note)),
       onLongPress: () {
@@ -61,11 +68,32 @@ class NoteCart extends StatelessWidget {
             ]),
             const SizedBox(height: PaddingSize.small),
 
-            Expanded(
-              child: Text(
-                note.content!,
-                style: fontStyleNormal.copyWith(fontSize: FontSize.small),
-                overflow: TextOverflow.ellipsis, maxLines: 4,
+            // Expanded(
+            //   child: Text(
+            //     note.content!,
+            //     style: fontStyleNormal.copyWith(fontSize: FontSize.small),
+            //     overflow: TextOverflow.ellipsis, maxLines: 4,
+            //   ),
+            // ),
+            QuillProvider(
+              configurations: QuillConfigurations(
+                controller: controller,
+                sharedConfigurations: const QuillSharedConfigurations(
+                  locale: Locale('en'),
+                ),
+              ),
+              child: Expanded(
+                child: QuillEditor.basic(
+                  configurations: const QuillEditorConfigurations(
+                    readOnly: true,
+                    // scrollable: false,
+                    showCursor: false,
+                    expands: true,
+                    maxHeight: 100,
+                    minHeight: 50,
+
+                  ),
+                ),
               ),
             ),
             const SizedBox(height: PaddingSize.small),
