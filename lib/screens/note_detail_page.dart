@@ -71,6 +71,13 @@ class _NoteDetailPageState extends State<NoteDetailPage> {
       ),
       body: TextEditWidget(readOnly: true, content: Document.fromJson(jsonDecode(widget.note.content!)), isAddNote: true),
 
+      floatingActionButton: FloatingActionButton(
+        elevation: 6,
+        onPressed: () => Get.toNamed(AppRoute.getEditNotePage(widget.note)),
+        backgroundColor: Theme.of(context).primaryColor,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(500)),
+        child: Icon(Icons.edit, color: Theme.of(context).cardColor),
+      ),
       /*body: GetBuilder<NoteController>(
         builder: (controller) => Scrollbar(
           child: Container(

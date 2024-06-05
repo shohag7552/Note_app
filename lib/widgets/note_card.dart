@@ -1,11 +1,8 @@
-import 'dart:convert';
-
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_quill/flutter_quill.dart';
 import 'package:get/get.dart';
 import 'package:notes_app/controller/note_controller.dart';
 import 'package:notes_app/helper/date_converter.dart';
+import 'package:notes_app/helper/quill_helper.dart';
 import 'package:notes_app/model/note_model.dart';
 import 'package:notes_app/routing/app_routes.dart';
 import 'package:notes_app/utils/font_size.dart';
@@ -13,6 +10,7 @@ import 'package:notes_app/utils/padding_size.dart';
 import 'package:notes_app/utils/radius_size.dart';
 import 'package:notes_app/utils/style.dart';
 import 'package:notes_app/widgets/alert_dialog.dart';
+
 class NoteCart extends StatelessWidget {
   final Note note;
   final int index;
@@ -20,8 +18,6 @@ class NoteCart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final QuillController controller = QuillController.basic();
-    controller.document = Document.fromJson(jsonDecode(note.content!));
 
     return GestureDetector(
       onTap: () => Get.toNamed(AppRoute.getNoteDetailsPage(note)),
@@ -40,78 +36,65 @@ class NoteCart extends StatelessWidget {
           );
         });
       },
-      child: Container(
-        decoration: BoxDecoration(
-          // color: '#2DCE29'.toColor(),
-          color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(RadiusSize.large),
-          boxShadow: [BoxShadow(color: Colors.grey[200]!, blurRadius: 10, offset: const Offset(2, 4))]
-        ),
-        padding: const EdgeInsets.all(PaddingSize.medium),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-              Flexible(
-                child: Text(
-                  note.title!,
-                  style: fontStyleMedium.copyWith(fontSize: FontSize.extraMedium),
-                  maxLines: 1, overflow: TextOverflow.ellipsis,
-                ),
-              ),
+      child: Stack(
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              // color: '#2DCE29'.toColor(),
+              color: Theme.of(context).cardColor,
+              borderRadius: BorderRadius.circular(RadiusSize.large),
+              boxShadow: [BoxShadow(color: Colors.grey[200]!, blurRadius: 10, offset: const Offset(2, 4))]
+            ),
+            padding: const EdgeInsets.all(PaddingSize.medium),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // const SizedBox(height: PaddingSize.small),
 
-              InkWell(
-                onTap: () => Get.find<NoteController>().favoriteNote(note.id!),
-                child: Icon(note.isFavorite == 1 ? Icons.bookmark_rounded : Icons.bookmark_border_outlined),
-              ),
-            ]),
-            const SizedBox(height: PaddingSize.small),
-
-            // Expanded(
-            //   child: Text(
-            //     note.content!,
-            //     style: fontStyleNormal.copyWith(fontSize: FontSize.small),
-            //     overflow: TextOverflow.ellipsis, maxLines: 4,
-            //   ),
-            // ),
-            QuillProvider(
-              configurations: QuillConfigurations(
-                controller: controller,
-                sharedConfigurations: const QuillSharedConfigurations(
-                  locale: Locale('en'),
-                ),
-              ),
-              child: Expanded(
-                child: QuillEditor.basic(
-                  configurations: const QuillEditorConfigurations(
-                    readOnly: true,
-                    // scrollable: false,
-                    showCursor: false,
-                    expands: true,
-                    maxHeight: 100,
-                    minHeight: 50,
-
+                Expanded(
+                  child: Builder(
+                    builder: (context) {
+                      String value = QuillHelper.convertStringDocumentToString(note.content!);
+                      value = smallSentence(value);
+                      return Text(
+                        value,
+                        style: fontStyleNormal.copyWith(fontSize: FontSize.small),
+                        overflow: TextOverflow.ellipsis,
+                      );
+                    }
                   ),
                 ),
-              ),
+                const SizedBox(height: PaddingSize.small),
+
+                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                  Flexible(
+                    child: Text(
+                      DateConverter.dateTimeStringToDateOnly(note.dateTimeEdited!),
+                      maxLines: 1, overflow: TextOverflow.ellipsis,
+                      style: fontStyleMedium.copyWith(fontSize: FontSize.small),
+                    ),
+                  ),
+
+                  // _createActions(context, note),
+                ]),
+              ],
             ),
-            const SizedBox(height: PaddingSize.small),
+          ),
 
-            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-              Flexible(
-                child: Text(
-                  // note.dateTimeEdited!,
-                  DateConverter.dateTimeStringToDateOnly(note.dateTimeEdited!),
-                  maxLines: 1, overflow: TextOverflow.ellipsis,
-                  style: fontStyleNormal.copyWith(fontSize: FontSize.small),
-                ),
-              ),
+          Positioned(
+            right: 5, top: 10,
+            child: InkWell(
+              onTap: () => Get.find<NoteController>().favoriteNote(note.id!),
+              child: Icon(note.isFavorite == 1 ? Icons.bookmark_rounded : Icons.bookmark_border_outlined),
+            ),
+          ),
 
-              _createActions(context, note),
-            ]),
-          ],
-        ),
+          Positioned(
+            right: 0, bottom: 5,
+            child: _createActions(context, note),
+          ),
+        ],
       ),
     );
   }
@@ -167,5 +150,14 @@ class NoteCart extends StatelessWidget {
         );
       },
     );
+  }
+
+  String smallSentence(String bigSentence){
+    if(bigSentence.length > 100){
+      return '${bigSentence.substring(0,100)}...';
+    }
+    else{
+      return bigSentence;
+    }
   }
 }

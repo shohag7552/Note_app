@@ -88,9 +88,9 @@ class _HomePageState extends State<HomePage> {
             child: FloatingActionButton(
               elevation: 6,
               onPressed: () => Get.toNamed(AppRoute.ADD_NEW_NOTE),
-              backgroundColor: Theme.of(context).cardColor,
+              backgroundColor: Theme.of(context).primaryColor,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(500)),
-              child: Icon(Icons.add, color: Theme.of(context).textTheme.bodyMedium!.color,),
+              child: Icon(Icons.add, color: Theme.of(context).cardColor),
             ),
           ),
           floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,

@@ -1,12 +1,14 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:notes_app/helper/date_converter.dart';
+import 'package:notes_app/helper/quill_helper.dart';
 import 'package:notes_app/routing/app_routes.dart';
 import 'package:notes_app/utils/font_size.dart';
 import 'package:notes_app/utils/padding_size.dart';
 import 'package:notes_app/utils/radius_size.dart';
 import 'package:notes_app/utils/style.dart';
 import '../controller/note_controller.dart';
-import 'note_detail_page.dart';
 
 class Search extends SearchDelegate {
   final NoteController controller = Get.find<NoteController>();
@@ -16,7 +18,11 @@ class Search extends SearchDelegate {
     return [
       IconButton(
         onPressed: () {
-          query = "";
+          if(query.isNotEmpty) {
+            query = "";
+          } else {
+            Get.back();
+          }
         },
         icon: const Icon(Icons.clear, color: Colors.black),
       )
@@ -42,54 +48,51 @@ class Search extends SearchDelegate {
   Widget buildSuggestions(BuildContext context) {
     final suggestionList = query.isEmpty
         ? controller.notes
-        : controller.notes.where(
-            (p) {
-              return p.title!.toLowerCase().contains(query.toLowerCase()) ||
-                  p.content!.toLowerCase().contains(query.toLowerCase());
-            },
+        : controller.notes.where((p) {
+              return /*p.title!.toLowerCase().contains(query.toLowerCase()) ||*/
+                  QuillHelper.convertStringDocumentToString(p.content!).toLowerCase().contains(query.toLowerCase());
+              },
           ).toList();
-    return Container(
-      padding: const EdgeInsets.only(top: PaddingSize.small, right: PaddingSize.small, left: PaddingSize.small),
-      child: ListView.builder(
-        shrinkWrap: true,
-        itemCount: suggestionList.length,
-        itemBuilder: (context, index) {
-          return GestureDetector(
+    return ListView.builder(
+      shrinkWrap: true,
+      itemCount: suggestionList.length,
+      itemBuilder: (context, index) {
+        return Material(
+          child: InkWell(
             onTap: () => Get.toNamed(AppRoute.getNoteDetailsPage(suggestionList[index])),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 5),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Theme.of(context).disabledColor,
-                  borderRadius: BorderRadius.circular(RadiusSize.medium),
-                ),
-                padding: const EdgeInsets.all(PaddingSize.medium),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      controller.notes[index].title!,
-                      style: fontStyleBold.copyWith(fontSize: FontSize.mediumLarge),
-                      maxLines: 1, overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: PaddingSize.small),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).cardColor,
+                borderRadius: BorderRadius.circular(RadiusSize.medium),
+                boxShadow: [BoxShadow(color: Colors.grey[300]!, blurRadius: 10, offset: const Offset(0, 0))],
+              ),
+              padding: const EdgeInsets.all(PaddingSize.medium),
+              margin: const EdgeInsets.symmetric(horizontal: PaddingSize.medium, vertical: PaddingSize.extraSmall),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Text(
+                  //   controller.notes[index].title!,
+                  //   style: fontStyleBold.copyWith(fontSize: FontSize.mediumLarge),
+                  //   maxLines: 1, overflow: TextOverflow.ellipsis,
+                  // ),
+                  // const SizedBox(height: PaddingSize.small),
 
-                    Text(
-                      suggestionList[index].content!,
-                      style: fontStyleNormal.copyWith(fontSize: FontSize.extraMedium),
-                      maxLines: 2, overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: PaddingSize.small),
+                  Text(
+                    QuillHelper.convertStringDocumentToString(suggestionList[index].content!),
+                    style: fontStyleNormal.copyWith(fontSize: FontSize.extraMedium),
+                    maxLines: 5, overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: PaddingSize.small),
 
-                    Text(controller.notes[index].dateTimeEdited!),
-                  ],
-                ),
+                  Align(alignment: Alignment.bottomRight, child: Text(DateConverter.dateTimeStringToDateOnly(controller.notes[index].dateTimeEdited!))),
+                ],
               ),
             ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 
