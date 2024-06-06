@@ -93,7 +93,7 @@ class NoteController extends GetxController {
     update();
   }
 
-  void shareNote(String title, String content) {
-    Share.share("$title \n$content");
+  void shareNote(String content) {
+    Share.share(content);
   }
 }

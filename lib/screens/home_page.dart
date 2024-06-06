@@ -95,7 +95,7 @@ class _HomePageState extends State<HomePage> {
           ),
           floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
           bottomNavigationBar: Container(
-            height: 80,
+            height: 50,
             width: double.infinity,
             decoration: BoxDecoration(
               color: Theme.of(context).cardColor,

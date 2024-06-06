@@ -112,7 +112,7 @@ class NoteCart extends StatelessWidget {
             _deleteNote(context, note.id!);
             break;
           case 2:
-            Get.find<NoteController>().shareNote(note.title!, note.content!);
+            Get.find<NoteController>().shareNote(QuillHelper.convertStringDocumentToString(note.content!));
             break;
           default:
             break;

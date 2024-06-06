@@ -4,10 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:get/get.dart';
+import 'package:notes_app/helper/quill_helper.dart';
 import 'package:notes_app/model/note_model.dart';
 import 'package:notes_app/routing/app_routes.dart';
-import 'package:notes_app/utils/font_size.dart';
-import 'package:notes_app/utils/padding_size.dart';
 import 'package:notes_app/utils/style.dart';
 import 'package:notes_app/widgets/text_edit_widget.dart';
 
@@ -23,16 +22,9 @@ class NoteDetailPage extends StatefulWidget {
 }
 
 class _NoteDetailPageState extends State<NoteDetailPage> {
-  // final NoteController controller = Get.find();
-  // final json = jsonDecode(r'{"insert":"hello\n"}');
-
-  // _controller.document = Document.fromJson(json);
 
   @override
   Widget build(BuildContext context) {
-    // final int i = ModalRoute.of(context)?.settings.arguments as int;
-    // print('=======index is : $i'); final doc = Document.fromDelta(DeltaHtmlExt.fromHtml(widget.inputText));
-    // print('====s>>> ${Document.fromJson(jsonDecode(widget.note.content!))}');
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
@@ -46,7 +38,7 @@ class _NoteDetailPageState extends State<NoteDetailPage> {
               } else if (val == 1) {
                 deleteNote(context, widget.note.id!);
               } else if (val == 2) {
-                Get.find<NoteController>().shareNote(widget.note.title!, widget.note.content!);
+                Get.find<NoteController>().shareNote(QuillHelper.convertStringDocumentToString(widget.note.content!));
               }
             },
             itemBuilder: (BuildContext bc) {
@@ -127,9 +119,5 @@ class _NoteDetailPageState extends State<NoteDetailPage> {
         );
       },
     );
-  }
-
-  void shareNote(String title, String content) async {
-    Get.find<NoteController>().shareNote( title, content);
   }
 }
