@@ -45,7 +45,8 @@ class _TextEditWidgetState extends State<TextEditWidget> {
                 locale: Locale('en'),
               ),
               checkBoxReadOnly: true,
-
+              // autoFocus: false,
+              showCursor: !widget.readOnly,
             ),
           ),
         ),

@@ -7,7 +7,7 @@ import 'package:share/share.dart';
 import '../database_helper/database_helper.dart';
 import '../routing/app_routes.dart';
 
-class NoteController extends GetxController {
+class NoteController extends GetxController implements GetxService{
   final titleController = TextEditingController();
   final contentController = TextEditingController();
 
