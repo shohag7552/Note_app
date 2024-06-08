@@ -12,7 +12,7 @@ import 'package:notes_app/utils/style.dart';
 import 'package:notes_app/widgets/text_edit_widget.dart';
 import 'package:notes_app/widgets/toast.dart';
 
-import '../controller/note_controller.dart';
+import '../../controller/note_controller.dart';
 
 class AddNewNotePage extends StatefulWidget {
   const AddNewNotePage({super.key});

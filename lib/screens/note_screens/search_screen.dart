@@ -8,7 +8,7 @@ import 'package:notes_app/utils/font_size.dart';
 import 'package:notes_app/utils/padding_size.dart';
 import 'package:notes_app/utils/radius_size.dart';
 import 'package:notes_app/utils/style.dart';
-import '../controller/note_controller.dart';
+import '../../controller/note_controller.dart';
 
 class Search extends SearchDelegate {
   final NoteController controller = Get.find<NoteController>();

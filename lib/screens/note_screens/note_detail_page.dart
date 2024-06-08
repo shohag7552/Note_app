@@ -10,8 +10,8 @@ import 'package:notes_app/routing/app_routes.dart';
 import 'package:notes_app/utils/style.dart';
 import 'package:notes_app/widgets/text_edit_widget.dart';
 
-import '../controller/note_controller.dart';
-import '../widgets/alert_dialog.dart';
+import '../../controller/note_controller.dart';
+import '../../widgets/alert_dialog.dart';
 
 class NoteDetailPage extends StatefulWidget {
   final Note note;

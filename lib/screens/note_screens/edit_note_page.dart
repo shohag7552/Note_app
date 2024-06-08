@@ -8,7 +8,7 @@ import 'package:notes_app/model/note_model.dart';
 import 'package:notes_app/utils/style.dart';
 import 'package:notes_app/widgets/text_edit_widget.dart';
 
-import '../controller/note_controller.dart';
+import '../../controller/note_controller.dart';
 
 class EditNotePage extends StatefulWidget {
   final Note note;

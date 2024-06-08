@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:notes_app/routing/app_routes.dart';
-import 'package:notes_app/screens/search_screen.dart';
+import 'package:notes_app/screens/auth_screen.dart';
+import 'package:notes_app/screens/note_screens/search_screen.dart';
 import 'package:notes_app/utils/font_size.dart';
 import 'package:notes_app/utils/images.dart';
 import 'package:notes_app/utils/padding_size.dart';
@@ -95,18 +96,18 @@ class _HomePageState extends State<HomePage> {
           ),
           floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
           bottomNavigationBar: Container(
-            height: 50,
+            height: 60,
             width: double.infinity,
             decoration: BoxDecoration(
               color: Theme.of(context).cardColor,
               boxShadow: [BoxShadow(color: Colors.grey[300]!, blurRadius: 10)],
             ),
-            // child: Center(
-            //   child: FloatingActionButton(
-            //     isExtended: true,
-            //     onPressed: (){},
-            //   ),
-            // ),
+            child: Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
+
+              IconButton(onPressed: (){}, icon: const Icon(Icons.home)),
+              const SizedBox(),
+              IconButton(onPressed: ()=> Get.to(const AuthScreen()), icon: const Icon(Icons.person)),
+            ]),
           ),
         );
       }

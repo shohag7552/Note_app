@@ -43,17 +43,6 @@ class NoteController extends GetxController implements GetxService{
   }
 
   void updateNote(Note note) async {
-    // final title = titleController.text;
-    // final content = contentController.text;
-    // Note note = Note(
-    //   id: id,
-    //   title: title,
-    //   content: content,
-    //   dateTimeEdited: DateFormat("dd-MM-yyyy hh:mm a").format(DateTime.now()),
-    //   dateTimeCreated: dTCreated,
-    //   isFavorite: isFavourite,
-    // );
-    print('=====ff====gg===> ${note.toJson()}');
     await DatabaseHelper.instance.updateNote(note);
     titleController.text = "";
     contentController.text = "";
@@ -96,4 +85,6 @@ class NoteController extends GetxController implements GetxService{
   void shareNote(String content) {
     Share.share(content);
   }
+
+
 }
