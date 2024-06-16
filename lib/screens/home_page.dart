@@ -20,7 +20,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  // final controller = Get.put(NoteController());
 
   @override
   Widget build(BuildContext context) {
@@ -77,38 +76,6 @@ class _HomePageState extends State<HomePage> {
           body: GetBuilder<NoteController>(
             builder: (_) => controller.isEmpty() ? emptyNotes() : viewNotes(controller),
           ),
-          // floatingActionButton: FloatingActionButton.extended(
-          //   onPressed: () => Get.toNamed(AppRoute.ADD_NEW_NOTE),
-          //   label: Text(
-          //     "Add new note", textAlign: TextAlign.center,
-          //     style: fontStyleMedium.copyWith(color: Theme.of(context).textTheme.bodyMedium!.color, fontSize: FontSize.medium),
-          //   ),
-          //   icon: const Icon(Icons.add),
-          // ),
-          floatingActionButton: Material(
-            child: FloatingActionButton(
-              elevation: 6,
-              onPressed: () => Get.toNamed(AppRoute.ADD_NEW_NOTE),
-              backgroundColor: Theme.of(context).primaryColor,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(500)),
-              child: Icon(Icons.add, color: Theme.of(context).cardColor),
-            ),
-          ),
-          floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-          bottomNavigationBar: Container(
-            height: 60,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: Theme.of(context).cardColor,
-              boxShadow: [BoxShadow(color: Colors.grey[300]!, blurRadius: 10)],
-            ),
-            child: Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
-
-              IconButton(onPressed: (){}, icon: const Icon(Icons.home)),
-              const SizedBox(),
-              IconButton(onPressed: ()=> Get.to(const AuthScreen()), icon: const Icon(Icons.person)),
-            ]),
-          ),
         );
       }
     );
@@ -130,83 +97,6 @@ class _HomePageState extends State<HomePage> {
               return NoteCart(note: controller.notes[index], index: index);
           },
         ),
-        /*child: ListView.builder(
-          shrinkWrap: false,
-          itemCount: controller.notes.length,
-          itemBuilder: (context, index) {
-            return NoteCart();
-            return GestureDetector(
-              onTap: () => Get.toNamed(AppRoute.NOTE_DETAILS, arguments: index),
-              onLongPress: () {
-                showDialog(context: context, builder: (context) {
-                    return AlertDialogWidget(
-                      headingText: "Are you sure you want to delete this note?",
-                      contentText: "This will delete the note permanently. You cannot undo this action.",
-                      confirmFunction: () {
-                        controller.deleteNote(controller.notes[index].id!);
-                        Get.back();
-                      },
-                      declineFunction: () {
-                        Get.back();
-                      },
-                    );
-                });
-              },
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 5),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: controller.notes[index].color!.toColor(),
-                    borderRadius: BorderRadius.circular(RadiusSize.medium),
-                  ),
-                  padding: const EdgeInsets.all(PaddingSize.medium),
-                  child: Row(children: [
-                    Expanded(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            controller.notes[index].title!,
-                            style: fontStyleBold.copyWith(fontSize: FontSize.mediumLarge),
-                            maxLines: 1, overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: PaddingSize.small),
-
-                          Text(
-                            controller.notes[index].content!,
-                            style: fontStyleMedium.copyWith(fontSize: FontSize.extraMedium),
-                            overflow: TextOverflow.ellipsis, maxLines: 2,
-                          ),
-                          const SizedBox(height: PaddingSize.small),
-
-                          Text(
-                            controller.notes[index].dateTimeEdited!,
-                            style: fontStyleNormal.copyWith(fontSize: FontSize.small),
-                          ),
-
-                          Text(
-                            controller.notes[index].color??'',
-                            style: fontStyleNormal.copyWith(fontSize: FontSize.small),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: PaddingSize.large),
-
-                    InkWell(
-                      onTap: () => controller.favoriteNote(controller.notes[index].id!),
-                      child: Icon(
-                        controller.notes[index].isFavorite == true ? Icons.favorite : Icons.favorite_border,
-                      ),
-                    ),
-
-                  ]),
-                ),
-              ),
-            );
-          },
-        ),*/
       ),
     );
   }

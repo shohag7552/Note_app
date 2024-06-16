@@ -22,7 +22,7 @@ class MyApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         title: "Note App by flutter",
         theme: light,
-        initialRoute: AppRoute.HOME,
+        initialRoute: AppRoute.DASHBOARD,
         getPages: AppRoute.getRoutes,
     );
   }

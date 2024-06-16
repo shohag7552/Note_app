@@ -39,6 +39,8 @@ class NoteCart extends StatelessWidget {
       child: Stack(
         children: [
           Container(
+            width: double.infinity,
+            height: double.infinity,
             decoration: BoxDecoration(
               // color: '#2DCE29'.toColor(),
               color: Theme.of(context).cardColor,
@@ -46,40 +48,43 @@ class NoteCart extends StatelessWidget {
               boxShadow: [BoxShadow(color: Colors.grey[200]!, blurRadius: 10, offset: const Offset(2, 4))]
             ),
             padding: const EdgeInsets.all(PaddingSize.medium),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // const SizedBox(height: PaddingSize.small),
-
-                Expanded(
-                  child: Builder(
-                    builder: (context) {
-                      String value = QuillHelper.convertStringDocumentToString(note.content!);
-                      value = smallSentence(value);
-                      return Text(
-                        value,
-                        style: fontStyleNormal.copyWith(fontSize: FontSize.small),
-                        overflow: TextOverflow.ellipsis,
-                      );
-                    }
-                  ),
-                ),
-                const SizedBox(height: PaddingSize.small),
-
-                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                  Flexible(
-                    child: Text(
-                      DateConverter.dateTimeStringToDateOnly(note.dateTimeEdited!),
-                      maxLines: 1, overflow: TextOverflow.ellipsis,
-                      style: fontStyleMedium.copyWith(fontSize: FontSize.small),
-                    ),
-                  ),
-
-                  // _createActions(context, note),
-                ]),
-              ],
-            ),
+            child: Text(QuillHelper.convertStringDocumentToString(note.content!)),
+            // child: Column(
+            //   mainAxisSize: MainAxisSize.min,
+            //   crossAxisAlignment: CrossAxisAlignment.start,
+            //   children: [
+            //     // const SizedBox(height: PaddingSize.small),
+            //
+            //     Expanded(
+            //       child: Builder(
+            //         builder: (context) {
+            //           String value = QuillHelper.convertStringDocumentToString(note.content!);
+            //           print('===1===> $value');
+            //           // value = smallSentence(value);
+            //           print('===2===> $value');
+            //           return Text(
+            //             value,
+            //             style: fontStyleNormal.copyWith(fontSize: FontSize.small),
+            //             overflow: TextOverflow.ellipsis,
+            //           );
+            //         }
+            //       ),
+            //     ),
+            //     const SizedBox(height: PaddingSize.small),
+            //
+            //     // Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+            //     //   Flexible(
+            //     //     child: Text(
+            //     //       DateConverter.dateTimeStringToDateOnly(note.dateTimeEdited!),
+            //     //       maxLines: 1, overflow: TextOverflow.ellipsis,
+            //     //       style: fontStyleMedium.copyWith(fontSize: FontSize.small),
+            //     //     ),
+            //     //   ),
+            //     //
+            //     //   // _createActions(context, note),
+            //     // ]),
+            //   ],
+            // ),
           ),
 
           Positioned(

@@ -4,6 +4,7 @@ import 'dart:convert';
 
 import 'package:get/get.dart';
 import 'package:notes_app/model/note_model.dart';
+import 'package:notes_app/screens/dashboard_screen.dart';
 import 'package:notes_app/screens/note_screens/add_new_note_page.dart';
 import 'package:notes_app/screens/note_screens/edit_note_page.dart';
 import 'package:notes_app/screens/home_page.dart';
@@ -11,6 +12,7 @@ import 'package:notes_app/screens/note_screens/note_detail_page.dart';
 
 class AppRoute {
   static const String SPLASH = '/';
+  static const String DASHBOARD = '/dashboard';
   static const String HOME = '/home';
 
   static const String ADD_NEW_NOTE = '/add_new_note';
@@ -31,6 +33,7 @@ class AppRoute {
 
   static var getRoutes = [
     //GetPage(name: AppRoute.SPLASH, page: () => Login()),
+    GetPage(name: AppRoute.DASHBOARD, page: () => DashboardScreen()),
     GetPage(name: AppRoute.HOME, page: () => HomePage()),
     GetPage(name: AppRoute.ADD_NEW_NOTE, page: () => AddNewNotePage()),
     GetPage(name: AppRoute.EDIT_NOTE, page: () {
