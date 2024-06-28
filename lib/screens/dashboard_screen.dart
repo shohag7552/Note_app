@@ -14,7 +14,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   List<Widget> screens = [
     HomePage(),
     SizedBox(),
-    AuthScreen(),
+    AddUser(),
+    // AuthScreen(),
   ];
   PageController? _pageController;
 

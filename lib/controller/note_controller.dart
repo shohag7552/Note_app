@@ -23,23 +23,29 @@ class NoteController extends GetxController implements GetxService{
     return notes.isEmpty;
   }
 
-  void addNoteToDatabase({required String title, required String content, String? color}) async {
-    // String title = titleController.text;
-    // String content = contentController.text;
-    Note note = Note(
-      title: title,
-      content: content,
-      dateTimeEdited: DateFormat("dd-MM-yyyy hh:mm a").format(DateTime.now()),
-      dateTimeCreated: DateFormat("dd-MM-yyyy hh:mm a").format(DateTime.now()),
-      isFavorite: 0,
-      color: color,
-    );
+  Future<void> addNoteToDatabase({required String title, required String content, String? color, Note? cloudNote}) async {
+    Note note;
+    if(cloudNote != null) {
+      note = cloudNote;
+    } else {
+      note = Note(
+        title: title,
+        content: content,
+        dateTimeEdited: DateFormat("dd-MM-yyyy hh:mm a").format(DateTime.now()),
+        dateTimeCreated: DateFormat("dd-MM-yyyy hh:mm a").format(DateTime.now()),
+        isFavorite: 0,
+        color: color,
+      );
+    }
+
     print('=====> ${note.toJson()}');
     await DatabaseHelper.instance.addNote(note);
     titleController.text = "";
     contentController.text = "";
-    getAllNotes();
-    Get.back();
+    if(cloudNote == null) {
+      getAllNotes();
+      Get.toNamed(AppRoute.DASHBOARD);
+    }
   }
 
   void updateNote(Note note) async {
@@ -47,7 +53,7 @@ class NoteController extends GetxController implements GetxService{
     titleController.text = "";
     contentController.text = "";
     getAllNotes();
-    Get.offAllNamed(AppRoute.HOME);
+    Get.offAllNamed(AppRoute.DASHBOARD);
   }
 
   void deleteNote(int id) async {
@@ -74,7 +80,7 @@ class NoteController extends GetxController implements GetxService{
     getAllNotes();
   }
 
-  void getAllNotes() async {
+  Future<void> getAllNotes() async {
     notes = await DatabaseHelper.instance.getNoteList();
     for (var note in notes) {
       print('===${notes.indexOf(note)}==> ${note.toJson()}');
