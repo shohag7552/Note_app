@@ -1,11 +1,11 @@
 class Note {
   int? id;
   String? title;
-  String? content;
   String? dateTimeEdited;
   String? dateTimeCreated;
   int? isFavorite;
   String? color;
+  String? content;
 
   Note({
     this.id,

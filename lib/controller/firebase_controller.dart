@@ -16,6 +16,8 @@ class FirebaseController extends GetxController implements GetxService{
       await Get.find<NoteController>().getAllNotes();
     }
     ///Delete the existing notes for the user.
+
+
     // await _firestore
     //     .collection('users')
     //     .doc(userId)
@@ -59,11 +61,13 @@ class FirebaseController extends GetxController implements GetxService{
   }
 
   Future<void> getNotesFromCloud() async {
+    await Get.find<NoteController>().deleteAllNotes();
     List<Note> notes = await _getNotes();
     for(Note note in notes) {
-      print('=======note getting form cloud');
       await Get.find<NoteController>().addNoteToDatabase(title: '', content: '', color: '', cloudNote: note);
     }
+
+    Get.find<NoteController>().getAllNotes();
   }
 
   Future<List<Note>> _getNotes() async {

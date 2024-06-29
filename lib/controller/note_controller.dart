@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -26,7 +28,15 @@ class NoteController extends GetxController implements GetxService{
   Future<void> addNoteToDatabase({required String title, required String content, String? color, Note? cloudNote}) async {
     Note note;
     if(cloudNote != null) {
-      note = cloudNote;
+      note = Note(
+        // id: int.parse(cloudNote.id.toString()),
+        title: cloudNote.title,
+        content: cloudNote.content.toString(),
+        dateTimeEdited: cloudNote.dateTimeEdited,
+        dateTimeCreated: cloudNote.dateTimeCreated,
+        isFavorite: int.parse(cloudNote.isFavorite.toString()),
+        color: cloudNote.color,
+      );
     } else {
       note = Note(
         title: title,
@@ -75,7 +85,7 @@ class NoteController extends GetxController implements GetxService{
     getAllNotes();
   }
 
-  void deleteAllNotes() async {
+  Future<void> deleteAllNotes() async {
     await DatabaseHelper.instance.deleteAllNotes();
     getAllNotes();
   }
