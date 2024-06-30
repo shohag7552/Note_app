@@ -36,6 +36,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:notes_app/controller/firebase_controller.dart';
 import 'package:uuid/uuid.dart';
 
@@ -44,77 +45,16 @@ class AddUser extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    String userId = 'this_is_user_id';
-    final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-    // // Create a CollectionReference called users that references the firestore collection
-    // CollectionReference users = FirebaseFirestore.instance.collection('users');
-    //
-    // Future<bool> addUser() async {
-    //   // Call the user's CollectionReference to add a new user
-    //   //  users
-    //   //     .add({
-    //   //   'full_name': 'fullName', // John Doe
-    //   //   'company': 'company', // Stokes and Sons
-    //   //   'age': 'age' // 42
-    //   // })
-    //   //     .then((value) => print("User Added"))
-    //   //     .catchError((error) => print("Failed to add user: $error"));
-    //
-    //   try {
-    //     var uuid = const Uuid().v4();
-    //     print('===ss====> $uuid');
-    //     DateTime data = new DateTime.now();
-    //     await _firestore
-    //         .collection('users')
-    //         .doc(userId)
-    //         .collection('notes')
-    //         .doc(uuid)
-    //         .set({
-    //       'id': uuid,
-    //       'subtitle': 'subtitle',
-    //       'isDon': false,
-    //       'time': data,
-    //       'title': 'title',
-    //     });
-    //     return true;
-    //   } catch (e) {
-    //     print(e);
-    //     return true;
-    //   }
-    // }
-    //
-    Future<bool> getUser() async {
-      // Call the user's CollectionReference to add a new user
-      //  users
-      //     .add({
-      //   'full_name': 'fullName', // John Doe
-      //   'company': 'company', // Stokes and Sons
-      //   'age': 'age' // 42
-      // })
-      //     .then((value) => print("User Added"))
-      //     .catchError((error) => print("Failed to add user: $error"));
+    const List<String> scopes = <String>[
+      'email',
+      'https://www.googleapis.com/auth/contacts.readonly',
+    ];
 
-      try {
-        // var uuid = const Uuid().v4();
-        // print('===ss====> $uuid');
-        // DateTime data = new DateTime.now();
-        await _firestore
-            .collection('users')
-            .doc(userId)
-            .collection('notes')
-            .get()
-            .then((QuerySnapshot<Map<String, dynamic>> value){
-              print('========ff====> ${value.docs.map((doc) {
-                final data = doc.data() as Map<String, dynamic>;
-                print('=========ssss====> $data');
-              })}');
-        });
-        return true;
-      } catch (e) {
-        print(e);
-        return true;
-      }
-    }
+    GoogleSignIn _googleSignIn = GoogleSignIn(
+      // Optional clientId
+      // clientId: 'your-client_id.apps.googleusercontent.com',
+      scopes: scopes,
+    );
 
     return Scaffold(
       body: Center(
@@ -125,7 +65,7 @@ class AddUser extends StatelessWidget {
               onPressed: () {
                 Get.find<FirebaseController>().uploadAllNotes();
               },
-              child: Text(
+              child: const Text(
                 "Add User",
               ),
             ),
@@ -135,8 +75,27 @@ class AddUser extends StatelessWidget {
               onPressed: (){
                 Get.find<FirebaseController>().getNotesFromCloud();
               },
-              child: Text(
+              child: const Text(
                 "get User",
+              ),
+            ),
+
+            TextButton(
+              // onPressed: getUser,
+              onPressed: () async {
+                try {
+                  await _googleSignIn.signIn();
+                } catch (error) {
+                  print(error);
+                }
+                // isAuthorized = await _googleSignIn.canAccessScopes(scopes);
+                GoogleSignInAccount googleAccount = (await _googleSignIn.signIn())!;
+                GoogleSignInAuthentication auth = await googleAccount.authentication;
+
+                print('====google data : ${googleAccount.email} // ${googleAccount.id} // ${googleAccount.displayName}');
+              },
+              child: const Text(
+                "google sign in",
               ),
             ),
           ],

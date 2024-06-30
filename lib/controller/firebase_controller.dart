@@ -17,6 +17,25 @@ class FirebaseController extends GetxController implements GetxService{
     }
     ///Delete the existing notes for the user.
 
+    final docRef = _firestore.collection("users").doc("userId");
+
+// Remove the 'capital' field from the document
+//     final updates = <String, dynamic>{
+//       "capital": FieldValue.delete(),
+//     };
+//
+//     docRef.update(updates);
+
+
+    // await _firestore
+    //     .collection('users')
+    //     .doc(userId)
+    //     .collection('notes');
+
+    // docRef.delete().then(
+    //       (doc) => print("Document deleted"),
+    //   onError: (e) => print("Error updating document $e"),
+    // );
 
     // await _firestore
     //     .collection('users')

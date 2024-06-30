@@ -34,7 +34,7 @@ class NoteController extends GetxController implements GetxService{
         content: cloudNote.content.toString(),
         dateTimeEdited: cloudNote.dateTimeEdited,
         dateTimeCreated: cloudNote.dateTimeCreated,
-        isFavorite: int.parse(cloudNote.isFavorite.toString()),
+        isFavorite: cloudNote.isFavorite,
         color: cloudNote.color,
       );
     } else {
