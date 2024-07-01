@@ -37,6 +37,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:notes_app/controller/auth_controller.dart';
 import 'package:notes_app/controller/firebase_controller.dart';
 import 'package:uuid/uuid.dart';
 
@@ -45,60 +46,55 @@ class AddUser extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const List<String> scopes = <String>[
-      'email',
-      'https://www.googleapis.com/auth/contacts.readonly',
-    ];
-
-    GoogleSignIn _googleSignIn = GoogleSignIn(
-      // Optional clientId
-      // clientId: 'your-client_id.apps.googleusercontent.com',
-      scopes: scopes,
-    );
+    GoogleSignIn googleSignIn = GoogleSignIn();
 
     return Scaffold(
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            TextButton(
-              onPressed: () {
-                Get.find<FirebaseController>().uploadAllNotes();
-              },
-              child: const Text(
-                "Add User",
-              ),
-            ),
+        child: GetBuilder<AuthController>(
+          builder: (authController) {
+            return Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                TextButton(
+                  onPressed: () {
+                    Get.find<FirebaseController>().uploadAllNotes();
+                  },
+                  child: const Text(
+                    "Add User",
+                  ),
+                ),
 
-            TextButton(
-              // onPressed: getUser,
-              onPressed: (){
-                Get.find<FirebaseController>().getNotesFromCloud();
-              },
-              child: const Text(
-                "get User",
-              ),
-            ),
+                TextButton(
+                  onPressed: (){
+                    Get.find<FirebaseController>().getNotesFromCloud();
+                  },
+                  child: const Text(
+                    "get User",
+                  ),
+                ),
 
-            TextButton(
-              // onPressed: getUser,
-              onPressed: () async {
-                try {
-                  await _googleSignIn.signIn();
-                } catch (error) {
-                  print(error);
-                }
-                // isAuthorized = await _googleSignIn.canAccessScopes(scopes);
-                GoogleSignInAccount googleAccount = (await _googleSignIn.signIn())!;
-                GoogleSignInAuthentication auth = await googleAccount.authentication;
+               authController.getUserToken() == null ? TextButton(
+                  onPressed: () async {
+                    authController.googleLogin(googleSignIn);
+                  },
+                  child: const Text(
+                    "google sign in",
+                    style: TextStyle(color: Colors.green),
+                  ),
+                ) : const SizedBox(),
 
-                print('====google data : ${googleAccount.email} // ${googleAccount.id} // ${googleAccount.displayName}');
-              },
-              child: const Text(
-                "google sign in",
-              ),
-            ),
-          ],
+                authController.getUserToken() != null ? TextButton(
+                  onPressed: () async {
+                    authController.googleLogOut(googleSignIn);
+                  },
+                  child: const Text(
+                    "google sign out",
+                    style: TextStyle(color: Colors.red),
+                  ),
+                ) : const SizedBox(),
+              ],
+            );
+          }
         ),
       ),
     );

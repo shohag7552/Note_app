@@ -3,15 +3,21 @@ import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:notes_app/controller/auth_controller.dart';
 import 'package:notes_app/controller/note_controller.dart';
 import 'package:notes_app/model/note_model.dart';
 import 'package:uuid/uuid.dart';
 
 class FirebaseController extends GetxController implements GetxService{
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  String userId = 'this_is_user_id';
+
 
   Future<void> uploadAllNotes() async {
+    String? userId = Get.find<AuthController>().getUserToken();
+    if(userId == null) {
+      print('you are not authenticated');
+      return;
+    }
     if(Get.find<NoteController>().notes.isEmpty) {
       await Get.find<NoteController>().getAllNotes();
     }
@@ -45,11 +51,11 @@ class FirebaseController extends GetxController implements GetxService{
     //     .catchError((error) => print("Failed to delete user: $error"));
 
     for(Note note in Get.find<NoteController>().notes) {
-      await _addNote(note);
+      await _addNote(note, userId);
     }
   }
 
-  Future<bool> _addNote(Note note) async {
+  Future<bool> _addNote(Note note, String? userId) async {
     // Call the user's CollectionReference to add a new user
     //  users
     //     .add({
@@ -80,8 +86,13 @@ class FirebaseController extends GetxController implements GetxService{
   }
 
   Future<void> getNotesFromCloud() async {
+    String? userId = Get.find<AuthController>().getUserToken();
+    if(userId == null) {
+      print('you are not authenticated');
+      return;
+    }
     await Get.find<NoteController>().deleteAllNotes();
-    List<Note> notes = await _getNotes();
+    List<Note> notes = await _getNotes(userId);
     for(Note note in notes) {
       await Get.find<NoteController>().addNoteToDatabase(title: '', content: '', color: '', cloudNote: note);
     }
@@ -89,7 +100,7 @@ class FirebaseController extends GetxController implements GetxService{
     Get.find<NoteController>().getAllNotes();
   }
 
-  Future<List<Note>> _getNotes() async {
+  Future<List<Note>> _getNotes(String? userId) async {
     List<Note> notes = [];
     try {
       await _firestore
