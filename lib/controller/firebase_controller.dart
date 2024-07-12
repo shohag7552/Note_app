@@ -1,15 +1,11 @@
-import 'dart:convert';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:notes_app/controller/auth_controller.dart';
 import 'package:notes_app/controller/note_controller.dart';
 import 'package:notes_app/model/note_model.dart';
-import 'package:uuid/uuid.dart';
 
 class FirebaseController extends GetxController implements GetxService{
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseFirestore _fireStore = FirebaseFirestore.instance;
 
 
   Future<void> uploadAllNotes() async {
@@ -21,34 +17,6 @@ class FirebaseController extends GetxController implements GetxService{
     if(Get.find<NoteController>().notes.isEmpty) {
       await Get.find<NoteController>().getAllNotes();
     }
-    ///Delete the existing notes for the user.
-
-    final docRef = _firestore.collection("users").doc("userId");
-
-// Remove the 'capital' field from the document
-//     final updates = <String, dynamic>{
-//       "capital": FieldValue.delete(),
-//     };
-//
-//     docRef.update(updates);
-
-
-    // await _firestore
-    //     .collection('users')
-    //     .doc(userId)
-    //     .collection('notes');
-
-    // docRef.delete().then(
-    //       (doc) => print("Document deleted"),
-    //   onError: (e) => print("Error updating document $e"),
-    // );
-
-    // await _firestore
-    //     .collection('users')
-    //     .doc(userId)
-    //     .delete()
-    //     .then((value) => print("User Deleted"))
-    //     .catchError((error) => print("Failed to delete user: $error"));
 
     for(Note note in Get.find<NoteController>().notes) {
       await _addNote(note, userId);
@@ -56,25 +24,17 @@ class FirebaseController extends GetxController implements GetxService{
   }
 
   Future<bool> _addNote(Note note, String? userId) async {
-    // Call the user's CollectionReference to add a new user
-    //  users
-    //     .add({
-    //   'full_name': 'fullName', // John Doe
-    //   'company': 'company', // Stokes and Sons
-    //   'age': 'age' // 42
-    // })
-    //     .then((value) => print("User Added"))
-    //     .catchError((error) => print("Failed to add user: $error"));
 
     try {
+      CollectionReference users = _fireStore.collection('users').doc(userId).collection('notes');
+
+      ///delete existing one.
+      await _deleteDuplicateNote(users, note.id.toString());
 
       ///Added the notes for the user
-      var uuid = const Uuid().v4();
-      await _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('notes')
-          .doc(uuid)
+      // var uuid = const Uuid().v4();
+      await users
+          .doc(note.id.toString())
           .set(note.toJson())
           .then((value) => print("note added"))
           .catchError((error) => print("Failed to add notes: $error"));
@@ -83,6 +43,21 @@ class FirebaseController extends GetxController implements GetxService{
       print(e);
       return false;
     }
+  }
+
+  Future<void> _deleteDuplicateNote(CollectionReference users, String noteId) {
+    WriteBatch batch = FirebaseFirestore.instance.batch();
+
+    return users.get().then((querySnapshot) {
+      for (var document in querySnapshot.docs) {
+        if(document.id == noteId) {
+          batch.delete(document.reference);
+          print('note deleted');
+        }
+      }
+
+      return batch.commit();
+    });
   }
 
   Future<void> getNotesFromCloud() async {
@@ -103,7 +78,7 @@ class FirebaseController extends GetxController implements GetxService{
   Future<List<Note>> _getNotes(String? userId) async {
     List<Note> notes = [];
     try {
-      await _firestore
+      await _fireStore
           .collection('users')
           .doc(userId)
           .collection('notes')
@@ -111,7 +86,6 @@ class FirebaseController extends GetxController implements GetxService{
           .then((QuerySnapshot<Map<String, dynamic>> value){
 
         notes = _processNotes(value);
-        print('=====ss==s=s=s=s=s==ss=s=s= > ${jsonEncode(notes)}');
 
       });
       return notes;
