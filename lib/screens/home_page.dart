@@ -30,6 +30,16 @@ class _HomePageState extends State<HomePage> {
             title: Text("Notes", style: fontStyleLarge.copyWith(fontSize: FontSize.large)),
             backgroundColor: Colors.white,
             iconTheme: const IconThemeData(color: Colors.black),
+            leading: Builder(
+              builder: (context) {
+                return IconButton(
+                  icon: const Icon(Icons.menu),
+                  onPressed: () {
+                    Scaffold.of(context).openDrawer();
+                  },
+                );
+              },
+            ),
             actions: [
               IconButton(
                 icon: const Icon(Icons.search),
@@ -73,8 +83,62 @@ class _HomePageState extends State<HomePage> {
             ],
             systemOverlayStyle: SystemUiOverlayStyle.dark,
           ),
+          drawer: Drawer(
+            child: ListView(
+              // Important: Remove any padding from the ListView.
+              padding: EdgeInsets.zero,
+              children: [
+                const DrawerHeader(
+                  decoration: BoxDecoration(
+                    color: Colors.blue,
+                  ),
+                  child: Text('Drawer Header'),
+                ),
+                ListTile(
+                  title: const Text('Home'),
+                  // selected: _selectedIndex == 0,
+                  onTap: () {
+                    // Update the state of the app
+                    // _onItemTapped(0);
+                    // Then close the drawer
+                    Navigator.pop(context);
+                  },
+                ),
+                ListTile(
+                  title: const Text('Authentication'),
+                  // selected: _selectedIndex == 1,
+                  onTap: () {
+                    // Update the state of the app
+                    // _onItemTapped(1);
+                    // Then close the drawer
+                    Get.to(const AddUser());
+                    // Navigator.pop(context);
+                  },
+                ),
+                ListTile(
+                  title: const Text('School'),
+                  // selected: _selectedIndex == 2,
+                  onTap: () {
+                    // Update the state of the app
+                    // _onItemTapped(2);
+                    // Then close the drawer
+                    Navigator.pop(context);
+                  },
+                ),
+              ],
+            ),
+          ),
           body: GetBuilder<NoteController>(
             builder: (_) => controller.isEmpty() ? emptyNotes() : viewNotes(controller),
+          ),
+          floatingActionButton: Material(
+            child: FloatingActionButton(
+              elevation: 6,
+              onPressed: () => Get.toNamed(AppRoute.ADD_NEW_NOTE),
+              backgroundColor: Theme.of(context).primaryColor,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(500)),
+              child: Icon(Icons.add, color: Theme.of(context).cardColor),
+            ),
           ),
         );
       }

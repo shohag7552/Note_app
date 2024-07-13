@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -54,7 +52,7 @@ class NoteController extends GetxController implements GetxService{
     contentController.text = "";
     if(cloudNote == null) {
       getAllNotes();
-      Get.toNamed(AppRoute.DASHBOARD);
+      Get.toNamed(AppRoute.HOME);
     }
   }
 
@@ -63,7 +61,7 @@ class NoteController extends GetxController implements GetxService{
     titleController.text = "";
     contentController.text = "";
     getAllNotes();
-    Get.offAllNamed(AppRoute.DASHBOARD);
+    Get.offAllNamed(AppRoute.HOME);
   }
 
   void deleteNote(int id) async {
