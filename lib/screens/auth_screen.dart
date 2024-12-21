@@ -28,18 +28,14 @@
 //   }
 // }
 
-import 'dart:async';
 
 import 'package:flutter/material.dart';
 
 // Import the firebase_core and cloud_firestore plugin
-import 'package:firebase_core/firebase_core.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:notes_app/controller/auth_controller.dart';
 import 'package:notes_app/controller/firebase_controller.dart';
-import 'package:uuid/uuid.dart';
 
 class AddUser extends StatelessWidget {
   const AddUser({super.key});

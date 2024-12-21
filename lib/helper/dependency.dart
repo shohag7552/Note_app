@@ -1,5 +1,4 @@
 import 'package:get/get.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 // import 'package:google_sign_in/google_sign_in.dart';
 import 'package:notes_app/controller/auth_controller.dart';
 import 'package:notes_app/controller/firebase_controller.dart';

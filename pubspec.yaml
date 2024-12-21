@@ -50,6 +50,7 @@ dependencies:
 #  googleapis_auth: ^1.6.0
   google_sign_in: ^6.2.1
   shared_preferences: ^2.2.3
+  url_launcher_ios: ^6.3.2
 
 
 dev_dependencies:

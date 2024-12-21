@@ -12,9 +12,9 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   List<Widget> screens = [
-    HomePage(),
-    SizedBox(),
-    AddUser(),
+    const HomePage(),
+    const SizedBox(),
+    const AddUser(),
     // AuthScreen(),
   ];
   PageController? _pageController;

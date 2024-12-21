@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:notes_app/controller/note_controller.dart';
-import 'package:notes_app/helper/date_converter.dart';
 import 'package:notes_app/helper/quill_helper.dart';
 import 'package:notes_app/model/note_model.dart';
 import 'package:notes_app/routing/app_routes.dart';
-import 'package:notes_app/utils/font_size.dart';
 import 'package:notes_app/utils/padding_size.dart';
 import 'package:notes_app/utils/radius_size.dart';
 import 'package:notes_app/utils/style.dart';

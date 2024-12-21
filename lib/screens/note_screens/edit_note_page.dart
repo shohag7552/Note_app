@@ -5,7 +5,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:get/get.dart';
 import 'package:notes_app/model/note_model.dart';
-import 'package:notes_app/utils/style.dart';
 import 'package:notes_app/widgets/text_edit_widget.dart';
 
 import '../../controller/note_controller.dart';

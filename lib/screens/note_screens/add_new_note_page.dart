@@ -1,16 +1,8 @@
-import 'dart:convert';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
-import 'package:flutter_quill/flutter_quill.dart';
 import 'package:get/get.dart';
-import 'package:notes_app/utils/colors.dart';
-import 'package:notes_app/utils/font_size.dart';
-import 'package:notes_app/utils/padding_size.dart';
 import 'package:notes_app/utils/style.dart';
 import 'package:notes_app/widgets/text_edit_widget.dart';
-import 'package:notes_app/widgets/toast.dart';
 
 import '../../controller/note_controller.dart';
 
