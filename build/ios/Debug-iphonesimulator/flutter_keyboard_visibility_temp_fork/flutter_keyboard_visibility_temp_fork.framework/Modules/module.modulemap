@@ -1,0 +1,11 @@
+framework module flutter_keyboard_visibility_temp_fork {
+  umbrella header "flutter_keyboard_visibility_temp_fork-umbrella.h"
+
+  export *
+  module * { export * }
+}
+
+module flutter_keyboard_visibility_temp_fork.Swift {
+  header "flutter_keyboard_visibility_temp_fork-Swift.h"
+  requires objc
+}

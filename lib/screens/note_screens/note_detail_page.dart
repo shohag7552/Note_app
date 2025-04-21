@@ -4,11 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:get/get.dart';
-import 'package:notes_app/helper/quill_helper.dart';
-import 'package:notes_app/model/note_model.dart';
-import 'package:notes_app/routing/app_routes.dart';
-import 'package:notes_app/utils/style.dart';
-import 'package:notes_app/widgets/text_edit_widget.dart';
+import 'package:my_note_app/helper/quill_helper.dart';
+import 'package:my_note_app/model/note_model.dart';
+import 'package:my_note_app/routing/app_routes.dart';
+import 'package:my_note_app/utils/style.dart';
+import 'package:my_note_app/widgets/text_edit_widget.dart';
 
 import '../../controller/note_controller.dart';
 import '../../widgets/alert_dialog.dart';

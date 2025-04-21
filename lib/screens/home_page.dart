@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:notes_app/routing/app_routes.dart';
-import 'package:notes_app/screens/auth_screen.dart';
-import 'package:notes_app/screens/note_screens/search_screen.dart';
-import 'package:notes_app/utils/font_size.dart';
-import 'package:notes_app/utils/images.dart';
-import 'package:notes_app/utils/padding_size.dart';
-import 'package:notes_app/utils/style.dart';
-import 'package:notes_app/widgets/note_card.dart';
+import 'package:my_note_app/routing/app_routes.dart';
+import 'package:my_note_app/screens/auth_screen.dart';
+import 'package:my_note_app/screens/note_screens/search_screen.dart';
+import 'package:my_note_app/utils/font_size.dart';
+import 'package:my_note_app/utils/images.dart';
+import 'package:my_note_app/utils/padding_size.dart';
+import 'package:my_note_app/utils/style.dart';
+import 'package:my_note_app/widgets/note_card.dart';
 import '../controller/note_controller.dart';
 import '../widgets/alert_dialog.dart';
 
@@ -149,9 +149,35 @@ class _HomePageState extends State<HomePage> {
     return Scrollbar(
       child: Container(
         padding: const EdgeInsets.only(top: PaddingSize.small, right: PaddingSize.small, left: PaddingSize.small),
+        // child: ListView.builder(
+        //   itemCount: controller.notes.length,
+        //   shrinkWrap: true,
+        //   itemBuilder: (context, index) {
+        //     // return Container(
+        //     //   margin: const EdgeInsets.only(bottom: PaddingSize.small),
+        //     //   height: 150, width: double.infinity,
+        //     //   decoration: BoxDecoration(
+        //     //     color: Theme.of(context).cardColor,
+        //     //     borderRadius: BorderRadius.circular(10),
+        //     //     boxShadow: [
+        //     //       BoxShadow(
+        //     //         color: Colors.grey.withOpacity(0.2),
+        //     //         spreadRadius: 1,
+        //     //         blurRadius: 5,
+        //     //         offset: const Offset(0, 3),
+        //     //       ),
+        //     //     ],
+        //     //   ),
+        //     // );
+        //     return Padding(
+        //       padding: const EdgeInsets.only(bottom: 10),
+        //       child: NoteCart(note: controller.notes[index], index: index),
+        //     );
+        //   },
+        // ),
         child: GridView.builder(
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            childAspectRatio: 1,
+            childAspectRatio: 0.7,
             crossAxisCount: 2,
             mainAxisSpacing: 7,
             crossAxisSpacing: 7

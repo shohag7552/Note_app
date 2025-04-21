@@ -8,9 +8,7 @@ extension ColorExtension on String {
     buffer.write('ff');
     buffer.write(hexStringColor.replaceFirst("#", ""));
     return Color(int.parse(buffer.toString(), radix: 16));
-    if (hexStringColor.length == 6 || hexStringColor.length == 9) {
-
-    }
+    // if (hexStringColor.length == 6 || hexStringColor.length == 9) {}
   }
 
   convertString() {

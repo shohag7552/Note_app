@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:get/get.dart';
-import 'package:notes_app/model/note_model.dart';
-import 'package:notes_app/widgets/text_edit_widget.dart';
+import 'package:my_note_app/model/note_model.dart';
+import 'package:my_note_app/widgets/text_edit_widget.dart';
 
 import '../../controller/note_controller.dart';
 

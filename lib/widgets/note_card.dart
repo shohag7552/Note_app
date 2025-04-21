@@ -1,13 +1,16 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_quill/flutter_quill.dart';
 import 'package:get/get.dart';
-import 'package:notes_app/controller/note_controller.dart';
-import 'package:notes_app/helper/quill_helper.dart';
-import 'package:notes_app/model/note_model.dart';
-import 'package:notes_app/routing/app_routes.dart';
-import 'package:notes_app/utils/padding_size.dart';
-import 'package:notes_app/utils/radius_size.dart';
-import 'package:notes_app/utils/style.dart';
-import 'package:notes_app/widgets/alert_dialog.dart';
+import 'package:my_note_app/controller/note_controller.dart';
+import 'package:my_note_app/helper/quill_helper.dart';
+import 'package:my_note_app/model/note_model.dart';
+import 'package:my_note_app/routing/app_routes.dart';
+import 'package:my_note_app/utils/padding_size.dart';
+import 'package:my_note_app/utils/radius_size.dart';
+import 'package:my_note_app/utils/style.dart';
+import 'package:my_note_app/widgets/alert_dialog.dart';
 
 class NoteCart extends StatelessWidget {
   final Note note;
@@ -16,10 +19,16 @@ class NoteCart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final String n = Document.fromJson(jsonDecode(note.content!)).toPlainText().trim();
+    // final String n = jsonDecode(note.content!).toString();
+    // final String json = jsonEncode(_controller.document.toDelta().toJson());
+    // _controller.document = Document.fromJson(jsonDecode(json));
 
     return GestureDetector(
       onTap: () => Get.toNamed(AppRoute.getNoteDetailsPage(note)),
       onLongPress: () {
+        print('======its clicked====');
+        // _createActions(context, note);
         showDialog(context: context, builder: (context) {
           return AlertDialogWidget(
             headingText: "Are you sure you want to delete this note?",
@@ -38,6 +47,7 @@ class NoteCart extends StatelessWidget {
         children: [
           Container(
             width: double.infinity,
+            // height: 150,
             height: double.infinity,
             decoration: BoxDecoration(
               // color: '#2DCE29'.toColor(),
@@ -46,7 +56,7 @@ class NoteCart extends StatelessWidget {
               boxShadow: [BoxShadow(color: Colors.grey[200]!, blurRadius: 10, offset: const Offset(2, 4))]
             ),
             padding: const EdgeInsets.all(PaddingSize.medium),
-            child: Text(QuillHelper.convertStringDocumentToString(note.content!)),
+            child: Text(n),
             // child: Column(
             //   mainAxisSize: MainAxisSize.min,
             //   crossAxisAlignment: CrossAxisAlignment.start,
@@ -106,6 +116,7 @@ class NoteCart extends StatelessWidget {
     return PopupMenuButton(
       elevation: 6,
       padding: EdgeInsets.zero,
+      // child: SizedBox(),
       onSelected: (value) async {
         switch (value) {
           case 0:

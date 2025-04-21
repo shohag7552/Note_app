@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:notes_app/helper/date_converter.dart';
-import 'package:notes_app/helper/quill_helper.dart';
-import 'package:notes_app/routing/app_routes.dart';
-import 'package:notes_app/utils/font_size.dart';
-import 'package:notes_app/utils/padding_size.dart';
-import 'package:notes_app/utils/radius_size.dart';
-import 'package:notes_app/utils/style.dart';
+import 'package:my_note_app/helper/date_converter.dart';
+import 'package:my_note_app/helper/quill_helper.dart';
+import 'package:my_note_app/routing/app_routes.dart';
+import 'package:my_note_app/utils/font_size.dart';
+import 'package:my_note_app/utils/padding_size.dart';
+import 'package:my_note_app/utils/radius_size.dart';
+import 'package:my_note_app/utils/style.dart';
 import '../../controller/note_controller.dart';
 
 class Search extends SearchDelegate {

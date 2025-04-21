@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:notes_app/routing/app_routes.dart';
-import 'package:notes_app/screens/auth_screen.dart';
-import 'package:notes_app/screens/home_page.dart';
+import 'package:my_note_app/routing/app_routes.dart';
+import 'package:my_note_app/screens/auth_screen.dart';
+import 'package:my_note_app/screens/home_page.dart';
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 

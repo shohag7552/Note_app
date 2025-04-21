@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:notes_app/model/note_model.dart';
+import 'package:my_note_app/model/note_model.dart';
 import 'package:share/share.dart';
 
 import '../database_helper/database_helper.dart';
@@ -52,7 +52,7 @@ class NoteController extends GetxController implements GetxService{
     contentController.text = "";
     if(cloudNote == null) {
       getAllNotes();
-      Get.toNamed(AppRoute.HOME);
+      Get.offAllNamed(AppRoute.HOME);
     }
   }
 

@@ -1,0 +1,11 @@
+framework module quill_native_bridge_ios {
+  umbrella header "quill_native_bridge_ios-umbrella.h"
+
+  export *
+  module * { export * }
+}
+
+module quill_native_bridge_ios.Swift {
+  header "quill_native_bridge_ios-Swift.h"
+  requires objc
+}

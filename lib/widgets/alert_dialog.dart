@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:notes_app/utils/font_size.dart';
-import 'package:notes_app/utils/style.dart';
+import 'package:my_note_app/utils/font_size.dart';
+import 'package:my_note_app/utils/style.dart';
 
 class AlertDialogWidget extends StatelessWidget {
   final String headingText;
