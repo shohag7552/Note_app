@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:my_note_app/model/note_model.dart';
-import 'package:share/share.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../database_helper/database_helper.dart';
 import '../routing/app_routes.dart';
@@ -97,7 +97,10 @@ class NoteController extends GetxController implements GetxService{
   }
 
   void shareNote(String content) {
-    Share.share(content);
+    // Share.share(content);
+    SharePlus.instance.share(
+        ShareParams(text: 'check out my website https://example.com')
+    );
   }
 
 
