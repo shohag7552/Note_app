@@ -2,6 +2,12 @@
   "configVersion": 2,
   "packages": [
     {
+      "name": "_discoveryapis_commons",
+      "rootUri": "file:///Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/_discoveryapis_commons-1.0.7",
+      "packageUri": "lib/",
+      "languageVersion": "3.4"
+    },
+    {
       "name": "args",
       "rootUri": "file:///Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/args-2.7.0",
       "packageUri": "lib/",
@@ -246,6 +252,18 @@
       "rootUri": "file:///Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/google_sign_in_web-0.12.4+4",
       "packageUri": "lib/",
       "languageVersion": "3.4"
+    },
+    {
+      "name": "googleapis",
+      "rootUri": "file:///Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/googleapis-14.0.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.6"
+    },
+    {
+      "name": "googleapis_auth",
+      "rootUri": "file:///Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/googleapis_auth-2.0.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.6"
     },
     {
       "name": "html",
@@ -692,7 +710,7 @@
       "languageVersion": "3.7"
     }
   ],
-  "generated": "2025-05-01T13:48:47.696058Z",
+  "generated": "2025-05-04T16:59:00.781053Z",
   "generator": "pub",
   "generatorVersion": "3.7.2",
   "flutterRoot": "file:///Users/mehedihasanshohag/development/flutter",

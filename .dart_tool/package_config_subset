@@ -1,3 +1,7 @@
+_discoveryapis_commons
+3.4
+file:///Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/_discoveryapis_commons-1.0.7/
+file:///Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/_discoveryapis_commons-1.0.7/lib/
 args
 3.3
 file:///Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/args-2.7.0/
@@ -146,6 +150,14 @@ google_sign_in_web
 3.4
 file:///Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/google_sign_in_web-0.12.4+4/
 file:///Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/google_sign_in_web-0.12.4+4/lib/
+googleapis
+3.6
+file:///Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/googleapis-14.0.0/
+file:///Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/googleapis-14.0.0/lib/
+googleapis_auth
+3.6
+file:///Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/googleapis_auth-2.0.0/
+file:///Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/googleapis_auth-2.0.0/lib/
 html
 3.2
 file:///Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/html-0.15.5+1/
