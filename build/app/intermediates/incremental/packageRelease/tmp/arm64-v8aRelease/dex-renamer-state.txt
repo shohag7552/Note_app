@@ -1,4 +1,0 @@
-#Mon May 05 00:19:56 BDT 2025
-base.0=/Users/mehedihasanshohag/Small projects/my_note_app/build/app/intermediates/dex/release/minifyReleaseWithR8/classes.dex
-path.0=classes.dex
-renamed.0=classes.dex
