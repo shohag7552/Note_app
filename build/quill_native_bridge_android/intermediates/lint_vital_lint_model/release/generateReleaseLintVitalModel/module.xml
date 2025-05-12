@@ -1,0 +1,19 @@
+<lint-module
+    format="1"
+    dir="/Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/quill_native_bridge_android-0.0.1+2/android"
+    name=":quill_native_bridge_android"
+    type="LIBRARY"
+    maven="dev.flutterquill.quill_native_bridge:quill_native_bridge_android:1.0-SNAPSHOT"
+    agpVersion="8.7.0"
+    buildFolder="/Users/mehedihasanshohag/Small projects/my_note_app/build/quill_native_bridge_android"
+    bootClassPath="/Users/mehedihasanshohag/Library/Android/sdk/platforms/android-34/android.jar:/Users/mehedihasanshohag/Library/Android/sdk/build-tools/34.0.0/core-lambda-stubs.jar"
+    javaSourceLevel="11"
+    compileTarget="android-34"
+    neverShrinking="true">
+  <lintOptions
+      abortOnError="true"
+      absolutePaths="true"
+      checkReleaseBuilds="true"
+      explainIssues="true"/>
+  <variant name="release"/>
+</lint-module>

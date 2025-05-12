@@ -46,7 +46,7 @@
 		</data>
 		<key>Frameworks/App.framework/App</key>
 		<data>
-		SW/B5NaNW5bApVpMHkBXGnP179o=
+		cUefx+sWNqKf5PAb6AFWLk6ZaAk=
 		</data>
 		<key>Frameworks/App.framework/Info.plist</key>
 		<data>
@@ -54,7 +54,7 @@
 		</data>
 		<key>Frameworks/App.framework/_CodeSignature/CodeResources</key>
 		<data>
-		wsEiwtINHfB3OFmclDS2ehJkMbQ=
+		gY/kTf/UpIRmb4ET2GWKUZpXJuw=
 		</data>
 		<key>Frameworks/App.framework/flutter_assets/AssetManifest.bin</key>
 		<data>
@@ -70,7 +70,7 @@
 		</data>
 		<key>Frameworks/App.framework/flutter_assets/NOTICES.Z</key>
 		<data>
-		gp5ns9TeNNcQpK6p2gNDM+/TehE=
+		M0b7wveCE470svxWl1snauSDKOM=
 		</data>
 		<key>Frameworks/App.framework/flutter_assets/NativeAssetsManifest.json</key>
 		<data>
@@ -90,7 +90,7 @@
 		</data>
 		<key>Frameworks/App.framework/flutter_assets/kernel_blob.bin</key>
 		<data>
-		RaeXA7/9cGdb7s4nU4nAfSXlvVU=
+		yzpspq2wYebbgGjnarIEoxeRMoc=
 		</data>
 		<key>Frameworks/App.framework/flutter_assets/packages/cupertino_icons/assets/CupertinoIcons.ttf</key>
 		<data>
@@ -698,6 +698,26 @@
 		<data>
 		/LX0ZlwxwIAIhjZaDB8EiH5KpXA=
 		</data>
+		<key>Frameworks/local_auth_darwin.framework/Info.plist</key>
+		<data>
+		Z/3Iv7/cIDgv13PFa4UtbhdgYpU=
+		</data>
+		<key>Frameworks/local_auth_darwin.framework/_CodeSignature/CodeResources</key>
+		<data>
+		By3gBKZt0vjqL0r+v8asJ1dVgQY=
+		</data>
+		<key>Frameworks/local_auth_darwin.framework/local_auth_darwin</key>
+		<data>
+		SJSdgvuNSd0bFfDL/ZvXqlyaoE8=
+		</data>
+		<key>Frameworks/local_auth_darwin.framework/local_auth_darwin_privacy.bundle/Info.plist</key>
+		<data>
+		j+eF7qfkoDEaDTSW2j1ePb1sJ2E=
+		</data>
+		<key>Frameworks/local_auth_darwin.framework/local_auth_darwin_privacy.bundle/PrivacyInfo.xcprivacy</key>
+		<data>
+		/LX0ZlwxwIAIhjZaDB8EiH5KpXA=
+		</data>
 		<key>Frameworks/path_provider_foundation.framework/Info.plist</key>
 		<data>
 		81p1tH2XSgNvXSY/ZTNZVB69Fs0=
@@ -832,7 +852,7 @@
 		</data>
 		<key>Info.plist</key>
 		<data>
-		Xc57tq1QCZSNi7Xfs8UjeRRD5GA=
+		rt1g0Pp6yYG8OtiTviOdIr8a7pk=
 		</data>
 		<key>PkgInfo</key>
 		<data>
@@ -840,7 +860,7 @@
 		</data>
 		<key>Runner.debug.dylib</key>
 		<data>
-		d9R189N9b0UAs/e6xjsNlk9CyKM=
+		fsQnzgey0p1oRcMUR3f5j6suMSs=
 		</data>
 		<key>__preview.dylib</key>
 		<data>
@@ -931,7 +951,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			hQfC19STMyKQvl7/HoWa7uJ/6nZeJQCaMHVgRxQlLjk=
+			Dh+19tLyRx0dxzevCsl9M5kbJUXB7ys311+sYD2QoFA=
 			</data>
 		</dict>
 		<key>Frameworks/App.framework/Info.plist</key>
@@ -945,7 +965,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			ypH/NPv/jyzbTjMriVWRTzQV/eK28S2sza6/6Y4PcXI=
+			aJIqBsx67t5kIferYFBMfho5APZhgMOF33cUkCUaEcY=
 			</data>
 		</dict>
 		<key>Frameworks/App.framework/flutter_assets/AssetManifest.bin</key>
@@ -973,7 +993,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			FoKadsGqo6f61ZCY4uMZD1/vQKN/n2fnsld31DCqTIY=
+			cqRGv04K0lyUdTCOSgU0J/g7oYcrazmjyhW8eDVbmWo=
 			</data>
 		</dict>
 		<key>Frameworks/App.framework/flutter_assets/NativeAssetsManifest.json</key>
@@ -1008,7 +1028,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			MfgzTENoFmmwF6v/wGvTATKUkgLOsEAE+8DbWQEEFaA=
+			dQPpqlNCprd+d40c5Tdv94HagpUMZm5c2ag2QyfpKGk=
 			</data>
 		</dict>
 		<key>Frameworks/App.framework/flutter_assets/packages/cupertino_icons/assets/CupertinoIcons.ttf</key>
@@ -1815,6 +1835,41 @@
 			bS2g2NkwIn1CjB2TY7CtbjoS4sm2jFzilxWKdBL8jDE=
 			</data>
 		</dict>
+		<key>Frameworks/local_auth_darwin.framework/Info.plist</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			FV7WmreLE0Q0YTT/R+UVY09N3claCZZ7cdXY3Jbc0mM=
+			</data>
+		</dict>
+		<key>Frameworks/local_auth_darwin.framework/_CodeSignature/CodeResources</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			w2gHCH0Fn+2J5wx0pbvM+XoVP/AuuTboq7CbvuYXgNY=
+			</data>
+		</dict>
+		<key>Frameworks/local_auth_darwin.framework/local_auth_darwin</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			5zJpBId33+68kctFN8lE2TJ6Mzlal6KaB1GVq1R1K+Y=
+			</data>
+		</dict>
+		<key>Frameworks/local_auth_darwin.framework/local_auth_darwin_privacy.bundle/Info.plist</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			PO+HsEf0c4omG8EyG8eOazhDoalneVIbVD2VPjL96T4=
+			</data>
+		</dict>
+		<key>Frameworks/local_auth_darwin.framework/local_auth_darwin_privacy.bundle/PrivacyInfo.xcprivacy</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			bS2g2NkwIn1CjB2TY7CtbjoS4sm2jFzilxWKdBL8jDE=
+			</data>
+		</dict>
 		<key>Frameworks/path_provider_foundation.framework/Info.plist</key>
 		<dict>
 			<key>hash2</key>
@@ -2050,7 +2105,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			QYGSAsYZWuxgQ1VigOKjet510fJky32th0AvsvyPyN0=
+			CGEG24HDS8KiNU/FVvYN8IMzx5dib7dR4npaupVKWdI=
 			</data>
 		</dict>
 		<key>__preview.dylib</key>

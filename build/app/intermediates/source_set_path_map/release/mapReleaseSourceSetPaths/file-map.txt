@@ -1,0 +1,59 @@
+com.example.my_note_app-jetified-lifecycle-runtime-ktx-2.7.0-0 /Users/mehedihasanshohag/.gradle/caches/8.9/transforms/1e4f3732045e6b96df345d50db906d8d/transformed/jetified-lifecycle-runtime-ktx-2.7.0/res
+com.example.my_note_app-jetified-savedstate-ktx-1.2.1-1 /Users/mehedihasanshohag/.gradle/caches/8.9/transforms/2428ffae1e87fdbf6f7ad3ed3ea9e6af/transformed/jetified-savedstate-ktx-1.2.1/res
+com.example.my_note_app-jetified-profileinstaller-1.3.1-2 /Users/mehedihasanshohag/.gradle/caches/8.9/transforms/2a42408294d82609de5815d4bafe1d72/transformed/jetified-profileinstaller-1.3.1/res
+com.example.my_note_app-jetified-tracing-1.2.0-3 /Users/mehedihasanshohag/.gradle/caches/8.9/transforms/2aefb758ccc1573ffabf736c8f7e75de/transformed/jetified-tracing-1.2.0/res
+com.example.my_note_app-fragment-1.7.1-4 /Users/mehedihasanshohag/.gradle/caches/8.9/transforms/30e53f9586371c3ebcf5e8cd2db45efd/transformed/fragment-1.7.1/res
+com.example.my_note_app-recyclerview-1.0.0-5 /Users/mehedihasanshohag/.gradle/caches/8.9/transforms/33da0337839881de40fa0efbcf357f22/transformed/recyclerview-1.0.0/res
+com.example.my_note_app-jetified-annotation-experimental-1.4.0-6 /Users/mehedihasanshohag/.gradle/caches/8.9/transforms/38c362ab153357c10994349315e409e5/transformed/jetified-annotation-experimental-1.4.0/res
+com.example.my_note_app-slidingpanelayout-1.2.0-7 /Users/mehedihasanshohag/.gradle/caches/8.9/transforms/3fa5dbf18aef4211acf1b59d561f9be1/transformed/slidingpanelayout-1.2.0/res
+com.example.my_note_app-jetified-play-services-basement-18.2.0-8 /Users/mehedihasanshohag/.gradle/caches/8.9/transforms/4b876e75e4a4b3b851dd0580c4627948/transformed/jetified-play-services-basement-18.2.0/res
+com.example.my_note_app-lifecycle-livedata-core-2.7.0-9 /Users/mehedihasanshohag/.gradle/caches/8.9/transforms/4eb1cc1df3d2ab86699cfb5e8a4cd8f1/transformed/lifecycle-livedata-core-2.7.0/res
+com.example.my_note_app-jetified-lifecycle-process-2.7.0-10 /Users/mehedihasanshohag/.gradle/caches/8.9/transforms/54a6cf6b466238d6d436a0a915f13f2f/transformed/jetified-lifecycle-process-2.7.0/res
+com.example.my_note_app-jetified-play-services-auth-21.0.0-11 /Users/mehedihasanshohag/.gradle/caches/8.9/transforms/55f1005d7e6fb7937e2ddad3c99db092/transformed/jetified-play-services-auth-21.0.0/res
+com.example.my_note_app-jetified-window-1.2.0-12 /Users/mehedihasanshohag/.gradle/caches/8.9/transforms/5634259c0af1587d404b3176bd1596e6/transformed/jetified-window-1.2.0/res
+com.example.my_note_app-jetified-datastore-preferences-release-13 /Users/mehedihasanshohag/.gradle/caches/8.9/transforms/5e67c421b6556e807ca94b1a0a8a33f1/transformed/jetified-datastore-preferences-release/res
+com.example.my_note_app-jetified-appcompat-resources-1.2.0-14 /Users/mehedihasanshohag/.gradle/caches/8.9/transforms/5eac1e679bdfb35361732b053acbbc14/transformed/jetified-appcompat-resources-1.2.0/res
+com.example.my_note_app-appcompat-1.2.0-15 /Users/mehedihasanshohag/.gradle/caches/8.9/transforms/65aa9d988c8246055c93e41b999d1174/transformed/appcompat-1.2.0/res
+com.example.my_note_app-jetified-startup-runtime-1.1.1-16 /Users/mehedihasanshohag/.gradle/caches/8.9/transforms/6864d9a1a1bbd7471fc2a389a742a3a8/transformed/jetified-startup-runtime-1.1.1/res
+com.example.my_note_app-jetified-window-java-1.2.0-17 /Users/mehedihasanshohag/.gradle/caches/8.9/transforms/6a7cc9731ba8f1040c51d9e679f16065/transformed/jetified-window-java-1.2.0/res
+com.example.my_note_app-jetified-activity-1.8.1-18 /Users/mehedihasanshohag/.gradle/caches/8.9/transforms/7cdf41ea91e2869c595f7b1c69a5d758/transformed/jetified-activity-1.8.1/res
+com.example.my_note_app-core-runtime-2.2.0-19 /Users/mehedihasanshohag/.gradle/caches/8.9/transforms/85f3458a8e3a3043aa54e9885dcecbae/transformed/core-runtime-2.2.0/res
+com.example.my_note_app-jetified-fragment-ktx-1.7.1-20 /Users/mehedihasanshohag/.gradle/caches/8.9/transforms/89dff872ff11b25b3fe6e4d6ac2f2dea/transformed/jetified-fragment-ktx-1.7.1/res
+com.example.my_note_app-jetified-lifecycle-viewmodel-ktx-2.7.0-21 /Users/mehedihasanshohag/.gradle/caches/8.9/transforms/940f7cabdbf01e622acf26d5f2c21b91/transformed/jetified-lifecycle-viewmodel-ktx-2.7.0/res
+com.example.my_note_app-core-1.13.1-22 /Users/mehedihasanshohag/.gradle/caches/8.9/transforms/a8035354cad8d7497540b65a96ad765d/transformed/core-1.13.1/res
+com.example.my_note_app-jetified-core-1.0.0-23 /Users/mehedihasanshohag/.gradle/caches/8.9/transforms/b7940e873ce6fe75051423150dbd4a6e/transformed/jetified-core-1.0.0/res
+com.example.my_note_app-transition-1.4.1-24 /Users/mehedihasanshohag/.gradle/caches/8.9/transforms/b8dd7b183d67320f99136697219d3a4f/transformed/transition-1.4.1/res
+com.example.my_note_app-jetified-datastore-release-25 /Users/mehedihasanshohag/.gradle/caches/8.9/transforms/b94fa940961d7a7c3670867a5d37ea31/transformed/jetified-datastore-release/res
+com.example.my_note_app-jetified-lifecycle-viewmodel-savedstate-2.7.0-26 /Users/mehedihasanshohag/.gradle/caches/8.9/transforms/bb166a6280ee22ea7c32e1df55497582/transformed/jetified-lifecycle-viewmodel-savedstate-2.7.0/res
+com.example.my_note_app-jetified-lifecycle-livedata-core-ktx-2.7.0-27 /Users/mehedihasanshohag/.gradle/caches/8.9/transforms/c9a80929ad69d0cc2eeb86cf8fb96184/transformed/jetified-lifecycle-livedata-core-ktx-2.7.0/res
+com.example.my_note_app-lifecycle-viewmodel-2.7.0-28 /Users/mehedihasanshohag/.gradle/caches/8.9/transforms/ca019841235a657cf893b24e8b6a1133/transformed/lifecycle-viewmodel-2.7.0/res
+com.example.my_note_app-jetified-savedstate-1.2.1-29 /Users/mehedihasanshohag/.gradle/caches/8.9/transforms/d6df4627b1ff7ace49114d5dfc8a6381/transformed/jetified-savedstate-1.2.1/res
+com.example.my_note_app-browser-1.8.0-30 /Users/mehedihasanshohag/.gradle/caches/8.9/transforms/d7ae2a4258a8ff593ef78a6ff83cab9d/transformed/browser-1.8.0/res
+com.example.my_note_app-jetified-activity-ktx-1.8.1-31 /Users/mehedihasanshohag/.gradle/caches/8.9/transforms/deaed08c30a6c0317ce419f9e1dbe59c/transformed/jetified-activity-ktx-1.8.1/res
+com.example.my_note_app-lifecycle-runtime-2.7.0-32 /Users/mehedihasanshohag/.gradle/caches/8.9/transforms/e0b856ee0337e26a435c2cb726886cca/transformed/lifecycle-runtime-2.7.0/res
+com.example.my_note_app-jetified-play-services-base-18.0.1-33 /Users/mehedihasanshohag/.gradle/caches/8.9/transforms/e192f7087f90516925c643994940158f/transformed/jetified-play-services-base-18.0.1/res
+com.example.my_note_app-jetified-datastore-core-release-34 /Users/mehedihasanshohag/.gradle/caches/8.9/transforms/e9b8b44712dae15874cee42e3cb6e8a4/transformed/jetified-datastore-core-release/res
+com.example.my_note_app-preference-1.2.1-35 /Users/mehedihasanshohag/.gradle/caches/8.9/transforms/f78e9faac5e46b4041f530b1f9f35b80/transformed/preference-1.2.1/res
+com.example.my_note_app-biometric-1.1.0-36 /Users/mehedihasanshohag/.gradle/caches/8.9/transforms/fb9b7420ccdda260c6be88ae1dbfe6d9/transformed/biometric-1.1.0/res
+com.example.my_note_app-jetified-core-ktx-1.13.1-37 /Users/mehedihasanshohag/.gradle/caches/8.9/transforms/feca5799b7513ccb373fcc78e7514a44/transformed/jetified-core-ktx-1.13.1/res
+com.example.my_note_app-coordinatorlayout-1.0.0-38 /Users/mehedihasanshohag/.gradle/caches/8.9/transforms/fed5d7d9e3b912672f2f5cd70546a27d/transformed/coordinatorlayout-1.0.0/res
+com.example.my_note_app-main-39 /Users/mehedihasanshohag/Small projects/my_note_app/android/app/src/main/res
+com.example.my_note_app-release-40 /Users/mehedihasanshohag/Small projects/my_note_app/android/app/src/release/res
+com.example.my_note_app-pngs-41 /Users/mehedihasanshohag/Small projects/my_note_app/build/app/generated/res/pngs/release
+com.example.my_note_app-resValues-42 /Users/mehedihasanshohag/Small projects/my_note_app/build/app/generated/res/resValues/release
+com.example.my_note_app-packageReleaseResources-43 /Users/mehedihasanshohag/Small projects/my_note_app/build/app/intermediates/incremental/release/packageReleaseResources/merged.dir
+com.example.my_note_app-packageReleaseResources-44 /Users/mehedihasanshohag/Small projects/my_note_app/build/app/intermediates/incremental/release/packageReleaseResources/stripped.dir
+com.example.my_note_app-merged-not-compiled-resources-45 /Users/mehedihasanshohag/Small projects/my_note_app/build/app/intermediates/merged-not-compiled-resources/release
+com.example.my_note_app-release-46 /Users/mehedihasanshohag/Small projects/my_note_app/build/app/intermediates/merged_res/release/mergeReleaseResources
+com.example.my_note_app-release-47 /Users/mehedihasanshohag/Small projects/my_note_app/build/flutter_keyboard_visibility_temp_fork/intermediates/packaged_res/release/packageReleaseResources
+com.example.my_note_app-release-48 /Users/mehedihasanshohag/Small projects/my_note_app/build/flutter_plugin_android_lifecycle/intermediates/packaged_res/release/packageReleaseResources
+com.example.my_note_app-release-49 /Users/mehedihasanshohag/Small projects/my_note_app/build/fluttertoast/intermediates/packaged_res/release/packageReleaseResources
+com.example.my_note_app-release-50 /Users/mehedihasanshohag/Small projects/my_note_app/build/google_sign_in_android/intermediates/packaged_res/release/packageReleaseResources
+com.example.my_note_app-release-51 /Users/mehedihasanshohag/Small projects/my_note_app/build/local_auth_android/intermediates/packaged_res/release/packageReleaseResources
+com.example.my_note_app-release-52 /Users/mehedihasanshohag/Small projects/my_note_app/build/path_provider_android/intermediates/packaged_res/release/packageReleaseResources
+com.example.my_note_app-release-53 /Users/mehedihasanshohag/Small projects/my_note_app/build/quill_native_bridge_android/intermediates/packaged_res/release/packageReleaseResources
+com.example.my_note_app-release-54 /Users/mehedihasanshohag/Small projects/my_note_app/build/share_plus/intermediates/packaged_res/release/packageReleaseResources
+com.example.my_note_app-release-55 /Users/mehedihasanshohag/Small projects/my_note_app/build/shared_preferences_android/intermediates/packaged_res/release/packageReleaseResources
+com.example.my_note_app-release-56 /Users/mehedihasanshohag/Small projects/my_note_app/build/speech_to_text/intermediates/packaged_res/release/packageReleaseResources
+com.example.my_note_app-release-57 /Users/mehedihasanshohag/Small projects/my_note_app/build/sqflite_android/intermediates/packaged_res/release/packageReleaseResources
+com.example.my_note_app-release-58 /Users/mehedihasanshohag/Small projects/my_note_app/build/url_launcher_android/intermediates/packaged_res/release/packageReleaseResources

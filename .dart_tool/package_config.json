@@ -176,6 +176,12 @@
       "languageVersion": "3.7"
     },
     {
+      "name": "flutter_plugin_android_lifecycle",
+      "rootUri": "file:///Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/flutter_plugin_android_lifecycle-2.0.28",
+      "packageUri": "lib/",
+      "languageVersion": "3.6"
+    },
+    {
       "name": "flutter_quill",
       "rootUri": "file:///Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/flutter_quill-11.2.0",
       "packageUri": "lib/",
@@ -302,6 +308,36 @@
       "languageVersion": "3.6"
     },
     {
+      "name": "local_auth",
+      "rootUri": "file:///Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/local_auth-2.3.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.2"
+    },
+    {
+      "name": "local_auth_android",
+      "rootUri": "file:///Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/local_auth_android-1.0.49",
+      "packageUri": "lib/",
+      "languageVersion": "3.6"
+    },
+    {
+      "name": "local_auth_darwin",
+      "rootUri": "file:///Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/local_auth_darwin-1.4.3",
+      "packageUri": "lib/",
+      "languageVersion": "3.4"
+    },
+    {
+      "name": "local_auth_platform_interface",
+      "rootUri": "file:///Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/local_auth_platform_interface-1.0.10",
+      "packageUri": "lib/",
+      "languageVersion": "3.0"
+    },
+    {
+      "name": "local_auth_windows",
+      "rootUri": "file:///Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/local_auth_windows-1.0.11",
+      "packageUri": "lib/",
+      "languageVersion": "3.2"
+    },
+    {
       "name": "markdown",
       "rootUri": "file:///Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/markdown-7.3.0",
       "packageUri": "lib/",
@@ -376,6 +412,12 @@
     {
       "name": "pedantic",
       "rootUri": "file:///Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/pedantic-1.11.1",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
+      "name": "pin_code_fields",
+      "rootUri": "file:///Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/pin_code_fields-8.0.1",
       "packageUri": "lib/",
       "languageVersion": "2.12"
     },
@@ -692,7 +734,7 @@
       "languageVersion": "3.7"
     }
   ],
-  "generated": "2025-05-01T13:48:47.696058Z",
+  "generated": "2025-05-05T18:09:53.082237Z",
   "generator": "pub",
   "generatorVersion": "3.7.2",
   "flutterRoot": "file:///Users/mehedihasanshohag/development/flutter",

@@ -1,0 +1,26 @@
+<lint-module
+    format="1"
+    dir="/Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/fluttertoast-8.2.12/android"
+    name=":fluttertoast"
+    type="LIBRARY"
+    maven="com.example.FlutterToast:fluttertoast:1.0-SNAPSHOT"
+    agpVersion="8.7.0"
+    buildFolder="/Users/mehedihasanshohag/Small projects/my_note_app/build/fluttertoast"
+    bootClassPath="/Users/mehedihasanshohag/Library/Android/sdk/platforms/android-33/android.jar:/Users/mehedihasanshohag/Library/Android/sdk/build-tools/34.0.0/core-lambda-stubs.jar"
+    javaSourceLevel="11"
+    compileTarget="android-33"
+    neverShrinking="true">
+  <lintOptions
+      disable="InvalidPackage"
+      abortOnError="true"
+      absolutePaths="true"
+      checkReleaseBuilds="true"
+      explainIssues="true">
+    <severities>
+      <severity
+        id="InvalidPackage"
+        severity="IGNORE" />
+    </severities>
+  </lintOptions>
+  <variant name="release"/>
+</lint-module>

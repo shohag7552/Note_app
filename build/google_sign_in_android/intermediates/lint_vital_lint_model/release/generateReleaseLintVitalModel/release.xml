@@ -1,0 +1,31 @@
+<variant
+    name="release"
+    package="io.flutter.plugins.googlesignin"
+    minSdkVersion="19"
+    targetSdkVersion="19"
+    mergedManifest="/Users/mehedihasanshohag/Small projects/my_note_app/build/google_sign_in_android/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml"
+    manifestMergeReport="/Users/mehedihasanshohag/Small projects/my_note_app/build/google_sign_in_android/outputs/logs/manifest-merger-release-report.txt"
+    proguardFiles="/Users/mehedihasanshohag/Small projects/my_note_app/build/google_sign_in_android/intermediates/default_proguard_files/global/proguard-android.txt-8.7.0"
+    partialResultsDir="/Users/mehedihasanshohag/Small projects/my_note_app/build/google_sign_in_android/intermediates/lint_vital_partial_results/release/lintVitalAnalyzeRelease/out">
+  <buildFeatures
+      namespacing="REQUIRED"/>
+  <sourceProviders>
+    <sourceProvider
+        manifests="src/main/AndroidManifest.xml"
+        javaDirectories="src/main/java:src/release/java:src/main/kotlin:src/release/kotlin"
+        resDirectories="src/main/res:src/release/res"
+        assetsDirectories="src/main/assets:src/release/assets"/>
+  </sourceProviders>
+  <testSourceProviders>
+  </testSourceProviders>
+  <testFixturesSourceProviders>
+  </testFixturesSourceProviders>
+  <artifact
+      classOutputs="/Users/mehedihasanshohag/Small projects/my_note_app/build/google_sign_in_android/intermediates/javac/release/compileReleaseJavaWithJavac/classes:/Users/mehedihasanshohag/Small projects/my_note_app/build/google_sign_in_android/intermediates/compile_r_class_jar/release/generateReleaseRFile/R.jar"
+      type="MAIN"
+      applicationId="io.flutter.plugins.googlesignin"
+      generatedSourceFolders="/Users/mehedihasanshohag/Small projects/my_note_app/build/google_sign_in_android/generated/ap_generated_sources/release/out"
+      generatedResourceFolders="/Users/mehedihasanshohag/Small projects/my_note_app/build/google_sign_in_android/generated/res/resValues/release"
+      desugaredMethodsFiles="/Users/mehedihasanshohag/.gradle/caches/8.9/transforms/30a4810da4f44b622b8fb5f2d090c59e/transformed/D8BackportedDesugaredMethods.txt">
+  </artifact>
+</variant>

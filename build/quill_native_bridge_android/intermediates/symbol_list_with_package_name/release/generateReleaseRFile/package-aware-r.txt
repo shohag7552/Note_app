@@ -1,0 +1,1 @@
+dev.flutterquill.quill_native_bridge

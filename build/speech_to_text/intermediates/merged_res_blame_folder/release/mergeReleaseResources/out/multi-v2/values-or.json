@@ -1,0 +1,34 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.csdcorp.speech_to_text-release-25:/values-or/values-or.xml",
+            "map": [
+                {
+                    "source": "/Users/mehedihasanshohag/.gradle/caches/8.9/transforms/a8035354cad8d7497540b65a96ad765d/transformed/core-1.13.1/res/values-or/values-or.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,158,260,363,468,569,671,790",
+                        "endColumns": "102,101,102,104,100,101,118,100",
+                        "endOffsets": "153,255,358,463,564,666,785,886"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.csdcorp.speech_to_text-mergeReleaseResources-23:/values-or/values-or.xml",
+            "map": [
+                {
+                    "source": "/Users/mehedihasanshohag/.gradle/caches/8.9/transforms/a8035354cad8d7497540b65a96ad765d/transformed/core-1.13.1/res/values-or/values-or.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,158,260,363,468,569,671,790",
+                        "endColumns": "102,101,102,104,100,101,118,100",
+                        "endOffsets": "153,255,358,463,564,666,785,886"
+                    }
+                }
+            ]
+        }
+    ]
+}

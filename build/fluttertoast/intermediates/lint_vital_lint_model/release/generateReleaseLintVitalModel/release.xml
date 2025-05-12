@@ -1,0 +1,31 @@
+<variant
+    name="release"
+    package="io.github.ponnamkarthik.toast.fluttertoast"
+    minSdkVersion="19"
+    targetSdkVersion="33"
+    mergedManifest="/Users/mehedihasanshohag/Small projects/my_note_app/build/fluttertoast/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml"
+    manifestMergeReport="/Users/mehedihasanshohag/Small projects/my_note_app/build/fluttertoast/outputs/logs/manifest-merger-release-report.txt"
+    proguardFiles="/Users/mehedihasanshohag/Small projects/my_note_app/build/fluttertoast/intermediates/default_proguard_files/global/proguard-android.txt-8.7.0"
+    partialResultsDir="/Users/mehedihasanshohag/Small projects/my_note_app/build/fluttertoast/intermediates/lint_vital_partial_results/release/lintVitalAnalyzeRelease/out">
+  <buildFeatures
+      namespacing="REQUIRED"/>
+  <sourceProviders>
+    <sourceProvider
+        manifests="src/main/AndroidManifest.xml"
+        javaDirectories="src/main/java:src/main/kotlin:src/release/java:src/release/kotlin"
+        resDirectories="src/main/res:src/release/res"
+        assetsDirectories="src/main/assets:src/release/assets"/>
+  </sourceProviders>
+  <testSourceProviders>
+  </testSourceProviders>
+  <testFixturesSourceProviders>
+  </testFixturesSourceProviders>
+  <artifact
+      classOutputs="/Users/mehedihasanshohag/Small projects/my_note_app/build/fluttertoast/intermediates/javac/release/compileReleaseJavaWithJavac/classes:/Users/mehedihasanshohag/Small projects/my_note_app/build/fluttertoast/tmp/kotlin-classes/release:/Users/mehedihasanshohag/Small projects/my_note_app/build/fluttertoast/intermediates/compile_r_class_jar/release/generateReleaseRFile/R.jar"
+      type="MAIN"
+      applicationId="io.github.ponnamkarthik.toast.fluttertoast"
+      generatedSourceFolders="/Users/mehedihasanshohag/Small projects/my_note_app/build/fluttertoast/generated/ap_generated_sources/release/out"
+      generatedResourceFolders="/Users/mehedihasanshohag/Small projects/my_note_app/build/fluttertoast/generated/res/resValues/release"
+      desugaredMethodsFiles="/Users/mehedihasanshohag/.gradle/caches/8.9/transforms/30a4810da4f44b622b8fb5f2d090c59e/transformed/D8BackportedDesugaredMethods.txt">
+  </artifact>
+</variant>

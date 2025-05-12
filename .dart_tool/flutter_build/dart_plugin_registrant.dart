@@ -7,12 +7,14 @@
 
 import 'dart:io'; // flutter_ignore: dart_io_import.
 import 'package:google_sign_in_android/google_sign_in_android.dart';
+import 'package:local_auth_android/local_auth_android.dart';
 import 'package:path_provider_android/path_provider_android.dart';
 import 'package:quill_native_bridge_android/quill_native_bridge_android.dart';
 import 'package:shared_preferences_android/shared_preferences_android.dart';
 import 'package:sqflite_android/sqflite_android.dart';
 import 'package:url_launcher_android/url_launcher_android.dart';
 import 'package:google_sign_in_ios/google_sign_in_ios.dart';
+import 'package:local_auth_darwin/local_auth_darwin.dart';
 import 'package:path_provider_foundation/path_provider_foundation.dart';
 import 'package:quill_native_bridge_ios/quill_native_bridge_ios.dart';
 import 'package:shared_preferences_foundation/shared_preferences_foundation.dart';
@@ -27,6 +29,7 @@ import 'package:shared_preferences_linux/shared_preferences_linux.dart';
 import 'package:url_launcher_linux/url_launcher_linux.dart';
 import 'package:flutter_keyboard_visibility_macos/flutter_keyboard_visibility_macos.dart';
 import 'package:google_sign_in_ios/google_sign_in_ios.dart';
+import 'package:local_auth_darwin/local_auth_darwin.dart';
 import 'package:path_provider_foundation/path_provider_foundation.dart';
 import 'package:quill_native_bridge_macos/quill_native_bridge_macos.dart';
 import 'package:shared_preferences_foundation/shared_preferences_foundation.dart';
@@ -34,6 +37,7 @@ import 'package:sqflite_darwin/sqflite_darwin.dart';
 import 'package:url_launcher_macos/url_launcher_macos.dart';
 import 'package:file_selector_windows/file_selector_windows.dart';
 import 'package:flutter_keyboard_visibility_windows/flutter_keyboard_visibility_windows.dart';
+import 'package:local_auth_windows/local_auth_windows.dart';
 import 'package:path_provider_windows/path_provider_windows.dart';
 import 'package:quill_native_bridge_windows/quill_native_bridge_windows.dart';
 import 'package:share_plus/share_plus.dart';
@@ -51,6 +55,15 @@ class _PluginRegistrant {
       } catch (err) {
         print(
           '`google_sign_in_android` threw an error: $err. '
+          'The app may not function as expected until you remove this plugin from pubspec.yaml'
+        );
+      }
+
+      try {
+        LocalAuthAndroid.registerWith();
+      } catch (err) {
+        print(
+          '`local_auth_android` threw an error: $err. '
           'The app may not function as expected until you remove this plugin from pubspec.yaml'
         );
       }
@@ -106,6 +119,15 @@ class _PluginRegistrant {
       } catch (err) {
         print(
           '`google_sign_in_ios` threw an error: $err. '
+          'The app may not function as expected until you remove this plugin from pubspec.yaml'
+        );
+      }
+
+      try {
+        LocalAuthDarwin.registerWith();
+      } catch (err) {
+        print(
+          '`local_auth_darwin` threw an error: $err. '
           'The app may not function as expected until you remove this plugin from pubspec.yaml'
         );
       }
@@ -239,6 +261,15 @@ class _PluginRegistrant {
       }
 
       try {
+        LocalAuthDarwin.registerWith();
+      } catch (err) {
+        print(
+          '`local_auth_darwin` threw an error: $err. '
+          'The app may not function as expected until you remove this plugin from pubspec.yaml'
+        );
+      }
+
+      try {
         PathProviderFoundation.registerWith();
       } catch (err) {
         print(
@@ -298,6 +329,15 @@ class _PluginRegistrant {
       } catch (err) {
         print(
           '`flutter_keyboard_visibility_windows` threw an error: $err. '
+          'The app may not function as expected until you remove this plugin from pubspec.yaml'
+        );
+      }
+
+      try {
+        LocalAuthWindows.registerWith();
+      } catch (err) {
+        print(
+          '`local_auth_windows` threw an error: $err. '
           'The app may not function as expected until you remove this plugin from pubspec.yaml'
         );
       }

@@ -2,12 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:my_note_app/model/note_model.dart';
+import 'package:my_note_app/utils/app_constants.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../database_helper/database_helper.dart';
 import '../routing/app_routes.dart';
 
 class NoteController extends GetxController implements GetxService{
+  final SharedPreferences sharedPreferences;
+  NoteController({required this.sharedPreferences});
+
   final titleController = TextEditingController();
   final contentController = TextEditingController();
 
@@ -102,6 +107,20 @@ class NoteController extends GetxController implements GetxService{
         ShareParams(text: 'check out my website https://example.com')
     );
   }
+
+  bool isContainPassword() {
+    return sharedPreferences.containsKey(AppConstants.passKey);
+  }
+
+  Future<bool> setPassword(String pass) async {
+    return await sharedPreferences.setString(AppConstants.passKey, pass);
+  }
+
+  String? getPassword() {
+    return sharedPreferences.getString(AppConstants.passKey);
+  }
+
+
 
 
 }

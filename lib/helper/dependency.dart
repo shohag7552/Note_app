@@ -7,7 +7,7 @@ Future<void> init() async {
   final SharedPreferences prefs = await SharedPreferences.getInstance();
 
   Get.lazyPut(() => prefs);
-  Get.lazyPut(() => NoteController());
+  Get.lazyPut(() => NoteController(sharedPreferences: Get.find()));
   // Get.lazyPut(() => FirebaseController());
   Get.lazyPut(() => AuthController(sharedPreferences: Get.find()));
 }

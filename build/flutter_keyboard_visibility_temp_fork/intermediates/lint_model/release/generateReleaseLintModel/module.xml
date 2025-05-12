@@ -1,0 +1,26 @@
+<lint-module
+    format="1"
+    dir="/Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/flutter_keyboard_visibility_temp_fork-0.1.5/android"
+    name=":flutter_keyboard_visibility_temp_fork"
+    type="LIBRARY"
+    maven="com.jrai.flutter_keyboard_visibility_temp_fork:flutter_keyboard_visibility_temp_fork:1.0"
+    agpVersion="8.7.0"
+    buildFolder="/Users/mehedihasanshohag/Small projects/my_note_app/build/flutter_keyboard_visibility_temp_fork"
+    bootClassPath="/Users/mehedihasanshohag/Library/Android/sdk/platforms/android-34/android.jar:/Users/mehedihasanshohag/Library/Android/sdk/build-tools/34.0.0/core-lambda-stubs.jar"
+    javaSourceLevel="1.8"
+    compileTarget="android-34"
+    neverShrinking="true">
+  <lintOptions
+      disable="InvalidPackage"
+      abortOnError="true"
+      absolutePaths="true"
+      checkReleaseBuilds="true"
+      explainIssues="true">
+    <severities>
+      <severity
+        id="InvalidPackage"
+        severity="IGNORE" />
+    </severities>
+  </lintOptions>
+  <variant name="release"/>
+</lint-module>

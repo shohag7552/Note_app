@@ -1,0 +1,18 @@
+[
+    {
+        "merged": "dev.flutterquill.quill_native_bridge.quill_native_bridge_android-release-25:/layout-v21/notification_template_custom_big.xml",
+        "source": "dev.flutterquill.quill_native_bridge.quill_native_bridge_android-core-1.13.1-12:/layout-v21/notification_template_custom_big.xml"
+    },
+    {
+        "merged": "dev.flutterquill.quill_native_bridge.quill_native_bridge_android-release-25:/layout-v21/notification_action.xml",
+        "source": "dev.flutterquill.quill_native_bridge.quill_native_bridge_android-core-1.13.1-12:/layout-v21/notification_action.xml"
+    },
+    {
+        "merged": "dev.flutterquill.quill_native_bridge.quill_native_bridge_android-release-25:/layout-v21/notification_action_tombstone.xml",
+        "source": "dev.flutterquill.quill_native_bridge.quill_native_bridge_android-core-1.13.1-12:/layout-v21/notification_action_tombstone.xml"
+    },
+    {
+        "merged": "dev.flutterquill.quill_native_bridge.quill_native_bridge_android-release-25:/layout-v21/notification_template_icon_group.xml",
+        "source": "dev.flutterquill.quill_native_bridge.quill_native_bridge_android-core-1.13.1-12:/layout-v21/notification_template_icon_group.xml"
+    }
+]
