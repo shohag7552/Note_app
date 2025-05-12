@@ -4,6 +4,9 @@ import 'package:get/get.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:my_note_app/controller/note_controller.dart';
 import 'package:my_note_app/routing/app_routes.dart';
+import 'package:my_note_app/utils/app_constants.dart';
+import 'package:my_note_app/utils/font_size.dart';
+import 'package:my_note_app/utils/padding_size.dart';
 import 'package:my_note_app/utils/style.dart';
 import 'package:my_note_app/widgets/toast.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
@@ -20,77 +23,191 @@ class _PassScreenState extends State<PassScreen> {
   String code = '1234';
 
   String? enterCode;
+  bool alreadyHavePassword = false;
+
+  final TextEditingController _textController = TextEditingController();
+
+  List<String> questions = [
+    'What is your favourite hobby?',
+    'What is your pet\'s name?',
+    'What is your spouse name?',
+  ];
+
+  int questionIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+
+    alreadyHavePassword = Get.find<NoteController>().isContainPassword();
+  }
+
+  @override
+  void dispose() {
+
+    _textController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).primaryColor,
-      body: GetBuilder<NoteController>(
-        builder: (noteController) {
-          bool alreadyHavePassword = noteController.isContainPassword();
+      body: SafeArea(
+        child: GetBuilder<NoteController>(
+          builder: (noteController) {
+            alreadyHavePassword = noteController.isContainPassword();
 
-          return Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-
-            Text(
-              !alreadyHavePassword ? 'Please setup your password' : 'Please enter your correct password',
-              style: fontStyleMedium.copyWith(fontSize: 20, color: Theme.of(context).cardColor),
-            ),
-            SizedBox(height: 50),
-
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 25),
-              child: PinCodeTextField(
-                length: 4,
-                appContext: context,
-                keyboardType: TextInputType.number,
-                animationType: AnimationType.slide,
-                pinTheme: PinTheme(
-                  shape: PinCodeFieldShape.box,
-                  fieldHeight: 60,
-                  fieldWidth: 55,
-                  borderWidth: 1,
-                  borderRadius: BorderRadius.circular(15),
-                  selectedColor: Theme.of(context).cardColor,
-                  selectedFillColor: Colors.white,
-                  inactiveFillColor: Colors.white,
-                  inactiveColor: Theme.of(context).primaryColor,
-                  activeColor: Theme.of(context).primaryColor,
-                  activeFillColor: Colors.white,
-                ),
-                animationDuration: const Duration(milliseconds: 300),
-                backgroundColor: Colors.transparent,
-                enableActiveFill: true,
-                onChanged: (v) {
-                  setState(() {
-                    enterCode = v;
-                  });
-                },
-                beforeTextPaste: (text) => true,
-              ),
-            ),
-
-            SizedBox(height: 50),
-
-            ElevatedButton(
-              onPressed: (){
-                if(enterCode == null || enterCode!.isEmpty) {
-                  showToast(message: 'Please Enter Password');
-                } else if(alreadyHavePassword) {
-                  if(enterCode == noteController.getPassword()) {
-                    Get.offNamed(AppRoute.HOME);
-                  } else {
-                    showToast(message: 'Your password is wrong');
-                  }
-                } else {
-                  noteController.setPassword(enterCode!);
-                }
-              },
-              child: Text(alreadyHavePassword ? 'Verify' : 'Set'),
-            ),
-          ]);
-        }
+            return !alreadyHavePassword
+                ? createAccount()
+                : passwordView(noteController);
+          }
+        ),
       ),
     );
+  }
+
+  Widget createAccount() {
+    return Padding(
+      padding: const EdgeInsets.all(PaddingSize.small),
+      child: questions.length == questionIndex ? passwordView(Get.find<NoteController>()) : Column(spacing: PaddingSize.small, children: [
+        Text(
+          'Welcome to ${AppConstants.appName}. Please provide some information for Setup your password. ',
+          style: fontStyleMedium.copyWith(fontSize: FontSize.medium, color: Theme.of(context).cardColor),
+        ),
+
+
+        Text(
+          "You'll reset your password with the help of these information. So please provide valid information.",
+          style: fontStyleMedium.copyWith(fontSize: FontSize.small, color: Colors.amber),
+        ),
+
+        const SizedBox(height: PaddingSize.large),
+
+        askQuestion(questions[questionIndex]),
+
+
+      ]),
+    );
+  }
+
+  Widget askQuestion(String question) {
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text(
+        'Q. $question',
+        style: fontStyleMedium.copyWith(fontSize: FontSize.mediumLarge, color: Theme.of(context).cardColor),
+      ),
+
+      Row(children: [
+        Text(
+          'Ans: ',
+          style: fontStyleMedium.copyWith(fontSize: FontSize.mediumLarge, color: Colors.amber),
+        ),
+        Expanded(
+          child: TextField(
+            controller: _textController,
+            decoration: InputDecoration(
+              hintText: 'Write your answer..',
+              focusColor: Theme.of(context).cardColor,
+              focusedBorder: UnderlineInputBorder(),
+              hintStyle: fontStyleNormal.copyWith(color: Colors.black38),
+            ),
+            onChanged: (v) {
+              setState(() {
+
+              });
+            },
+          ),
+        ),
+      ]),
+      const SizedBox(height: PaddingSize.medium),
+
+      Center(
+        child: _textController.text.isNotEmpty ? ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            shadowColor: Colors.black45,
+            elevation: 3,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32.0)),
+            minimumSize: const Size(150, 40),
+          ),
+          onPressed: (){
+            _textController.text = '';
+            if(questions.length > questionIndex) {
+              questionIndex++;
+            }
+            setState(() {});
+          },
+          child: Text('Submit'),
+        ) : const SizedBox(),
+      ),
+
+    ]);
+  }
+
+  Widget passwordView(NoteController noteController) {
+    return Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+
+      Text(
+        !alreadyHavePassword ? 'Please setup your password' : 'Please enter your password',
+        style: fontStyleMedium.copyWith(fontSize: 20, color: Theme.of(context).cardColor),
+      ),
+      SizedBox(height: 50),
+
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 25),
+        child: PinCodeTextField(
+          length: 4,
+          appContext: context,
+          keyboardType: TextInputType.number,
+          animationType: AnimationType.slide,
+          pinTheme: PinTheme(
+            shape: PinCodeFieldShape.box,
+            fieldHeight: 60,
+            fieldWidth: 55,
+            borderWidth: 1,
+            borderRadius: BorderRadius.circular(15),
+            selectedColor: Theme.of(context).cardColor,
+            selectedFillColor: Colors.white,
+            inactiveFillColor: Colors.white,
+            inactiveColor: Theme.of(context).primaryColor,
+            activeColor: Theme.of(context).primaryColor,
+            activeFillColor: Colors.white,
+          ),
+          animationDuration: const Duration(milliseconds: 300),
+          backgroundColor: Colors.transparent,
+          enableActiveFill: true,
+          onChanged: (v) {
+            setState(() {
+              enterCode = v;
+            });
+          },
+          beforeTextPaste: (text) => true,
+        ),
+      ),
+
+      SizedBox(height: 50),
+
+      ElevatedButton(
+        onPressed: (){
+          if(enterCode == null || enterCode!.isEmpty) {
+            showToast(message: 'Please Enter Password');
+          } else if(alreadyHavePassword) {
+            if(enterCode == noteController.getPassword()) {
+              Get.offNamed(AppRoute.HOME);
+            } else {
+              showToast(message: 'Your password is wrong');
+            }
+          } else {
+            noteController.setPassword(enterCode!);
+            Get.offNamed(AppRoute.HOME);
+          }
+        },
+        style: ElevatedButton.styleFrom(
+          minimumSize: const Size(150, 40),
+        ),
+        child: Text(alreadyHavePassword ? 'Verify' : 'Set'),
+      ),
+    ]);
   }
 }
 

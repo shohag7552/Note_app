@@ -1,4 +1,5 @@
 class AppConstants{
+  static const String appName = 'My Note';
   static const String authKey = 'account';
 
 
