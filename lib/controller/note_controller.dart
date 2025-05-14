@@ -120,7 +120,12 @@ class NoteController extends GetxController implements GetxService{
     return sharedPreferences.getString(AppConstants.passKey);
   }
 
+  Future<bool> setSuggestions(List<String> answers) async {
+    return await sharedPreferences.setStringList(AppConstants.suggestionsKey, answers);
+  }
 
-
+  Future<List<String>?> getSuggestions() async {
+    return sharedPreferences.getStringList(AppConstants.suggestionsKey);
+  }
 
 }

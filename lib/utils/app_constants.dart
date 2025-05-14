@@ -4,4 +4,5 @@ class AppConstants{
 
 
   static const String passKey = 'password';
+  static const String suggestionsKey = 'suggestions';
 }

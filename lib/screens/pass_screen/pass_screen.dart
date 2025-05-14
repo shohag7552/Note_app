@@ -10,6 +10,7 @@ import 'package:my_note_app/utils/padding_size.dart';
 import 'package:my_note_app/utils/style.dart';
 import 'package:my_note_app/widgets/toast.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
+import 'dart:math';
 
 class PassScreen extends StatefulWidget {
   const PassScreen({super.key});
@@ -34,12 +35,27 @@ class _PassScreenState extends State<PassScreen> {
   ];
 
   int questionIndex = 0;
+  int randomQuestionIndex = 0;
+
+  List<String> answerList = [];
+
+  bool isForgetPassword = false;
+  List<String>? suggestion;
+
+  bool takePassAgain = false;
 
   @override
   void initState() {
     super.initState();
 
     alreadyHavePassword = Get.find<NoteController>().isContainPassword();
+    randomQuestionIndex = generateRandom(0, questions.length);
+    initConfig();
+  }
+
+  initConfig() async {
+    suggestion = await Get.find<NoteController>().getSuggestions();
+    print('=========suggestion: $suggestion');
   }
 
   @override
@@ -49,6 +65,11 @@ class _PassScreenState extends State<PassScreen> {
     super.dispose();
   }
 
+  int generateRandom(int min, int max) {
+    final random = Random();
+    return min + random.nextInt(max - min + 1);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -56,10 +77,13 @@ class _PassScreenState extends State<PassScreen> {
       body: SafeArea(
         child: GetBuilder<NoteController>(
           builder: (noteController) {
-            alreadyHavePassword = noteController.isContainPassword();
 
-            return !alreadyHavePassword
-                ? createAccount()
+            // if(!takePassAgain) {
+              alreadyHavePassword = noteController.isContainPassword();
+            // }
+
+            return isForgetPassword ? forgetPassView()
+                : !alreadyHavePassword ? createAccount()
                 : passwordView(noteController);
           }
         ),
@@ -67,10 +91,26 @@ class _PassScreenState extends State<PassScreen> {
     );
   }
 
+  Widget forgetPassView() {
+    return Padding(
+      padding: const EdgeInsets.all(PaddingSize.small),
+      child: Column(mainAxisAlignment: MainAxisAlignment.center, mainAxisSize: MainAxisSize.min, children: [
+        Text(
+          "Write the proper answer that you provided while creating password.",
+          style: fontStyleMedium.copyWith(fontSize: FontSize.medium),
+        ),
+
+        askQuestion(questions[randomQuestionIndex], fromForgetPass: true),
+      ]),
+    );
+  }
+
   Widget createAccount() {
     return Padding(
       padding: const EdgeInsets.all(PaddingSize.small),
       child: questions.length == questionIndex ? passwordView(Get.find<NoteController>()) : Column(spacing: PaddingSize.small, children: [
+        const SizedBox(height: 50),
+
         Text(
           'Welcome to ${AppConstants.appName}. Please provide some information for Setup your password. ',
           style: fontStyleMedium.copyWith(fontSize: FontSize.medium, color: Theme.of(context).cardColor),
@@ -91,8 +131,9 @@ class _PassScreenState extends State<PassScreen> {
     );
   }
 
-  Widget askQuestion(String question) {
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+  Widget askQuestion(String question, {bool fromForgetPass = false}) {
+    bool isAllAnswerSubmitted = questions.length == questionIndex;
+    return Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
       Text(
         'Q. $question',
         style: fontStyleMedium.copyWith(fontSize: FontSize.mediumLarge, color: Theme.of(context).cardColor),
@@ -130,12 +171,34 @@ class _PassScreenState extends State<PassScreen> {
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32.0)),
             minimumSize: const Size(150, 40),
           ),
-          onPressed: (){
-            _textController.text = '';
-            if(questions.length > questionIndex) {
-              questionIndex++;
+          onPressed: () async {
+            if(!fromForgetPass) {
+              answerList.add(_textController.text);
+              print('===yyyyy==> $answerList // $isAllAnswerSubmitted');
+              _textController.text = '';
+              if (!isAllAnswerSubmitted) {
+                questionIndex++;
+                if(answerList.length == questions.length) {
+                  Get.find<NoteController>().setSuggestions(answerList);
+                }
+              }/* else {
+                print('===xxxx==> $answerList');
+                Get.find<NoteController>().setSuggestions(answerList);
+              }*/
+              setState(() {});
+            } else {
+              suggestion = await Get.find<NoteController>().getSuggestions();
+              print('====s : $suggestion');
+              if(suggestion != null && suggestion![randomQuestionIndex] == _textController.text) {
+                setState(() {
+                  isForgetPassword = false;
+                  alreadyHavePassword = false;
+                  takePassAgain = true;
+                });
+              } else {
+                showToast(message: 'Not matched any answer');
+              }
             }
-            setState(() {});
           },
           child: Text('Submit'),
         ) : const SizedBox(),
@@ -207,6 +270,16 @@ class _PassScreenState extends State<PassScreen> {
         ),
         child: Text(alreadyHavePassword ? 'Verify' : 'Set'),
       ),
+      const SizedBox(height: PaddingSize.medium),
+
+      alreadyHavePassword ? TextButton(
+        onPressed: (){
+          setState(() {
+            isForgetPassword = true;
+          });
+        },
+        child: Text('Forget password?', style: fontStyleNormal),
+      ) : const SizedBox(),
     ]);
   }
 }
