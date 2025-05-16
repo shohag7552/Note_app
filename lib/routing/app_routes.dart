@@ -8,12 +8,14 @@ import 'package:my_note_app/screens/home_page.dart';
 import 'package:my_note_app/screens/note_screens/add_new_note_page.dart';
 import 'package:my_note_app/screens/note_screens/edit_note_page.dart';
 import 'package:my_note_app/screens/note_screens/note_detail_page.dart';
+import 'package:my_note_app/screens/pass_screen/forget_pass_screen.dart';
 import 'package:my_note_app/screens/pass_screen/pass_screen.dart';
 
 class AppRoute {
   static const String SPLASH = '/';
   // static const String DASHBOARD = '/dashboard';
   static const String pass = '/password';
+  static const String forgetPass = '/forget_password';
   static const String HOME = '/home';
 
   static const String ADD_NEW_NOTE = '/add_new_note';
@@ -36,6 +38,7 @@ class AppRoute {
     //GetPage(name: AppRoute.SPLASH, page: () => Login()),
     // GetPage(name: AppRoute.DASHBOARD, page: () => DashboardScreen()),
     GetPage(name: AppRoute.pass, page: () => const PassScreen()),
+    GetPage(name: AppRoute.forgetPass, page: () => const ForgetPassScreen()),
     GetPage(name: AppRoute.HOME, page: () => const HomePage()),
     GetPage(name: AppRoute.ADD_NEW_NOTE, page: () => const AddNewNotePage()),
     GetPage(name: AppRoute.EDIT_NOTE, page: () {

@@ -42,14 +42,12 @@ class _PassScreenState extends State<PassScreen> {
   bool isForgetPassword = false;
   List<String>? suggestion;
 
-  bool takePassAgain = false;
-
   @override
   void initState() {
     super.initState();
 
     alreadyHavePassword = Get.find<NoteController>().isContainPassword();
-    randomQuestionIndex = generateRandom(0, questions.length);
+    randomQuestionIndex = generateRandom(0, questions.length-1);
     initConfig();
   }
 
@@ -78,9 +76,7 @@ class _PassScreenState extends State<PassScreen> {
         child: GetBuilder<NoteController>(
           builder: (noteController) {
 
-            // if(!takePassAgain) {
-              alreadyHavePassword = noteController.isContainPassword();
-            // }
+            alreadyHavePassword = noteController.isContainPassword();
 
             return isForgetPassword ? forgetPassView()
                 : !alreadyHavePassword ? createAccount()
@@ -95,10 +91,13 @@ class _PassScreenState extends State<PassScreen> {
     return Padding(
       padding: const EdgeInsets.all(PaddingSize.small),
       child: Column(mainAxisAlignment: MainAxisAlignment.center, mainAxisSize: MainAxisSize.min, children: [
+        const SizedBox(height: 50),
+
         Text(
           "Write the proper answer that you provided while creating password.",
-          style: fontStyleMedium.copyWith(fontSize: FontSize.medium),
+          style: fontStyleMedium.copyWith(fontSize: FontSize.medium), textAlign: TextAlign.center,
         ),
+        const SizedBox(height: 25),
 
         askQuestion(questions[randomQuestionIndex], fromForgetPass: true),
       ]),
@@ -149,10 +148,11 @@ class _PassScreenState extends State<PassScreen> {
             controller: _textController,
             decoration: InputDecoration(
               hintText: 'Write your answer..',
-              focusColor: Theme.of(context).cardColor,
+              focusColor: Colors.black,
               focusedBorder: UnderlineInputBorder(),
               hintStyle: fontStyleNormal.copyWith(color: Colors.black38),
             ),
+            cursorColor: Colors.black,
             onChanged: (v) {
               setState(() {
 
@@ -190,11 +190,12 @@ class _PassScreenState extends State<PassScreen> {
               suggestion = await Get.find<NoteController>().getSuggestions();
               print('====s : $suggestion');
               if(suggestion != null && suggestion![randomQuestionIndex] == _textController.text) {
-                setState(() {
-                  isForgetPassword = false;
-                  alreadyHavePassword = false;
-                  takePassAgain = true;
-                });
+                Get.offNamed(AppRoute.forgetPass);
+                // setState(() {
+                //   isForgetPassword = false;
+                //   alreadyHavePassword = false;
+                //   takePassAgain = true;
+                // });
               } else {
                 showToast(message: 'Not matched any answer');
               }
