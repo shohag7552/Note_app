@@ -4,6 +4,7 @@ import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_navigation/src/root/get_material_app.dart';
 import 'package:my_note_app/controller/note_controller.dart';
 import 'package:my_note_app/routing/app_routes.dart';
+import 'package:my_note_app/theme/dark_theme.dart';
 import 'package:my_note_app/theme/light_theme.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
@@ -23,20 +24,24 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return GetMaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: "Note App by flutter",
-      theme: light,
-      localizationsDelegates: const [
-        GlobalMaterialLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        FlutterQuillLocalizations.delegate,
-      ],
-      initialRoute: checkPasswordAllow(),
-      // initialRoute: AppRoute.HOME,
-      getPages: AppRoute.getRoutes,
-      // home: MyHomePage(),
+    return GetBuilder<NoteController>(
+      builder: (noteController) {
+        return GetMaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: "Note App by flutter",
+          theme: noteController.darkTheme ? dark : light,
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            FlutterQuillLocalizations.delegate,
+          ],
+          initialRoute: checkPasswordAllow(),
+          // initialRoute: AppRoute.HOME,
+          getPages: AppRoute.getRoutes,
+          // home: MyHomePage(),
+        );
+      }
     );
   }
 

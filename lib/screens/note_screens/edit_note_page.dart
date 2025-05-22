@@ -35,19 +35,17 @@ class _EditNotePageState extends State<EditNotePage> {
     // controller.contentController.text = controller.notes[i].content!;
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        iconTheme: const IconThemeData(
-          color: Colors.black,
+        backgroundColor: Theme.of(context).cardColor,
+        iconTheme: IconThemeData(
+          color: Theme.of(context).textTheme.bodyLarge!.color,
         ),
-        title: const Text(
-          "Edit Note",
-          style: TextStyle(
-            color: Colors.black,
-          ),
-        ),
+        title: const Text("Edit Note"),
         systemOverlayStyle: SystemUiOverlayStyle.dark,
       ),
-      body: TextEditWidget(readOnly: false, content: Document.fromJson(jsonDecode(widget.note.content!)), isAddNote: false, note: widget.note),
+      body: Padding(
+        padding: const EdgeInsets.only(top: 6),
+        child: TextEditWidget(readOnly: false, content: Document.fromJson(jsonDecode(widget.note.content!)), isAddNote: false, note: widget.note),
+      ),
       /*body: SingleChildScrollView(
         child: Container(
           padding: const EdgeInsets.only(

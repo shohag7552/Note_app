@@ -27,8 +27,8 @@ class _NoteDetailPageState extends State<NoteDetailPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        iconTheme: const IconThemeData(color: Colors.black),
+        backgroundColor:  Theme.of(context).cardColor,
+        iconTheme: IconThemeData(color:Theme.of(context).textTheme.bodyLarge!.color),
         title: const Text("Note Details", style: fontStyleNormal),
         actions: [
           PopupMenuButton(

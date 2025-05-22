@@ -27,14 +27,15 @@ class _HomePageState extends State<HomePage> {
     return GetBuilder<NoteController>(
       builder: (controller) {
         return Scaffold(
+
           appBar: AppBar(
             title: Text("Notes", style: fontStyleLarge.copyWith(fontSize: FontSize.large)),
-            backgroundColor: Colors.white,
+            backgroundColor: Theme.of(context).cardColor,
             iconTheme: const IconThemeData(color: Colors.black),
             leading: Builder(
               builder: (context) {
                 return IconButton(
-                  icon: const Icon(Icons.menu),
+                  icon: Icon(Icons.menu, color: Theme.of(context).textTheme.bodyLarge!.color!),
                   onPressed: () {
                     Scaffold.of(context).openDrawer();
                   },
@@ -43,12 +44,14 @@ class _HomePageState extends State<HomePage> {
             ),
             actions: [
               IconButton(
-                icon: const Icon(Icons.search),
+                icon: Icon(Icons.search, color: Theme.of(context).textTheme.bodyLarge!.color!),
                 onPressed: () {
                   showSearch(context: context, delegate: Search());
                 },
               ),
               PopupMenuButton(
+                // color: Theme.of(context).textTheme.bodyLarge!.color!,
+                child: Icon(Icons.more_vert_sharp, color: Theme.of(context).textTheme.bodyLarge!.color!),
                 onSelected: (val) {
                   if (val == 0) {
                     showDialog(

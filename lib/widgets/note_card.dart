@@ -53,7 +53,7 @@ class NoteCart extends StatelessWidget {
               // color: '#2DCE29'.toColor(),
               color: Theme.of(context).cardColor,
               borderRadius: BorderRadius.circular(RadiusSize.large),
-              boxShadow: [BoxShadow(color: Colors.grey[200]!, blurRadius: 10, offset: const Offset(2, 4))]
+              boxShadow: Get.find<NoteController>().darkTheme ? null : [BoxShadow(color: Colors.grey[200]!, blurRadius: 10, offset: const Offset(2, 4))]
             ),
             padding: const EdgeInsets.all(PaddingSize.medium),
             child: Text(n),

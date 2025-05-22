@@ -11,7 +11,9 @@ import '../routing/app_routes.dart';
 
 class NoteController extends GetxController implements GetxService{
   final SharedPreferences sharedPreferences;
-  NoteController({required this.sharedPreferences});
+  NoteController({required this.sharedPreferences}) {
+    _loadCurrentTheme();
+  }
 
   final titleController = TextEditingController();
   final contentController = TextEditingController();
@@ -19,6 +21,9 @@ class NoteController extends GetxController implements GetxService{
   var notes = <Note>[];
 
   bool appLockStatus = false;
+
+  bool _darkTheme = false;
+  bool get darkTheme => _darkTheme;
 
   @override
   void onInit() {
@@ -140,6 +145,17 @@ class NoteController extends GetxController implements GetxService{
     update();
     print('=s0=-> $appLockStatus // ${await sharedPreferences.setBool(AppConstants.passActiveKey, status)}');
     return await sharedPreferences.setBool(AppConstants.passActiveKey, status);
+  }
+
+  void toggleTheme() {
+    _darkTheme = !_darkTheme;
+    sharedPreferences.setBool(AppConstants.theme, _darkTheme);
+    update();
+  }
+
+  void _loadCurrentTheme() async {
+    _darkTheme = sharedPreferences.getBool(AppConstants.theme) ?? false;;
+    update();
   }
 
 }
