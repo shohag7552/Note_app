@@ -18,6 +18,8 @@ class NoteController extends GetxController implements GetxService{
 
   var notes = <Note>[];
 
+  bool appLockStatus = false;
+
   @override
   void onInit() {
     getAllNotes();
@@ -104,7 +106,7 @@ class NoteController extends GetxController implements GetxService{
   void shareNote(String content) {
     // Share.share(content);
     SharePlus.instance.share(
-        ShareParams(text: 'check out my website https://example.com')
+        ShareParams(text: content)
     );
   }
 
@@ -126,6 +128,18 @@ class NoteController extends GetxController implements GetxService{
 
   Future<List<String>?> getSuggestions() async {
     return sharedPreferences.getStringList(AppConstants.suggestionsKey);
+  }
+
+  bool isPasswordActive() {
+    return sharedPreferences.getBool(AppConstants.passActiveKey)?? false;
+    // return sharedPreferences.containsKey(AppConstants.passActiveKey);
+  }
+
+  Future<bool> activePassword(bool status) async {
+    appLockStatus = status;
+    update();
+    print('=s0=-> $appLockStatus // ${await sharedPreferences.setBool(AppConstants.passActiveKey, status)}');
+    return await sharedPreferences.setBool(AppConstants.passActiveKey, status);
   }
 
 }

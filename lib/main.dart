@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_navigation/src/root/get_material_app.dart';
+import 'package:my_note_app/controller/note_controller.dart';
 import 'package:my_note_app/routing/app_routes.dart';
 import 'package:my_note_app/theme/light_theme.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
@@ -30,10 +33,19 @@ class MyApp extends StatelessWidget {
         GlobalWidgetsLocalizations.delegate,
         FlutterQuillLocalizations.delegate,
       ],
-      initialRoute: AppRoute.pass,
+      initialRoute: checkPasswordAllow(),
       // initialRoute: AppRoute.HOME,
       getPages: AppRoute.getRoutes,
       // home: MyHomePage(),
     );
+  }
+
+  String checkPasswordAllow() {
+    if(Get.find<NoteController>().isPasswordActive()) {
+      return AppRoute.pass;
+    } else {
+      return AppRoute.HOME;
+    }
+
   }
 }

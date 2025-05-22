@@ -8,6 +8,7 @@ import 'package:my_note_app/utils/font_size.dart';
 import 'package:my_note_app/utils/images.dart';
 import 'package:my_note_app/utils/padding_size.dart';
 import 'package:my_note_app/utils/style.dart';
+import 'package:my_note_app/widgets/drawer_widget.dart';
 import 'package:my_note_app/widgets/note_card.dart';
 import '../controller/note_controller.dart';
 import '../widgets/alert_dialog.dart';
@@ -83,51 +84,7 @@ class _HomePageState extends State<HomePage> {
             ],
             systemOverlayStyle: SystemUiOverlayStyle.dark,
           ),
-          drawer: Drawer(
-            child: ListView(
-              // Important: Remove any padding from the ListView.
-              padding: EdgeInsets.zero,
-              children: [
-                DrawerHeader(
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).primaryColor,
-                  ),
-                  child: Text('Drawer Header'),
-                ),
-                ListTile(
-                  title: const Text('Home'),
-                  // selected: _selectedIndex == 0,
-                  onTap: () {
-                    // Update the state of the app
-                    // _onItemTapped(0);
-                    // Then close the drawer
-                    Navigator.pop(context);
-                  },
-                ),
-                ListTile(
-                  title: const Text('Authentication'),
-                  // selected: _selectedIndex == 1,
-                  onTap: () {
-                    // Update the state of the app
-                    // _onItemTapped(1);
-                    // Then close the drawer
-                    Get.to(const AddUser());
-                    // Navigator.pop(context);
-                  },
-                ),
-                ListTile(
-                  title: const Text('School'),
-                  // selected: _selectedIndex == 2,
-                  onTap: () {
-                    // Update the state of the app
-                    // _onItemTapped(2);
-                    // Then close the drawer
-                    Navigator.pop(context);
-                  },
-                ),
-              ],
-            ),
-          ),
+          drawer: DrawerWidget(),
           body: GetBuilder<NoteController>(
             builder: (_) => controller.isEmpty() ? emptyNotes() : viewNotes(controller),
           ),
