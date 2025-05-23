@@ -60,10 +60,10 @@ class Search extends SearchDelegate {
           mainAxisSpacing: 7,
           crossAxisSpacing: 7
       ),
-      itemCount: controller.notes.length,
+      itemCount: suggestionList.length,
       padding: const EdgeInsets.symmetric(horizontal: PaddingSize.medium, vertical: PaddingSize.small),
       itemBuilder: (context, index) {
-        return NoteCart(note: controller.notes[index], index: index);
+        return NoteCart(note: suggestionList[index], index: index);
       },
     );
     return ListView.builder(
@@ -109,6 +109,66 @@ class Search extends SearchDelegate {
 
   @override
   Widget buildResults(BuildContext context) {
-    throw UnimplementedError();
+    // throw UnimplementedError();
+    final suggestionList = query.isEmpty
+        ? controller.notes
+        : controller.notes.where((p) {
+      return /*p.title!.toLowerCase().contains(query.toLowerCase()) ||*/
+        QuillHelper.convertStringDocumentToString(p.content!).toLowerCase().contains(query.toLowerCase());
+    },
+    ).toList();
+    return GridView.builder(
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          childAspectRatio: 0.7,
+          crossAxisCount: 2,
+          mainAxisSpacing: 7,
+          crossAxisSpacing: 7
+      ),
+      itemCount: suggestionList.length,
+      padding: const EdgeInsets.symmetric(horizontal: PaddingSize.medium, vertical: PaddingSize.small),
+      itemBuilder: (context, index) {
+        return NoteCart(note: suggestionList[index], index: index);
+      },
+    );
+
+    return ListView.builder(
+      shrinkWrap: true,
+      itemCount: suggestionList.length,
+      itemBuilder: (context, index) {
+        return InkWell(
+          onTap: () => Get.toNamed(AppRoute.getNoteDetailsPage(suggestionList[index])),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Theme.of(context).cardColor,
+              borderRadius: BorderRadius.circular(RadiusSize.medium),
+              boxShadow: [BoxShadow(color: Colors.grey[300]!, blurRadius: 10, offset: const Offset(0, 0))],
+            ),
+            padding: const EdgeInsets.all(PaddingSize.medium),
+            margin: const EdgeInsets.symmetric(horizontal: PaddingSize.medium, vertical: PaddingSize.extraSmall),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Text(
+                //   controller.notes[index].title!,
+                //   style: fontStyleBold.copyWith(fontSize: FontSize.mediumLarge),
+                //   maxLines: 1, overflow: TextOverflow.ellipsis,
+                // ),
+                // const SizedBox(height: PaddingSize.small),
+
+                Text(
+                  QuillHelper.convertStringDocumentToString(suggestionList[index].content!),
+                  style: fontStyleNormal.copyWith(fontSize: FontSize.extraMedium),
+                  maxLines: 5, overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: PaddingSize.small),
+
+                Align(alignment: Alignment.bottomRight, child: Text(DateConverter.dateTimeStringToDateOnly(controller.notes[index].dateTimeEdited!))),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 }
