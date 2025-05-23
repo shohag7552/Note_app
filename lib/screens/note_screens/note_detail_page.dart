@@ -1,9 +1,11 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:get/get.dart';
+import 'package:my_note_app/controller/background_controller.dart';
 import 'package:my_note_app/helper/quill_helper.dart';
 import 'package:my_note_app/model/note_model.dart';
 import 'package:my_note_app/routing/app_routes.dart';
@@ -61,7 +63,16 @@ class _NoteDetailPageState extends State<NoteDetailPage> {
         ],
         systemOverlayStyle: SystemUiOverlayStyle.dark,
       ),
-      body: TextEditWidget(readOnly: true, content: Document.fromJson(jsonDecode(widget.note.content!)), isAddNote: true),
+      body: GetBuilder<BackgroundController>(
+          builder: (backgroundController) {
+          return Container(
+            decoration: backgroundController.backgroundImage != null ? BoxDecoration(
+              image: DecorationImage(image: FileImage(File(backgroundController.backgroundImage!.path)), fit: BoxFit.cover),
+            ) : null,
+            child: TextEditWidget(readOnly: true, content: Document.fromJson(jsonDecode(widget.note.content!)), isAddNote: true),
+          );
+        }
+      ),
 
       floatingActionButton: FloatingActionButton(
         elevation: 6,

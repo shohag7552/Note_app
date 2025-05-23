@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:my_note_app/controller/background_controller.dart';
 import 'package:my_note_app/controller/note_controller.dart';
 import 'package:my_note_app/model/note_model.dart';
 import 'package:my_note_app/utils/padding_size.dart';
@@ -28,6 +29,13 @@ class _TextEditWidgetState extends State<TextEditWidget> {
 
     controller.readOnly = widget.readOnly;
     controller.document = widget.content != null ? widget.content! : controller.document;
+
+    // controller.formatTextStyle(index, len, style)
+    // controller.formatText(
+    //   0,
+    //   controller.document.length,
+    //   Attribute.color.withValue('FFFFFF'), // Hex color for white
+    // );
   }
 
   @override
@@ -54,8 +62,18 @@ class _TextEditWidgetState extends State<TextEditWidget> {
         Expanded(
           child: QuillEditor.basic(
             controller: controller,
-            config: const QuillEditorConfig(
-
+            config: QuillEditorConfig(
+              // customStyles: Get.find<BackgroundController>().backgroundImage != null ? DefaultStyles(
+              //     paragraph: DefaultTextBlockStyle(
+              //       TextStyle(
+              //         color: Colors.white, // Set default text color to white
+              //         fontSize: 16, // You can also set other default styles here
+              //       ),
+              //       HorizontalSpacing(0, 0), // Default line spacing
+              //       VerticalSpacing(0, 0),
+              //       VerticalSpacing(0,0), // No text decoration
+              //       null,
+              //     )) : null,
             ),
           ),
         ),
@@ -67,6 +85,7 @@ class _TextEditWidgetState extends State<TextEditWidget> {
               child: QuillSimpleToolbar(
                 controller: controller,
                 config: QuillSimpleToolbarConfig(
+                  color: Colors.transparent,
                   multiRowsDisplay: false,
                   showDirection: false,
                   showFontFamily: false,

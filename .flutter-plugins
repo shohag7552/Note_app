@@ -1,5 +1,6 @@
 # This is a generated file; do not edit or check into version control.
 file_selector_linux=/Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/file_selector_linux-0.9.3+2/
+file_selector_macos=/Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/file_selector_macos-0.9.4+2/
 file_selector_windows=/Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/file_selector_windows-0.9.3+4/
 flutter_keyboard_visibility_linux=/Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/flutter_keyboard_visibility_linux-1.0.0/
 flutter_keyboard_visibility_macos=/Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/flutter_keyboard_visibility_macos-1.0.0/
@@ -11,10 +12,13 @@ google_sign_in=/Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/google_sign_in
 google_sign_in_android=/Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/google_sign_in_android-6.2.0/
 google_sign_in_ios=/Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/google_sign_in_ios-5.8.1/
 google_sign_in_web=/Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/google_sign_in_web-0.12.4+4/
-local_auth=/Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/local_auth-2.3.0/
-local_auth_android=/Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/local_auth_android-1.0.49/
-local_auth_darwin=/Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/local_auth_darwin-1.4.3/
-local_auth_windows=/Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/local_auth_windows-1.0.11/
+image_picker=/Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/image_picker-1.1.2/
+image_picker_android=/Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/image_picker_android-0.8.12+23/
+image_picker_for_web=/Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/image_picker_for_web-3.0.6/
+image_picker_ios=/Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/image_picker_ios-0.8.12+2/
+image_picker_linux=/Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/image_picker_linux-0.2.1+2/
+image_picker_macos=/Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/image_picker_macos-0.2.1+2/
+image_picker_windows=/Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/image_picker_windows-0.2.1+1/
 path_provider=/Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/path_provider-2.1.5/
 path_provider_android=/Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/path_provider_android-2.2.16/
 path_provider_foundation=/Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/path_provider_foundation-2.4.1/

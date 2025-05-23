@@ -7,4 +7,5 @@ class AppConstants{
   static const String passActiveKey = 'password-activation';
   static const String suggestionsKey = 'suggestions';
   static const String theme = 'theme';
+  static const String opacityKey = 'opacity';
 }

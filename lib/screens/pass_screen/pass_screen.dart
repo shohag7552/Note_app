@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:local_auth/local_auth.dart';
 import 'package:my_note_app/controller/note_controller.dart';
 import 'package:my_note_app/routing/app_routes.dart';
 import 'package:my_note_app/utils/app_constants.dart';

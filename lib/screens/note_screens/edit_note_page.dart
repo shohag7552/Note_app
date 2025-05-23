@@ -1,10 +1,14 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:my_note_app/controller/background_controller.dart';
 import 'package:my_note_app/model/note_model.dart';
+import 'package:my_note_app/widgets/background_color_opacity_dialog.dart';
 import 'package:my_note_app/widgets/text_edit_widget.dart';
 
 import '../../controller/note_controller.dart';
@@ -20,19 +24,19 @@ class EditNotePage extends StatefulWidget {
 class _EditNotePageState extends State<EditNotePage> {
   // final NoteController controller = Get.find();
 
+  double bgOpacity = 0.1;
+
   @override
   void initState() {
     super.initState();
 
     Get.find<NoteController>().titleController.text = widget.note.title!;
     Get.find<NoteController>().contentController.text = widget.note.content!;
+    bgOpacity = Get.find<BackgroundController>().getOpacity();
   }
 
   @override
   Widget build(BuildContext context) {
-    // final int i = ModalRoute.of(context)?.settings.arguments as int;
-    // controller.titleController.text = controller.notes[i].title!;
-    // controller.contentController.text = controller.notes[i].content!;
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).cardColor,
@@ -41,10 +45,45 @@ class _EditNotePageState extends State<EditNotePage> {
         ),
         title: const Text("Edit Note"),
         systemOverlayStyle: SystemUiOverlayStyle.dark,
+        actions: [
+          if(Get.find<BackgroundController>().backgroundImage != null)
+          IconButton(
+            onPressed: (){
+              britenessWidget();
+            },
+            icon: Icon(Icons.brightness_4_outlined),
+          ),
+
+          IconButton(
+            onPressed: () async {
+              ///Take image from gallery...
+              XFile? image = await Get.find<BackgroundController>().pickBackgroundImage();
+
+              ///If successfully take image, then show background color opacity..
+              if(image != null) {
+                britenessWidget();
+              }
+              },
+            icon: Icon(Icons.image_rounded),
+          ),
+        ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.only(top: 6),
-        child: TextEditWidget(readOnly: false, content: Document.fromJson(jsonDecode(widget.note.content!)), isAddNote: false, note: widget.note),
+      body: GetBuilder<BackgroundController>(
+          builder: (backgroundController) {
+            return Container(
+              color: backgroundController.backgroundImage != null ? Colors.grey : null,
+              child: Container(
+                decoration: backgroundController.backgroundImage != null ? BoxDecoration(
+                  image: DecorationImage(image: FileImage(File(backgroundController.backgroundImage!.path)), fit: BoxFit.cover),
+                ) : null,
+                // padding: const EdgeInsets.only(top: 6),
+                child: Container(
+                  color: Colors.black.withValues(alpha: bgOpacity),
+                  child: TextEditWidget(readOnly: false, content: Document.fromJson(jsonDecode(widget.note.content!)), isAddNote: false, note: widget.note),
+                ),
+              ),
+            );
+          }
       ),
       /*body: SingleChildScrollView(
         child: Container(
@@ -109,5 +148,14 @@ class _EditNotePageState extends State<EditNotePage> {
         // backgroundColor: AppColor.buttonColor,
       ),*/
     );
+  }
+
+  void britenessWidget() {
+    Get.dialog(BackgroundColorOpacityDialog(), barrierColor: Colors.transparent).then((v){
+      setState(() {
+        bgOpacity = v;
+        Get.find<BackgroundController>().setOpacity(bgOpacity);
+      });
+    });
   }
 }
