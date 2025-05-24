@@ -24,6 +24,13 @@ class NoteDetailPage extends StatefulWidget {
 }
 
 class _NoteDetailPageState extends State<NoteDetailPage> {
+  double bgOpacity = 0.1;
+
+  @override
+  void initState() {
+    super.initState();
+    bgOpacity = Get.find<BackgroundController>().getOpacity();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -69,7 +76,10 @@ class _NoteDetailPageState extends State<NoteDetailPage> {
             decoration: backgroundController.backgroundImage != null ? BoxDecoration(
               image: DecorationImage(image: FileImage(File(backgroundController.backgroundImage!.path)), fit: BoxFit.cover),
             ) : null,
-            child: TextEditWidget(readOnly: true, content: Document.fromJson(jsonDecode(widget.note.content!)), isAddNote: true),
+            child: Container(
+              color: backgroundController.backgroundImage != null ? Colors.black.withValues(alpha: bgOpacity) : null,
+              child: TextEditWidget(readOnly: true, content: Document.fromJson(jsonDecode(widget.note.content!)), isAddNote: true),
+            ),
           );
         }
       ),

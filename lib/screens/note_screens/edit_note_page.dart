@@ -39,7 +39,9 @@ class _EditNotePageState extends State<EditNotePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).cardColor,
+        backgroundColor: Colors.transparent, // Make the AppBar transparent
+        elevation: 0, //
+        // backgroundColor: Theme.of(context).cardColor,
         iconTheme: IconThemeData(
           color: Theme.of(context).textTheme.bodyLarge!.color,
         ),
@@ -71,16 +73,13 @@ class _EditNotePageState extends State<EditNotePage> {
       body: GetBuilder<BackgroundController>(
           builder: (backgroundController) {
             return Container(
-              color: backgroundController.backgroundImage != null ? Colors.grey : null,
+              decoration: backgroundController.backgroundImage != null ? BoxDecoration(
+                image: DecorationImage(image: FileImage(File(backgroundController.backgroundImage!.path)), fit: BoxFit.cover),
+              ) : null,
+              // padding: const EdgeInsets.only(top: 6),
               child: Container(
-                decoration: backgroundController.backgroundImage != null ? BoxDecoration(
-                  image: DecorationImage(image: FileImage(File(backgroundController.backgroundImage!.path)), fit: BoxFit.cover),
-                ) : null,
-                // padding: const EdgeInsets.only(top: 6),
-                child: Container(
-                  color: Colors.black.withValues(alpha: bgOpacity),
-                  child: TextEditWidget(readOnly: false, content: Document.fromJson(jsonDecode(widget.note.content!)), isAddNote: false, note: widget.note),
-                ),
+                color: backgroundController.backgroundImage != null ? Colors.black.withValues(alpha: bgOpacity) : null,
+                child: TextEditWidget(readOnly: false, content: Document.fromJson(jsonDecode(widget.note.content!)), isAddNote: false, note: widget.note),
               ),
             );
           }

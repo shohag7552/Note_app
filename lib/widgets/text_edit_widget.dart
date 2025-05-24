@@ -45,35 +45,21 @@ class _TextEditWidgetState extends State<TextEditWidget> {
       padding: const EdgeInsets.symmetric(horizontal: PaddingSize.medium),
       child: Column(children: [
 
-        // Expanded(
-        //   child: QuillEditor.basic(
-        //     configurations: QuillEditorConfigurations(
-        //       controller: controller,
-        //       // readOnly: false,
-        //       sharedConfigurations: const QuillSharedConfigurations(
-        //         locale: Locale('en'),
-        //       ),
-        //       checkBoxReadOnly: true,
-        //       // autoFocus: false,
-        //       showCursor: !widget.readOnly,
-        //     ),
-        //   ),
-        // ),
         Expanded(
           child: QuillEditor.basic(
             controller: controller,
             config: QuillEditorConfig(
-              // customStyles: Get.find<BackgroundController>().backgroundImage != null ? DefaultStyles(
-              //     paragraph: DefaultTextBlockStyle(
-              //       TextStyle(
-              //         color: Colors.white, // Set default text color to white
-              //         fontSize: 16, // You can also set other default styles here
-              //       ),
-              //       HorizontalSpacing(0, 0), // Default line spacing
-              //       VerticalSpacing(0, 0),
-              //       VerticalSpacing(0,0), // No text decoration
-              //       null,
-              //     )) : null,
+              customStyles: Get.find<BackgroundController>().backgroundImage != null ? DefaultStyles(
+                  paragraph: DefaultTextBlockStyle(
+                    TextStyle(
+                      color: Colors.white, // Set default text color to white
+                      fontSize: 16, // You can also set other default styles here
+                    ),
+                    HorizontalSpacing(0, 0), // Default line spacing
+                    VerticalSpacing(0, 0),
+                    VerticalSpacing(0,0), // No text decoration
+                    BoxDecoration(color: Colors.white),
+                  )) : null,
             ),
           ),
         ),
@@ -86,6 +72,7 @@ class _TextEditWidgetState extends State<TextEditWidget> {
                 controller: controller,
                 config: QuillSimpleToolbarConfig(
                   color: Colors.transparent,
+                  // iconTheme: QuillIconTheme(iconButtonUnselectedData: IconButtonData(color: Colors.white, disabledColor: Colors.lightGreenAccent, focusColor: Colors.white, highlightColor: Colors.white), iconButtonSelectedData: ),
                   multiRowsDisplay: false,
                   showDirection: false,
                   showFontFamily: false,
@@ -119,44 +106,6 @@ class _TextEditWidgetState extends State<TextEditWidget> {
                 ),
               ),
             ),
-            // QuillToolbar.simple(
-            //   configurations: QuillSimpleToolbarConfigurations(
-            //     controller: controller,
-            //     sharedConfigurations: const QuillSharedConfigurations(
-            //       locale: Locale('en'),
-            //     ),
-            //     multiRowsDisplay: true,
-            //     showDirection: false,
-            //     showFontFamily: false,
-            //     showDividers: false,
-            //     showHeaderStyle: false,
-            //     showIndent: false,
-            //     showInlineCode: false,
-            //     showJustifyAlignment: false,
-            //     showQuote: false,
-            //     showSearchButton: false,
-            //     showRightAlignment: false,
-            //     showAlignmentButtons: false,
-            //     showLeftAlignment: false,
-            //     showStrikeThrough: false,
-            //     showSubscript: false,
-            //     showSuperscript: false,
-            //     showSmallButton: false,
-            //     showClearFormat: false,
-            //     showBackgroundColorButton: false,
-            //     showCodeBlock: false,
-            //     showRedo: false,
-            //     showUndo: false,
-            //     showItalicButton: false,
-            //     showUnderLineButton: false,
-            //     showLink: false,
-            //     showCenterAlignment: false,
-            //     showFontSize: false,
-            //     showClipboardCut: false,
-            //     showClipboardCopy: false,
-            //     showClipboardPaste: false,
-            //   ),
-            // ),
 
             IconButton(
               icon: const Icon(Icons.check),
