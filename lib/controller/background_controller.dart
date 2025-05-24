@@ -9,7 +9,7 @@ class BackgroundController extends GetxController implements GetxService {
   final SharedPreferences sharedPreferences;
 
   BackgroundController({required this.sharedPreferences}) {
-    // _loadCurrentTheme();
+    _getBackgroundImage();
   }
 
   XFile? _image;
@@ -25,6 +25,10 @@ class BackgroundController extends GetxController implements GetxService {
       final ImagePicker picker = ImagePicker();
       _image = await picker.pickImage(source: ImageSource.gallery);
 
+      if(_image != null) {
+        // Save the image path to shared preferences
+        await sharedPreferences.setString(AppConstants.backgroundImageKey, _image!.path);
+      }
       // Get.dialog(BackgroundColorOpacityDialog(), barrierColor: Colors.transparent).then((v) {
       //   print('====tttt===> $v');
       //   _colorOpacity = v;
@@ -56,6 +60,16 @@ class BackgroundController extends GetxController implements GetxService {
 
   double getOpacity() {
     return sharedPreferences.getDouble(AppConstants.opacityKey) ?? 0.1;
+  }
+
+  void _getBackgroundImage() {
+    String? savedImagePath = sharedPreferences.getString(AppConstants.backgroundImageKey);
+    if (savedImagePath != null && savedImagePath.isNotEmpty) {
+      _image = XFile(savedImagePath);
+    } else {
+      _image = null;
+    }
+    update();
   }
 
 

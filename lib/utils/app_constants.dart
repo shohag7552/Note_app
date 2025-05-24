@@ -8,4 +8,5 @@ class AppConstants{
   static const String suggestionsKey = 'suggestions';
   static const String theme = 'theme';
   static const String opacityKey = 'opacity';
+  static const String backgroundImageKey = 'backgroundImage';
 }
