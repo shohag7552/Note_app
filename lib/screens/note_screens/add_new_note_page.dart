@@ -68,8 +68,7 @@ class _AddNewNotePageState extends State<AddNewNotePage> {
         return Scaffold(
           appBar: AppBar(
             title: const Text("Add New Note", style: fontStyleNormal),
-            backgroundColor: Colors.white,
-            iconTheme: const IconThemeData(color: Colors.black),
+            backgroundColor: Theme.of(context).cardColor,
           ),
           body: Column(
             spacing: 20,

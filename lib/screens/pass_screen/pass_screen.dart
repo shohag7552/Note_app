@@ -234,7 +234,9 @@ class _PassScreenState extends State<PassScreen> {
             inactiveColor: Theme.of(context).primaryColor,
             activeColor: Theme.of(context).primaryColor,
             activeFillColor: Colors.white,
+
           ),
+          textStyle: fontStyleBold.copyWith(color: Colors.black),
           animationDuration: const Duration(milliseconds: 300),
           backgroundColor: Colors.transparent,
           enableActiveFill: true,

@@ -20,9 +20,6 @@ class NoteCart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final String n = Document.fromJson(jsonDecode(note.content!)).toPlainText().trim();
-    // final String n = jsonDecode(note.content!).toString();
-    // final String json = jsonEncode(_controller.document.toDelta().toJson());
-    // _controller.document = Document.fromJson(jsonDecode(json));
 
     return GestureDetector(
       onTap: () => Get.toNamed(AppRoute.getNoteDetailsPage(note)),

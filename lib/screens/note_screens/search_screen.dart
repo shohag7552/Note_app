@@ -125,7 +125,7 @@ class Search extends SearchDelegate {
           crossAxisSpacing: 7
       ),
       itemCount: suggestionList.length,
-      padding: const EdgeInsets.symmetric(horizontal: PaddingSize.medium, vertical: PaddingSize.small),
+      padding: const EdgeInsets.symmetric(horizontal: PaddingSize.small, vertical: PaddingSize.small),
       itemBuilder: (context, index) {
         return NoteCart(note: suggestionList[index], index: index);
       },

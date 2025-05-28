@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:my_note_app/routing/app_routes.dart';
 import 'package:my_note_app/screens/auth_screen.dart';
 import 'package:my_note_app/screens/note_screens/search_screen.dart';
+import 'package:my_note_app/screens/paper_view_widget.dart';
 import 'package:my_note_app/utils/font_size.dart';
 import 'package:my_note_app/utils/images.dart';
 import 'package:my_note_app/utils/padding_size.dart';
@@ -144,9 +145,12 @@ class _HomePageState extends State<HomePage> {
           ),
             itemCount: controller.notes.length,
             itemBuilder: (context, index) {
+            // return PageCurlEffectExample(child: NoteCart(note: controller.notes[index], index: index));
               return NoteCart(note: controller.notes[index], index: index);
           },
         ),
+
+        // child: PaperViewWidget(data: controller.notes),
       ),
     );
   }
@@ -167,5 +171,15 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
     );
+  }
+}
+
+class DemoPage extends StatelessWidget {
+  final int page;
+  const DemoPage({super.key, required this.page});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Placeholder();
   }
 }
