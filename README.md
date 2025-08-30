@@ -2,15 +2,35 @@
 
 A new Flutter project.
 
-## Getting Started
+## Built with:
 
-This project is a starting point for a Flutter application.
+- GetX
+- sqflite
+- flutter_quill
+- MVC Pattern
 
-A few resources to get you started if this is your first Flutter project:
+## Features
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+- Lock app with password
+- forget password
+- Create note
+- Update note
+- Delete note
+- Favorite note
+- Search notes
+- Delete all notes
+- Light & Dark mode
+- Text background dynamic image set
+- 
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Dependencies
+
+- get
+- sqflite
+- flutter_quill
+- pin_code_fields
+- shared_preferences
+- image_picker
+- path_provider
+- MVC Pattern
+

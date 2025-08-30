@@ -12,9 +12,12 @@ ThemeData light = ThemeData(
   textButtonTheme: TextButtonThemeData(style: TextButton.styleFrom(foregroundColor: const Color(0xFF3B3B3B))),
   colorScheme: const ColorScheme.light(primary: Color(0xFFBDAD00), secondary: Color(0xFFBDAD00), surface: Color(0xFFF6FBFF)).copyWith(error: const Color(0xFFE84D4F)),
   popupMenuTheme: const PopupMenuThemeData(color: Colors.white, surfaceTintColor: Colors.white),
-  dialogTheme: const DialogTheme(surfaceTintColor: Colors.white),
+  dialogTheme: const DialogThemeData(surfaceTintColor: Colors.white),
+  bottomAppBarTheme: const BottomAppBarThemeData(
+    color: Colors.white, height: 60, padding: EdgeInsets.symmetric(vertical: 5),
+  ),
   // floatingActionButtonTheme: FloatingActionButtonThemeData(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(500))),
   // bottomAppBarTheme: const BottomAppBarTheme(color: Colors.white, height: 60, padding: EdgeInsets.symmetric(vertical: 5)),
   dividerTheme: const DividerThemeData(thickness: 0.2, color: Color(0xFFA0A4A8)),
-  tabBarTheme: const TabBarTheme(dividerColor: Colors.transparent),
+  tabBarTheme: const TabBarThemeData(dividerColor: Colors.transparent),
 );

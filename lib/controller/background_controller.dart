@@ -1,8 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:my_note_app/utils/app_constants.dart';
-import 'package:my_note_app/widgets/background_color_opacity_dialog.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class BackgroundController extends GetxController implements GetxService {

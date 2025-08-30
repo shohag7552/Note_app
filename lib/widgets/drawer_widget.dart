@@ -56,6 +56,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                   onTap: () {},
                   trailing: CupertinoSwitch(
                     value: noteController.appLockStatus,
+                    activeTrackColor: Theme.of(context).primaryColor,
                     onChanged: (status){
                       noteController.activePassword(status);
 
@@ -69,6 +70,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                   onTap: () {},
                   trailing: CupertinoSwitch(
                     value: noteController.darkTheme,
+                    activeTrackColor: Theme.of(context).primaryColor,
                     onChanged: (status){
                       noteController.toggleTheme();
                     },
