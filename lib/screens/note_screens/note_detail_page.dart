@@ -73,11 +73,11 @@ class _NoteDetailPageState extends State<NoteDetailPage> {
       body: GetBuilder<BackgroundController>(
           builder: (backgroundController) {
           return Container(
-            decoration: backgroundController.backgroundImage != null ? BoxDecoration(
-              image: DecorationImage(image: FileImage(File(backgroundController.backgroundImage!.path)), fit: BoxFit.cover),
-            ) : null,
+            // decoration: backgroundController.backgroundImage != null ? BoxDecoration(
+            //   image: DecorationImage(image: FileImage(File(backgroundController.backgroundImage!.path)), fit: BoxFit.cover),
+            // ) : null,
             child: Container(
-              color: backgroundController.backgroundImage != null ? Colors.black.withValues(alpha: bgOpacity) : null,
+              // color: backgroundController.backgroundImage != null ? Colors.black.withValues(alpha: bgOpacity) : null,
               child: TextEditWidget(readOnly: true, content: Document.fromJson(jsonDecode(widget.note.content!)), isAddNote: true),
             ),
           );

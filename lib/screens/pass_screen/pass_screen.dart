@@ -279,7 +279,7 @@ class _PassScreenState extends State<PassScreen> {
             isForgetPassword = true;
           });
         },
-        child: Text('Forget password?', style: fontStyleNormal),
+        child: Text('Forget password?', style: fontStyleNormal.copyWith(color: Theme.of(context).textTheme.bodyLarge!.color)),
       ) : const SizedBox(),
     ]);
   }

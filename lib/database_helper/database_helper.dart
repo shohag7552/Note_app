@@ -29,7 +29,7 @@ class DatabaseHelper {
   void _onCreate(Database db, int version) async {
     await db.execute('''
       CREATE TABLE $_tableName(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id INTEGER PRIMARY KEY,
         title TEXT NOT NULL,
         content TEXT NOT NULL,
         dateTimeEdited TEXT NOT NULL,
@@ -40,8 +40,18 @@ class DatabaseHelper {
       ''');
   }
 
+  Future<int> getNextId() async {
+   final db = await instance.database;
+   final result = await db.rawQuery('SELECT MAX(id) as maxId FROM $_tableName');
+   int? maxId = result.first['maxId'] as int?;
+  return (maxId ?? 0) + 1;
+ }
+
   /// Add Note
   Future<int> addNote(Note note) async {
+    // int newId = await getNextId();
+    note.id = await getNextId();
+    print('=====new id: ${note.id}');
     Database db = await instance.database;
     return await db.insert(_tableName, note.toJson());
   }

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 ThemeData light = ThemeData(
   // fontFamily: AppConstants.fontFamily,
-  primaryColor: const Color(0xFFBDAD00),
+  primaryColor: const Color.fromARGB(255, 13, 179, 116),
   secondaryHeaderColor: const Color(0xFF000743),
   disabledColor: const Color(0xFFA0A4A8),
   brightness: Brightness.light,
@@ -10,7 +10,8 @@ ThemeData light = ThemeData(
   cardColor: Colors.white,
   shadowColor: Colors.black.withValues(alpha: 0.03),
   textButtonTheme: TextButtonThemeData(style: TextButton.styleFrom(foregroundColor: const Color(0xFF3B3B3B))),
-  colorScheme: const ColorScheme.light(primary: Color(0xFFBDAD00), secondary: Color(0xFFBDAD00), surface: Color(0xFFF6FBFF)).copyWith(error: const Color(0xFFE84D4F)),
+  colorScheme: const ColorScheme.light(primary: Color.fromARGB(255, 13, 179, 116),
+   secondary: Color.fromARGB(255, 13, 179, 116), surface: Color(0xFFF6FBFF)).copyWith(error: const Color(0xFFE84D4F)),
   popupMenuTheme: const PopupMenuThemeData(color: Colors.white, surfaceTintColor: Colors.white),
   dialogTheme: const DialogThemeData(surfaceTintColor: Colors.white),
   bottomAppBarTheme: const BottomAppBarThemeData(

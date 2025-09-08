@@ -49,17 +49,17 @@ class _TextEditWidgetState extends State<TextEditWidget> {
           child: QuillEditor.basic(
             controller: controller,
             config: QuillEditorConfig(
-              customStyles: Get.find<BackgroundController>().backgroundImage != null ? DefaultStyles(
-                  paragraph: DefaultTextBlockStyle(
-                    TextStyle(
-                      color: Colors.white, // Set default text color to white
-                      fontSize: 16, // You can also set other default styles here
-                    ),
-                    HorizontalSpacing(0, 0), // Default line spacing
-                    VerticalSpacing(0, 0),
-                    VerticalSpacing(0,0), // No text decoration
-                    BoxDecoration(color: Colors.white),
-                  )) : null,
+              // customStyles: Get.find<BackgroundController>().backgroundImage != null ? DefaultStyles(
+              //     paragraph: DefaultTextBlockStyle(
+              //       TextStyle(
+              //         // color: Colors.white, // Set default text color to white
+              //         fontSize: 16, // You can also set other default styles here
+              //       ),
+              //       HorizontalSpacing(0, 0), // Default line spacing
+              //       VerticalSpacing(0, 0),
+              //       VerticalSpacing(0,0), // No text decoration
+              //       BoxDecoration(),
+              //     )) : null,
             ),
           ),
         ),
