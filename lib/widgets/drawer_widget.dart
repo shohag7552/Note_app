@@ -1,7 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:my_note_app/config/app_write_service.dart';
 import 'package:my_note_app/controller/note_controller.dart';
+import 'package:my_note_app/model/note_model.dart';
 
 import '../screens/auth_screen.dart';
 class DrawerWidget extends StatefulWidget {
@@ -12,7 +14,7 @@ class DrawerWidget extends StatefulWidget {
 }
 
 class _DrawerWidgetState extends State<DrawerWidget> {
-
+  final AppWriteService appwriteService = AppWriteService();
   @override
   void initState() {
     super.initState();
@@ -46,8 +48,23 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                 ),
                 ListTile(
                   title: const Text('Authentication'),
-                  onTap: () {
-                    Get.to(const AddUser());
+                  onTap: () async {
+                    // Get.to(const AddUser());
+                    print('=======here=======');
+                    // await appwriteService.addNote(
+                    //   // Note(id: 1, title: 'This is title', content: 'This is description.', dateTimeEdited: DateTime.now().toString(), dateTimeCreated: DateTime.now().toString()),
+                    //   Note(id: 2, title: 'This is title 2', content: 'This is description 2.', dateTimeEdited: DateTime.now().toString(), dateTimeCreated: DateTime.now().toString()),
+                    // );
+                    // await appwriteService.updateNote(
+                    //   Note(id: 2, title: 'This is title 3----------', content: 'This is description 2.', dateTimeEdited: DateTime.now().toString(), dateTimeCreated: DateTime.now().toString()),
+                    // );
+                    await appwriteService.getNoteList();
+
+                    // await appwriteService.deleteNote('68c5306acad23e03a01c');
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("Note added!")),
+                    );
                   },
                 ),
                 ListTile(

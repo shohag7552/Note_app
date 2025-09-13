@@ -38,4 +38,14 @@ class Note {
       "color": color,
     };
   }
+
+  Map<String, dynamic> toMapForUpdate() {
+    return {
+      if (title != null) 'title': title,
+      if (content != null) 'content': content,
+      'dateTimeEdited': DateTime.now().toUtc().toIso8601String(),
+      if (isFavorite != null) 'isFavorite': isFavorite,
+      if (color != null) 'color': color,
+    };
+  }
 }
