@@ -1,5 +1,4 @@
 import 'package:appwrite/appwrite.dart';
-import 'package:appwrite/models.dart';
 import 'package:my_note_app/appwrite/app_write_config.dart';
 import 'package:my_note_app/appwrite/app_write_service.dart';
 import 'package:my_note_app/model/note_model.dart';
@@ -10,14 +9,13 @@ class AppWriteRepository {
   Future<List<Note>> getNotes({
     int limit = 10,
     int offset = 0,
-    required String authorId,
+    required String authorEmail,
   }) async {
     try {
       List<String> queries = [
         Query.limit(limit),
         Query.offset(offset),
-        Query.equal('author', authorId),
-        // Query.orderDesc('createdAt'),
+        Query.equal('authorEmail', authorEmail),
       ];
 
       final response = await _appwriteService.listDocuments(
@@ -35,7 +33,7 @@ class AppWriteRepository {
   Future<void> createNote({required Note note}) async {
     try {
 
-      final response = await _appwriteService.createDocument(
+      await _appwriteService.createDocument(
         collectionId: AppwriteConfig.noteTable,
         data: note.toJson(),
       );

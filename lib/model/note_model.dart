@@ -8,6 +8,7 @@ class Note {
   int? isFavorite;
   String? color;
   String? content;
+  String? authorEmail;
 
   Note({
     this.id,
@@ -17,6 +18,7 @@ class Note {
     this.dateTimeCreated,
     this.isFavorite,
     this.color = '#FFA0A4A8',
+    this.authorEmail,
   });
 
   Note.fromJson(Map<String, dynamic> json) {
@@ -38,6 +40,7 @@ class Note {
       "dateTimeCreated": dateTimeCreated,
       "isFavorite": isFavorite,
       "color": color,
+      if(authorEmail != null) 'authorEmail': authorEmail,
     };
   }
 

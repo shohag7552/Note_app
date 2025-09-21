@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:my_note_app/appwrite/repository/app_write_repository.dart';
 import 'package:my_note_app/controller/auth_controller.dart';
+import 'package:my_note_app/controller/background_controller.dart';
 import 'package:my_note_app/controller/note_controller.dart';
 import 'package:my_note_app/model/note_model.dart';
 
@@ -102,10 +103,17 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                       title: const Text('get user'),
                       onTap: () async {
 
-                        Get.find<AppWriteRepository>().getNotes(authorId: authController.getUserToken()!).then((v) {
-                          for(var note in v) {
-                            print('====${v.indexOf(note)}====> ${note.toJson()}');
-                          }
+                        Get.find<BackgroundController>().getAllNotes();
+
+                      },
+                    ),
+
+                    ListTile(
+                      title: const Text('upload notes'),
+                      onTap: () async {
+
+                        Get.find<BackgroundController>().uploadAllNotes().then((v) {
+
                         });
 
                       },
