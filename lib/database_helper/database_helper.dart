@@ -29,7 +29,7 @@ class DatabaseHelper {
   void _onCreate(Database db, int version) async {
     await db.execute('''
       CREATE TABLE $_tableName(
-        id INTEGER PRIMARY KEY,
+        note_id INTEGER PRIMARY KEY,
         title TEXT NOT NULL,
         content TEXT NOT NULL,
         dateTimeEdited TEXT NOT NULL,
@@ -42,7 +42,7 @@ class DatabaseHelper {
 
   Future<int> getNextId() async {
    final db = await instance.database;
-   final result = await db.rawQuery('SELECT MAX(id) as maxId FROM $_tableName');
+   final result = await db.rawQuery('SELECT MAX(note_id) as maxId FROM $_tableName');
    int? maxId = result.first['maxId'] as int?;
   return (maxId ?? 0) + 1;
  }
@@ -91,7 +91,7 @@ class DatabaseHelper {
       maps.length,
       (index) {
         return Note(
-          id: maps[index]["id"],
+          id: maps[index]["note_id"],
           title: maps[index]["title"],
           content: maps[index]["content"],
           dateTimeEdited: maps[index]["dateTimeEdited"],

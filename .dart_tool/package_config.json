@@ -285,13 +285,13 @@
     },
     {
       "name": "google_sign_in_android",
-      "rootUri": "file:///Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/google_sign_in_android-6.2.0",
+      "rootUri": "file:///Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/google_sign_in_android-6.2.1",
       "packageUri": "lib/",
       "languageVersion": "3.6"
     },
     {
       "name": "google_sign_in_ios",
-      "rootUri": "file:///Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/google_sign_in_ios-5.8.1",
+      "rootUri": "file:///Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/google_sign_in_ios-5.9.0",
       "packageUri": "lib/",
       "languageVersion": "3.4"
     },

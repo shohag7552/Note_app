@@ -1,3 +1,5 @@
+import 'package:appwrite/appwrite.dart';
+
 class Note {
   int? id;
   String? title;
@@ -18,7 +20,7 @@ class Note {
   });
 
   Note.fromJson(Map<String, dynamic> json) {
-    id = json['id'];
+    id = json['note_id'];
     title = json['title'];
     content = json['content'];
     dateTimeEdited = json['dateTimeEdited'];
@@ -29,7 +31,7 @@ class Note {
 
   Map<String, dynamic> toJson() {
     return {
-      "id": id,
+      "note_id": id,
       "title": title,
       "content": content,
       "dateTimeEdited": dateTimeEdited,

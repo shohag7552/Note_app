@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:my_note_app/appwrite/repository/app_write_repository.dart';
 import 'package:my_note_app/controller/auth_controller.dart';
 import 'package:my_note_app/controller/note_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -13,4 +14,5 @@ Future<void> init() async {
   // Get.lazyPut(() => FirebaseController());
   Get.lazyPut(() => AuthController(sharedPreferences: Get.find()));
   Get.lazyPut(() => BackgroundController(sharedPreferences: Get.find()));
+  Get.lazyPut(() => AppWriteRepository());
 }

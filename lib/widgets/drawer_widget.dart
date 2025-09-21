@@ -1,7 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:my_note_app/config/app_write_service.dart';
+import 'package:my_note_app/appwrite/repository/app_write_repository.dart';
+import 'package:my_note_app/controller/auth_controller.dart';
 import 'package:my_note_app/controller/note_controller.dart';
 import 'package:my_note_app/model/note_model.dart';
 
@@ -14,7 +15,6 @@ class DrawerWidget extends StatefulWidget {
 }
 
 class _DrawerWidgetState extends State<DrawerWidget> {
-  final AppWriteService appwriteService = AppWriteService();
   @override
   void initState() {
     super.initState();
@@ -30,71 +30,126 @@ class _DrawerWidgetState extends State<DrawerWidget> {
         color: Theme.of(context).disabledColor.withValues(alpha: 0.1),
         child: GetBuilder<NoteController>(
             builder: (noteController) {
-            return ListView(
-              // Important: Remove any padding from the ListView.
-              padding: EdgeInsets.zero,
-              children: [
-                DrawerHeader(
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).primaryColor,
-                  ),
-                  child: Text('Drawer Header'),
-                ),
-                ListTile(
-                  title: const Text('Home'),
-                  onTap: () {
-                    Navigator.pop(context);
-                  },
-                ),
-                ListTile(
-                  title: const Text('Authentication'),
-                  onTap: () async {
-                    // Get.to(const AddUser());
-                    print('=======here=======');
-                    // await appwriteService.addNote(
-                    //   // Note(id: 1, title: 'This is title', content: 'This is description.', dateTimeEdited: DateTime.now().toString(), dateTimeCreated: DateTime.now().toString()),
-                    //   Note(id: 2, title: 'This is title 2', content: 'This is description 2.', dateTimeEdited: DateTime.now().toString(), dateTimeCreated: DateTime.now().toString()),
-                    // );
-                    // await appwriteService.updateNote(
-                    //   Note(id: 2, title: 'This is title 3----------', content: 'This is description 2.', dateTimeEdited: DateTime.now().toString(), dateTimeCreated: DateTime.now().toString()),
-                    // );
-                    await appwriteService.getNoteList();
+            return GetBuilder<AuthController>(
+              builder: (authController) {
+                return ListView(
+                  padding: EdgeInsets.zero,
+                  children: [
+                    DrawerHeader(
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).primaryColor,
+                      ),
+                      child: authController.getUserToken() != null ? Column(children: [
+                        CircleAvatar(
+                          radius: 40,
+                          backgroundColor: Colors.white,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(50),
+                            child: Image.network(
+                              authController.getUser()?.imageUrl ?? 'https://www.gravatar.com/avatar/placeholder',
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                        Text(
+                          authController.getUser()?.name ?? 'Guest User',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                          ),
+                        ),
 
-                    // await appwriteService.deleteNote('68c5306acad23e03a01c');
+                        Text(
+                          authController.getUser()?.email ?? '',
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ]) : Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          spacing: 10,
+                          children: [
+                            const Text(
+                              'Welcome, Guest',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                              ),
+                            ),
 
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text("Note added!")),
-                    );
-                  },
-                ),
-                ListTile(
-                  leading: Icon(Icons.lock),
-                  title: const Text('App Lock'),
-                  onTap: () {},
-                  trailing: CupertinoSwitch(
-                    value: noteController.appLockStatus,
-                    activeTrackColor: Theme.of(context).primaryColor,
-                    onChanged: (status){
-                      noteController.activePassword(status);
+                            ElevatedButton(
+                              onPressed: () {
+                                Get.find<AuthController>().googleLogin();
+                              },
+                              child: const Text('Login'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
 
-                    },
-                  ),
-                ),
+                    ListTile(
+                      title: const Text('Home'),
+                      onTap: () {
+                        Navigator.pop(context);
+                      },
+                    ),
 
-                ListTile(
-                  leading: Icon(Icons.nights_stay),
-                  title: const Text('Dark Mode'),
-                  onTap: () {},
-                  trailing: CupertinoSwitch(
-                    value: noteController.darkTheme,
-                    activeTrackColor: Theme.of(context).primaryColor,
-                    onChanged: (status){
-                      noteController.toggleTheme();
-                    },
-                  ),
-                ),
+                    ListTile(
+                      title: const Text('get user'),
+                      onTap: () async {
 
-              ],
+                        Get.find<AppWriteRepository>().getNotes(authorId: authController.getUserToken()!).then((v) {
+                          for(var note in v) {
+                            print('====${v.indexOf(note)}====> ${note.toJson()}');
+                          }
+                        });
+
+                      },
+                    ),
+
+                    ListTile(
+                      leading: Icon(Icons.lock),
+                      title: const Text('App Lock'),
+                      onTap: () {},
+                      trailing: CupertinoSwitch(
+                        value: noteController.appLockStatus,
+                        activeTrackColor: Theme.of(context).primaryColor,
+                        onChanged: (status){
+                          noteController.activePassword(status);
+                        },
+                      ),
+                    ),
+
+                    ListTile(
+                      leading: Icon(Icons.nights_stay),
+                      title: const Text('Dark Mode'),
+                      onTap: () {},
+                      trailing: CupertinoSwitch(
+                        value: noteController.darkTheme,
+                        activeTrackColor: Theme.of(context).primaryColor,
+                        onChanged: (status){
+                          noteController.toggleTheme();
+                        },
+                      ),
+                    ),
+
+
+                    if(authController.getUserToken() != null)
+                      ListTile(
+                        leading: Icon(Icons.logout_outlined),
+                        title: const Text('Logout'),
+                        onTap: () async {
+                          Get.find<AuthController>().googleLogOut();
+                        },
+                      ),
+
+                  ],
+                );
+              }
             );
           }
         ),
