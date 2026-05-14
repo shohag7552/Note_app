@@ -1,11 +1,36 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:local_auth/local_auth.dart';
 import 'package:my_note_app/controller/note_controller.dart';
 import 'package:my_note_app/routing/app_routes.dart';
 
-class AppLockScreen extends StatelessWidget {
+class AppLockScreen extends StatefulWidget {
   const AppLockScreen({super.key});
+
+  @override
+  State<AppLockScreen> createState() => _AppLockScreenState();
+}
+
+class _AppLockScreenState extends State<AppLockScreen> {
+  bool _deviceSupportsBiometrics = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkBiometricSupport();
+  }
+
+  Future<void> _checkBiometricSupport() async {
+    try {
+      final auth = LocalAuthentication();
+      final canCheck = await auth.canCheckBiometrics;
+      final isSupported = await auth.isDeviceSupported();
+      if (mounted) {
+        setState(() => _deviceSupportsBiometrics = canCheck && isSupported);
+      }
+    } catch (_) {}
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,6 +52,8 @@ class AppLockScreen extends StatelessWidget {
         builder: (ctrl) {
           final lockActive = ctrl.isPasswordActive();
           final hasPin = ctrl.isContainPassword();
+          final biometricEnabled = ctrl.isBiometricEnabled();
+
           return ListView(
             padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
             children: [
@@ -43,10 +70,34 @@ class AppLockScreen extends StatelessWidget {
                         ? 'Your notes are protected with a PIN'
                         : 'Lock the app with a 4-digit PIN',
                     value: lockActive,
-                    onChanged: (enable) => _handleToggle(ctrl, enable, hasPin),
+                    onChanged: (enable) => _handleLockToggle(ctrl, enable, hasPin),
                   ),
+                  if (lockActive && hasPin && _deviceSupportsBiometrics) ...[
+                    Divider(height: 1, indent: 56, color: theme.dividerColor),
+                    _ToggleTile(
+                      theme: theme,
+                      icon: Icons.fingerprint_rounded,
+                      title: 'Biometric Unlock',
+                      subtitle: biometricEnabled
+                          ? 'Use fingerprint to unlock the app'
+                          : 'Enable fingerprint unlock',
+                      value: biometricEnabled,
+                      onChanged: (enable) => ctrl.setBiometricEnabled(enable),
+                    ),
+                  ],
                 ],
               ),
+              if (!lockActive)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(4, 12, 4, 0),
+                  child: Text(
+                    'When enabled, you\'ll need to enter a 4-digit PIN every time you open the app.',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.hintColor,
+                      height: 1.5,
+                    ),
+                  ),
+                ),
               if (lockActive && hasPin) ...[
                 const SizedBox(height: 24),
                 _SectionLabel(text: 'Security', theme: theme),
@@ -78,19 +129,6 @@ class AppLockScreen extends StatelessWidget {
                   ],
                 ),
               ],
-              if (!lockActive) ...[
-                const SizedBox(height: 24),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: Text(
-                    'When enabled, you\'ll need to enter a 4-digit PIN every time you open the app.',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.hintColor,
-                      height: 1.5,
-                    ),
-                  ),
-                ),
-              ],
             ],
           );
         },
@@ -98,7 +136,7 @@ class AppLockScreen extends StatelessWidget {
     );
   }
 
-  void _handleToggle(NoteController ctrl, bool enable, bool hasPin) {
+  void _handleLockToggle(NoteController ctrl, bool enable, bool hasPin) {
     if (enable) {
       ctrl.activePassword(true);
       if (!hasPin) {
@@ -106,9 +144,15 @@ class AppLockScreen extends StatelessWidget {
       }
     } else {
       ctrl.activePassword(false);
+      // Also disable biometric when app lock is turned off
+      ctrl.setBiometricEnabled(false);
     }
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Shared layout widgets
+// ─────────────────────────────────────────────────────────────────────────────
 
 class _SectionLabel extends StatelessWidget {
   const _SectionLabel({required this.text, required this.theme});
@@ -145,9 +189,7 @@ class _Card extends StatelessWidget {
         border: Border.all(color: theme.dividerColor),
       ),
       clipBehavior: Clip.antiAlias,
-      child: Column(
-        children: children,
-      ),
+      child: Column(children: children),
     );
   }
 }
@@ -208,9 +250,8 @@ class _ToggleTile extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.hintColor,
-                    ),
+                    style: theme.textTheme.bodySmall
+                        ?.copyWith(color: theme.hintColor),
                   ),
                 ],
               ),
@@ -258,11 +299,7 @@ class _NavTile extends StatelessWidget {
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.06),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(
-                icon,
-                size: 20,
-                color: theme.colorScheme.onSurface,
-              ),
+              child: Icon(icon, size: 20, color: theme.colorScheme.onSurface),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -278,18 +315,13 @@ class _NavTile extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.hintColor,
-                    ),
+                    style: theme.textTheme.bodySmall
+                        ?.copyWith(color: theme.hintColor),
                   ),
                 ],
               ),
             ),
-            Icon(
-              Icons.chevron_right_rounded,
-              size: 20,
-              color: theme.hintColor,
-            ),
+            Icon(Icons.chevron_right_rounded, size: 20, color: theme.hintColor),
           ],
         ),
       ),

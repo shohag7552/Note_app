@@ -167,6 +167,14 @@ class NoteController extends GetxController implements GetxService {
     return sharedPreferences.setBool(AppConstants.passActiveKey, status);
   }
 
+  bool isBiometricEnabled() =>
+      sharedPreferences.getBool(AppConstants.biometricKey) ?? false;
+
+  Future<void> setBiometricEnabled(bool status) async {
+    await sharedPreferences.setBool(AppConstants.biometricKey, status);
+    update();
+  }
+
   // ── Theme / Font ─────────────────────────────────────────────────────────
   void toggleTheme() {
     _darkTheme = !_darkTheme;

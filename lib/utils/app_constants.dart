@@ -12,4 +12,5 @@ class AppConstants{
   static const String opacityKey = 'opacity';
   static const String backgroundImageKey = 'backgroundImage';
   static const String fontKey = 'font';
+  static const String biometricKey = 'biometric-enabled';
 }

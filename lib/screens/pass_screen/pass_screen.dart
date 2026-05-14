@@ -90,7 +90,9 @@ class _PassScreenState extends State<PassScreen> {
       final canCheck = await _localAuth.canCheckBiometrics;
       final isSupported = await _localAuth.isDeviceSupported();
       if (!mounted) return;
-      setState(() => _biometricAvailable = canCheck && isSupported);
+      final userEnabled = Get.find<NoteController>().isBiometricEnabled();
+      final deviceReady = canCheck && isSupported;
+      setState(() => _biometricAvailable = deviceReady && userEnabled);
       if (_biometricAvailable) _triggerBiometric();
     } catch (_) {}
   }
