@@ -16,13 +16,6 @@ class DrawerWidget extends StatefulWidget {
 
 class _DrawerWidgetState extends State<DrawerWidget> {
   @override
-  void initState() {
-    super.initState();
-    Get.find<NoteController>().appLockStatus =
-        Get.find<NoteController>().isPasswordActive();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
@@ -161,20 +154,13 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                         Get.to(() => const FontStyleScreen());
                       },
                     ),
-                    _toggleRow(
+                    _row(
                       context,
                       icon: Icons.lock_outline_rounded,
-                      label: 'App lock',
-                      value: noteController.appLockStatus,
-                      onChanged: (s) {
-                        if (s && !noteController.isContainPassword()) {
-                          // Lock enabled but no PIN set yet — run setup first.
-                          noteController.activePassword(true);
-                          Get.back();
-                          Get.toNamed(AppRoute.pass);
-                        } else {
-                          noteController.activePassword(s);
-                        }
+                      label: 'App Lock',
+                      onTap: () {
+                        Get.back();
+                        Get.toNamed(AppRoute.appLock);
                       },
                     ),
                     _toggleRow(

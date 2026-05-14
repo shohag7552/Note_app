@@ -9,7 +9,15 @@ import 'package:my_note_app/routing/app_routes.dart';
 import 'package:my_note_app/utils/app_constants.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 
-enum _Mode { verify, setupQuestions, createPin, forgotPin }
+enum _Mode {
+  verify,
+  setupQuestions,
+  createPin,
+  forgotPin,
+  changePinVerify,
+  changePinCreate,
+  changeQuestionsOnly,
+}
 
 class PassScreen extends StatefulWidget {
   const PassScreen({super.key});
@@ -26,6 +34,7 @@ class _PassScreenState extends State<PassScreen> {
   late _Mode _mode;
   bool _biometricAvailable = false;
   bool _pinError = false;
+  bool _fromSettings = false;
 
   // Security-question setup
   int _questionIndex = 0;
@@ -33,6 +42,10 @@ class _PassScreenState extends State<PassScreen> {
 
   // Forgot PIN — show a random question
   late int _randomQuestionIndex;
+
+  // Two-step PIN confirmation (create & change flows)
+  String? _newPinBuffer;
+  bool _confirmingNewPin = false;
 
   static const _questions = [
     'What is your favourite hobby?',
@@ -45,9 +58,23 @@ class _PassScreenState extends State<PassScreen> {
   void initState() {
     super.initState();
     _randomQuestionIndex = Random().nextInt(_questions.length);
+
+    final args = Get.arguments as Map<String, dynamic>?;
+    final intent = args?['intent'] as String?;
+    _fromSettings = intent != null;
+
     final hasPin = Get.find<NoteController>().isContainPassword();
-    _mode = hasPin ? _Mode.verify : _Mode.setupQuestions;
-    if (_mode == _Mode.verify) _initBiometrics();
+
+    if (intent == 'changePin') {
+      _mode = _Mode.changePinVerify;
+    } else if (intent == 'changeQuestions') {
+      _mode = _Mode.changeQuestionsOnly;
+    } else if (intent == 'setup') {
+      _mode = _Mode.setupQuestions;
+    } else {
+      _mode = hasPin ? _Mode.verify : _Mode.setupQuestions;
+      if (_mode == _Mode.verify) _initBiometrics();
+    }
   }
 
   @override
@@ -79,18 +106,64 @@ class _PassScreenState extends State<PassScreen> {
       );
       if (ok && mounted) Get.offAllNamed(AppRoute.HOME);
     } on PlatformException {
-      // Biometric failed / cancelled — fall back to PIN silently.
+      // fall back to PIN silently
     }
   }
 
-  // ── PIN verify ────────────────────────────────────────────────────────────
+  // ── PIN verify (unlock / change-PIN gate) ─────────────────────────────────
   void _verifyPin(String pin) {
     final ok = Get.find<NoteController>().verifyPassword(pin);
     if (ok) {
-      Get.offAllNamed(AppRoute.HOME);
+      if (_mode == _Mode.changePinVerify) {
+        _pinController.clear();
+        setState(() {
+          _mode = _Mode.changePinCreate;
+          _pinError = false;
+        });
+      } else {
+        Get.offAllNamed(AppRoute.HOME);
+      }
     } else {
       _pinController.clear();
       setState(() => _pinError = true);
+    }
+  }
+
+  // ── Two-step PIN creation (setup + change flows) ──────────────────────────
+  void _onPinCreateCompleted(String pin) {
+    if (!_confirmingNewPin) {
+      // First entry: buffer it and ask to confirm
+      _newPinBuffer = pin;
+      _pinController.clear();
+      setState(() {
+        _confirmingNewPin = true;
+        _pinError = false;
+      });
+    } else {
+      // Confirm entry
+      if (pin == _newPinBuffer) {
+        Get.find<NoteController>().setPassword(pin);
+        if (_fromSettings) {
+          Get.back();
+          Get.snackbar(
+            'PIN updated',
+            'Your new PIN has been saved',
+            snackPosition: SnackPosition.BOTTOM,
+            margin: const EdgeInsets.all(16),
+            borderRadius: 12,
+            duration: const Duration(seconds: 2),
+          );
+        } else {
+          Get.offAllNamed(AppRoute.HOME);
+        }
+      } else {
+        _pinController.clear();
+        _newPinBuffer = null;
+        setState(() {
+          _confirmingNewPin = false;
+          _pinError = true;
+        });
+      }
     }
   }
 
@@ -103,7 +176,21 @@ class _PassScreenState extends State<PassScreen> {
     }
     setState(() {
       _questionIndex++;
-      if (_questionIndex >= _questions.length) _mode = _Mode.createPin;
+      if (_questionIndex >= _questions.length) {
+        if (_mode == _Mode.changeQuestionsOnly) {
+          Get.back();
+          Get.snackbar(
+            'Questions updated',
+            'Your security questions have been saved',
+            snackPosition: SnackPosition.BOTTOM,
+            margin: const EdgeInsets.all(16),
+            borderRadius: 12,
+            duration: const Duration(seconds: 2),
+          );
+        } else {
+          _mode = _Mode.createPin;
+        }
+      }
     });
   }
 
@@ -119,13 +206,14 @@ class _PassScreenState extends State<PassScreen> {
       _answerController.clear();
       Get.offNamed(AppRoute.forgetPass);
     } else {
-      final errorColor = Theme.of(context).colorScheme.error;
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Incorrect answer. Please try again.'),
           behavior: SnackBarBehavior.floating,
-          backgroundColor: errorColor,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          backgroundColor: Theme.of(context).colorScheme.error,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           margin: const EdgeInsets.all(16),
         ),
       );
@@ -137,14 +225,17 @@ class _PassScreenState extends State<PassScreen> {
   Widget build(BuildContext context) {
     return switch (_mode) {
       _Mode.verify => _buildVerify(context),
-      _Mode.setupQuestions => _buildSetupQuestions(context),
-      _Mode.createPin => _buildCreatePin(context),
+      _Mode.setupQuestions ||
+      _Mode.changeQuestionsOnly =>
+        _buildSetupQuestions(context),
+      _Mode.createPin || _Mode.changePinCreate => _buildCreatePin(context),
       _Mode.forgotPin => _buildForgotPin(context),
+      _Mode.changePinVerify => _buildChangePinVerify(context),
     };
   }
 
   // ─────────────────────────────────────────────────────────────────────────
-  // SCREEN: Verify PIN
+  // SCREEN: Verify PIN (app unlock)
   // ─────────────────────────────────────────────────────────────────────────
   Widget _buildVerify(BuildContext context) {
     final theme = Theme.of(context);
@@ -182,21 +273,7 @@ class _PassScreenState extends State<PassScreen> {
                   },
                   onCompleted: _verifyPin,
                 ),
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 200),
-                  child: _pinError
-                      ? Padding(
-                          key: const ValueKey('err'),
-                          padding: const EdgeInsets.only(top: 12),
-                          child: Text(
-                            'Incorrect PIN. Try again.',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.error,
-                            ),
-                          ),
-                        )
-                      : const SizedBox(key: ValueKey('no-err'), height: 12),
-                ),
+                _pinErrorWidget(context, 'Incorrect PIN. Try again.'),
                 const SizedBox(height: 8),
                 TextButton(
                   onPressed: () => setState(() {
@@ -219,9 +296,11 @@ class _PassScreenState extends State<PassScreen> {
                     Expanded(child: Divider(color: theme.dividerColor)),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: Text('or',
-                          style: theme.textTheme.labelSmall
-                              ?.copyWith(color: theme.hintColor)),
+                      child: Text(
+                        'or',
+                        style: theme.textTheme.labelSmall
+                            ?.copyWith(color: theme.hintColor),
+                      ),
                     ),
                     Expanded(child: Divider(color: theme.dividerColor)),
                   ]),
@@ -247,12 +326,65 @@ class _PassScreenState extends State<PassScreen> {
   }
 
   // ─────────────────────────────────────────────────────────────────────────
-  // SCREEN: Security-question setup (step 1–3)
+  // SCREEN: Verify current PIN (before changing it)
   // ─────────────────────────────────────────────────────────────────────────
-  Widget _buildSetupQuestions(BuildContext context) {
+  Widget _buildChangePinVerify(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
+      appBar: _settingsAppBar(context, 'Change PIN'),
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 40),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _lockIcon(theme, Icons.lock_outline_rounded),
+                const SizedBox(height: 24),
+                Text(
+                  'Verify your PIN',
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Enter your current PIN to continue',
+                  style: theme.textTheme.bodyMedium
+                      ?.copyWith(color: theme.hintColor),
+                ),
+                const SizedBox(height: 40),
+                _pinField(
+                  context,
+                  controller: _pinController,
+                  hasError: _pinError,
+                  onChanged: (_) {
+                    if (_pinError) setState(() => _pinError = false);
+                  },
+                  onCompleted: _verifyPin,
+                ),
+                _pinErrorWidget(context, 'Incorrect PIN. Try again.'),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // SCREEN: Security-question setup (step 1–3) — shared by setup & change
+  // ─────────────────────────────────────────────────────────────────────────
+  Widget _buildSetupQuestions(BuildContext context) {
+    final theme = Theme.of(context);
+    final isChangeMode = _mode == _Mode.changeQuestionsOnly;
+    return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
+      appBar: isChangeMode
+          ? _settingsAppBar(context, 'Security Questions')
+          : null,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(28, 32, 28, 28),
@@ -281,7 +413,7 @@ class _PassScreenState extends State<PassScreen> {
               ),
               const SizedBox(height: 36),
               Text(
-                'Security Setup',
+                isChangeMode ? 'Update Security Questions' : 'Security Setup',
                 style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w700,
                   letterSpacing: -0.5,
@@ -338,7 +470,9 @@ class _PassScreenState extends State<PassScreen> {
                     shape: const StadiumBorder(),
                   ),
                   child: Text(
-                    _questionIndex < _questions.length - 1 ? 'Next' : 'Continue',
+                    _questionIndex < _questions.length - 1
+                        ? 'Next'
+                        : 'Save Questions',
                     style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
                 ),
@@ -351,12 +485,27 @@ class _PassScreenState extends State<PassScreen> {
   }
 
   // ─────────────────────────────────────────────────────────────────────────
-  // SCREEN: Create PIN (step 4 of setup)
+  // SCREEN: Create / Change PIN — with two-step confirmation
   // ─────────────────────────────────────────────────────────────────────────
   Widget _buildCreatePin(BuildContext context) {
     final theme = Theme.of(context);
+    final isChangeMode = _mode == _Mode.changePinCreate;
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
+      appBar: isChangeMode
+          ? _settingsAppBar(
+              context,
+              'Change PIN',
+              onBack: _confirmingNewPin
+                  ? () => setState(() {
+                        _confirmingNewPin = false;
+                        _newPinBuffer = null;
+                        _pinController.clear();
+                        _pinError = false;
+                      })
+                  : null,
+            )
+          : null,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -364,32 +513,57 @@ class _PassScreenState extends State<PassScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                _lockIcon(theme, Icons.lock_open_rounded),
-                const SizedBox(height: 24),
-                Text(
-                  'Create your PIN',
-                  style: theme.textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -0.5,
-                  ),
+                _lockIcon(
+                  theme,
+                  _confirmingNewPin
+                      ? Icons.lock_reset_rounded
+                      : Icons.lock_open_rounded,
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  'Choose a 4-digit PIN to protect your notes',
-                  style: theme.textTheme.bodyMedium
-                      ?.copyWith(color: theme.hintColor),
-                  textAlign: TextAlign.center,
+                const SizedBox(height: 24),
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  child: Column(
+                    key: ValueKey(_confirmingNewPin),
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        _confirmingNewPin
+                            ? 'Confirm your PIN'
+                            : isChangeMode
+                                ? 'Create new PIN'
+                                : 'Create your PIN',
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        _confirmingNewPin
+                            ? 'Re-enter your PIN to confirm'
+                            : 'Choose a 4-digit PIN to protect your notes',
+                        style: theme.textTheme.bodyMedium
+                            ?.copyWith(color: theme.hintColor),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 40),
                 _pinField(
                   context,
                   controller: _pinController,
-                  hasError: false,
-                  onChanged: (_) {},
-                  onCompleted: (pin) {
-                    Get.find<NoteController>().setPassword(pin);
-                    Get.offAllNamed(AppRoute.HOME);
+                  hasError: _pinError,
+                  onChanged: (_) {
+                    if (_pinError) setState(() => _pinError = false);
                   },
+                  onCompleted: _onPinCreateCompleted,
+                ),
+                _pinErrorWidget(
+                  context,
+                  _confirmingNewPin
+                      ? 'PINs do not match. Try again.'
+                      : 'Something went wrong. Try again.',
                 ),
               ],
             ),
@@ -486,6 +660,44 @@ class _PassScreenState extends State<PassScreen> {
   // ─────────────────────────────────────────────────────────────────────────
   // Shared helpers
   // ─────────────────────────────────────────────────────────────────────────
+  AppBar _settingsAppBar(
+    BuildContext context,
+    String title, {
+    VoidCallback? onBack,
+  }) {
+    final theme = Theme.of(context);
+    return AppBar(
+      leading: BackButton(onPressed: onBack ?? () => Navigator.of(context).pop()),
+      title: Text(
+        title,
+        style: theme.textTheme.titleLarge?.copyWith(
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+          letterSpacing: -0.2,
+        ),
+      ),
+    );
+  }
+
+  Widget _pinErrorWidget(BuildContext context, String message) {
+    final theme = Theme.of(context);
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 200),
+      child: _pinError
+          ? Padding(
+              key: const ValueKey('err'),
+              padding: const EdgeInsets.only(top: 12),
+              child: Text(
+                message,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.error,
+                ),
+              ),
+            )
+          : const SizedBox(key: ValueKey('no-err'), height: 12),
+    );
+  }
+
   Widget _lockIcon(ThemeData theme, IconData icon) {
     return Container(
       width: 80,
@@ -527,9 +739,8 @@ class _PassScreenState extends State<PassScreen> {
         inactiveFillColor: theme.cardColor,
         selectedColor: theme.colorScheme.onSurface,
         selectedFillColor: theme.cardColor,
-        activeColor: hasError
-            ? theme.colorScheme.error
-            : theme.colorScheme.onSurface,
+        activeColor:
+            hasError ? theme.colorScheme.error : theme.colorScheme.onSurface,
         activeFillColor: hasError
             ? theme.colorScheme.error.withValues(alpha: 0.06)
             : theme.cardColor,
