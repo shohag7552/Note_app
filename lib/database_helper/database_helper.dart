@@ -72,6 +72,18 @@ class DatabaseHelper {
     return await db.delete(_tableName);
   }
 
+  /// Delete notes by a list of IDs in a single query
+  Future<void> deleteNotesByIds(List<int> ids) async {
+    if (ids.isEmpty) return;
+    final db = await instance.database;
+    final placeholders = List.filled(ids.length, '?').join(',');
+    await db.delete(
+      _tableName,
+      where: 'note_id IN ($placeholders)',
+      whereArgs: ids,
+    );
+  }
+
   /// Update Note
   Future<int> updateNote(Note note) async {
     print('=====sss===> ${note.toJson()}');

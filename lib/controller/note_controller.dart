@@ -32,6 +32,35 @@ class NoteController extends GetxController implements GetxService {
 
   bool showFavouritesOnly = false;
 
+  // ── Multi-select ─────────────────────────────────────────────────────────
+  final selectedIds = <int>{};
+  bool get isSelectionMode => selectedIds.isNotEmpty;
+
+  void toggleSelection(int id) {
+    if (selectedIds.contains(id)) {
+      selectedIds.remove(id);
+    } else {
+      selectedIds.add(id);
+    }
+    update();
+  }
+
+  void selectAll(List<Note> displayedNotes) {
+    selectedIds.addAll(displayedNotes.map((n) => n.id!));
+    update();
+  }
+
+  void clearSelection() {
+    selectedIds.clear();
+    update();
+  }
+
+  Future<void> deleteSelectedNotes() async {
+    await DatabaseHelper.instance.deleteNotesByIds(selectedIds.toList());
+    selectedIds.clear();
+    getAllNotes();
+  }
+
   // ── PIN hashing ──────────────────────────────────────────────────────────
   static String _hashPin(String pin) =>
       sha256.convert(utf8.encode(pin)).toString();
