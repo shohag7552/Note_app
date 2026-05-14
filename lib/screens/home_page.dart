@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:get/get.dart';
+import 'package:my_note_app/model/note_model.dart';
 import 'package:my_note_app/routing/app_routes.dart';
 import 'package:my_note_app/screens/note_screens/search_screen.dart';
 import 'package:my_note_app/widgets/drawer_widget.dart';
@@ -84,9 +85,27 @@ class HomePage extends StatelessWidget {
           ),
           drawer: const DrawerWidget(),
           body: GetBuilder<NoteController>(
-            builder: (_) => controller.isEmpty()
-                ? _emptyState(context)
-                : _notesGrid(context, controller),
+            builder: (_) {
+              final favourites = controller.notes
+                  .where((n) => n.isFavorite == 1)
+                  .toList();
+              final displayNotes = controller.showFavouritesOnly
+                  ? favourites
+                  : controller.notes;
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _filterChips(context, controller, favourites.length),
+                  Expanded(
+                    child: displayNotes.isEmpty
+                        ? _emptyState(context,
+                            isFavouritesFilter: controller.showFavouritesOnly)
+                        : _notesGrid(context, displayNotes),
+                  ),
+                ],
+              );
+            },
           ),
           floatingActionButton: FloatingActionButton.extended(
             onPressed: () => Get.toNamed(AppRoute.ADD_NEW_NOTE),
@@ -101,7 +120,94 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _notesGrid(BuildContext context, NoteController controller) {
+  Widget _filterChips(BuildContext context, NoteController controller, int favCount) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 8, 14, 4),
+      child: Row(
+        children: [
+          _chip(
+            context,
+            label: 'All',
+            count: controller.notes.length,
+            selected: !controller.showFavouritesOnly,
+            onTap: () {
+              if (controller.showFavouritesOnly) controller.toggleFavouritesFilter();
+            },
+          ),
+          const SizedBox(width: 8),
+          _chip(
+            context,
+            label: 'Bookmarked',
+            count: favCount,
+            selected: controller.showFavouritesOnly,
+            icon: Icons.bookmark_rounded,
+            onTap: () {
+              if (!controller.showFavouritesOnly) controller.toggleFavouritesFilter();
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _chip(
+    BuildContext context, {
+    required String label,
+    required int count,
+    required bool selected,
+    required VoidCallback onTap,
+    IconData? icon,
+  }) {
+    final theme = Theme.of(context);
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        decoration: BoxDecoration(
+          color: selected ? theme.colorScheme.onSurface : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: selected ? theme.colorScheme.onSurface : theme.dividerColor,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null) ...[
+              Icon(
+                icon,
+                size: 13,
+                color: selected ? theme.colorScheme.surface : theme.hintColor,
+              ),
+              const SizedBox(width: 4),
+            ],
+            Text(
+              label,
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: selected ? theme.colorScheme.surface : theme.hintColor,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            if (count > 0) ...[
+              const SizedBox(width: 5),
+              Text(
+                '$count',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: selected
+                      ? theme.colorScheme.surface.withValues(alpha: 0.7)
+                      : theme.hintColor.withValues(alpha: 0.7),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _notesGrid(BuildContext context, List<Note> notes) {
     return SafeArea(
       top: false,
       child: Padding(
@@ -110,16 +216,16 @@ class HomePage extends StatelessWidget {
           crossAxisCount: 2,
           mainAxisSpacing: 10,
           crossAxisSpacing: 10,
-          itemCount: controller.notes.length,
+          itemCount: notes.length,
           itemBuilder: (context, index) {
-            return NoteCart(note: controller.notes[index], index: index);
+            return NoteCart(note: notes[index], index: index);
           },
         ),
       ),
     );
   }
 
-  Widget _emptyState(BuildContext context) {
+  Widget _emptyState(BuildContext context, {bool isFavouritesFilter = false}) {
     final theme = Theme.of(context);
     return Center(
       child: Padding(
@@ -136,14 +242,16 @@ class HomePage extends StatelessWidget {
                 border: Border.all(color: theme.dividerColor),
               ),
               child: Icon(
-                Icons.edit_note_rounded,
+                isFavouritesFilter
+                    ? Icons.bookmark_border_rounded
+                    : Icons.edit_note_rounded,
                 size: 44,
                 color: theme.hintColor,
               ),
             ),
             const SizedBox(height: 24),
             Text(
-              'No notes yet',
+              isFavouritesFilter ? 'No bookmarks yet' : 'No notes yet',
               style: theme.textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.w700,
                 letterSpacing: -0.4,
@@ -151,28 +259,32 @@ class HomePage extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Capture an idea, a thought, or a reminder.\nTap the button below to begin.',
+              isFavouritesFilter
+                  ? 'Tap the bookmark icon on any note to save it here.'
+                  : 'Capture an idea, a thought, or a reminder.\nTap the button below to begin.',
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.hintColor,
                 height: 1.5,
               ),
             ),
-            const SizedBox(height: 24),
-            FilledButton.icon(
-              onPressed: () => Get.toNamed(AppRoute.ADD_NEW_NOTE),
-              style: FilledButton.styleFrom(
-                backgroundColor: theme.colorScheme.primary,
-                foregroundColor: theme.colorScheme.onPrimary,
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                shape: const StadiumBorder(),
+            if (!isFavouritesFilter) ...[
+              const SizedBox(height: 24),
+              FilledButton.icon(
+                onPressed: () => Get.toNamed(AppRoute.ADD_NEW_NOTE),
+                style: FilledButton.styleFrom(
+                  backgroundColor: theme.colorScheme.primary,
+                  foregroundColor: theme.colorScheme.onPrimary,
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                  shape: const StadiumBorder(),
+                ),
+                icon: const Icon(Icons.add_rounded, size: 20),
+                label: const Text(
+                  'Create your first note',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
               ),
-              icon: const Icon(Icons.add_rounded, size: 20),
-              label: const Text(
-                'Create your first note',
-                style: TextStyle(fontWeight: FontWeight.w600),
-              ),
-            ),
+            ],
           ],
         ),
       ),

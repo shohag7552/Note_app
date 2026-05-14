@@ -28,6 +28,13 @@ class NoteController extends GetxController implements GetxService{
   String _currentFont = 'Inter';
   String get currentFont => _currentFont;
 
+  bool showFavouritesOnly = false;
+
+  void toggleFavouritesFilter() {
+    showFavouritesOnly = !showFavouritesOnly;
+    update();
+  }
+
   @override
   void onInit() {
     getAllNotes();
