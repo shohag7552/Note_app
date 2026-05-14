@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:my_note_app/controller/auth_controller.dart';
 import 'package:my_note_app/controller/background_controller.dart';
 import 'package:my_note_app/controller/note_controller.dart';
+import 'package:my_note_app/routing/app_routes.dart';
 import 'package:my_note_app/screens/setting_screen/font_style_screen.dart';
 
 class DrawerWidget extends StatefulWidget {
@@ -165,7 +166,16 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                       icon: Icons.lock_outline_rounded,
                       label: 'App lock',
                       value: noteController.appLockStatus,
-                      onChanged: (s) => noteController.activePassword(s),
+                      onChanged: (s) {
+                        if (s && !noteController.isContainPassword()) {
+                          // Lock enabled but no PIN set yet — run setup first.
+                          noteController.activePassword(true);
+                          Get.back();
+                          Get.toNamed(AppRoute.pass);
+                        } else {
+                          noteController.activePassword(s);
+                        }
+                      },
                     ),
                     _toggleRow(
                       context,

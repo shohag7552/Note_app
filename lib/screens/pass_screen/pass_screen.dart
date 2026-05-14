@@ -1,14 +1,15 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:local_auth/local_auth.dart';
 import 'package:my_note_app/controller/note_controller.dart';
 import 'package:my_note_app/routing/app_routes.dart';
 import 'package:my_note_app/utils/app_constants.dart';
-import 'package:my_note_app/utils/font_size.dart';
-import 'package:my_note_app/utils/padding_size.dart';
-import 'package:my_note_app/utils/style.dart';
-import 'package:my_note_app/widgets/toast.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
-import 'dart:math';
+
+enum _Mode { verify, setupQuestions, createPin, forgotPin }
 
 class PassScreen extends StatefulWidget {
   const PassScreen({super.key});
@@ -18,483 +19,525 @@ class PassScreen extends StatefulWidget {
 }
 
 class _PassScreenState extends State<PassScreen> {
+  final _localAuth = LocalAuthentication();
+  final _answerController = TextEditingController();
+  final _pinController = TextEditingController();
 
-  String code = '1234';
+  late _Mode _mode;
+  bool _biometricAvailable = false;
+  bool _pinError = false;
 
-  String? enterCode;
-  bool alreadyHavePassword = false;
+  // Security-question setup
+  int _questionIndex = 0;
+  final List<String> _collectedAnswers = [];
 
-  final TextEditingController _textController = TextEditingController();
+  // Forgot PIN — show a random question
+  late int _randomQuestionIndex;
 
-  List<String> questions = [
+  static const _questions = [
     'What is your favourite hobby?',
-    'What is your pet\'s name?',
-    'What is your spouse name?',
+    "What is your pet's name?",
+    "What is your mother's maiden name?",
   ];
 
-  int questionIndex = 0;
-  int randomQuestionIndex = 0;
-
-  List<String> answerList = [];
-
-  bool isForgetPassword = false;
-  List<String>? suggestion;
-
+  // ── Lifecycle ─────────────────────────────────────────────────────────────
   @override
   void initState() {
     super.initState();
-
-    alreadyHavePassword = Get.find<NoteController>().isContainPassword();
-    randomQuestionIndex = generateRandom(0, questions.length-1);
-    initConfig();
-  }
-
-  initConfig() async {
-    suggestion = await Get.find<NoteController>().getSuggestions();
-    print('=========suggestion: $suggestion');
+    _randomQuestionIndex = Random().nextInt(_questions.length);
+    final hasPin = Get.find<NoteController>().isContainPassword();
+    _mode = hasPin ? _Mode.verify : _Mode.setupQuestions;
+    if (_mode == _Mode.verify) _initBiometrics();
   }
 
   @override
   void dispose() {
-
-    _textController.dispose();
+    _answerController.dispose();
+    _pinController.dispose();
     super.dispose();
   }
 
-  int generateRandom(int min, int max) {
-    final random = Random();
-    return min + random.nextInt(max - min + 1);
+  // ── Biometrics ────────────────────────────────────────────────────────────
+  Future<void> _initBiometrics() async {
+    try {
+      final canCheck = await _localAuth.canCheckBiometrics;
+      final isSupported = await _localAuth.isDeviceSupported();
+      if (!mounted) return;
+      setState(() => _biometricAvailable = canCheck && isSupported);
+      if (_biometricAvailable) _triggerBiometric();
+    } catch (_) {}
   }
 
+  Future<void> _triggerBiometric() async {
+    try {
+      final ok = await _localAuth.authenticate(
+        localizedReason: 'Authenticate to access your notes',
+        options: const AuthenticationOptions(
+          biometricOnly: false,
+          stickyAuth: true,
+        ),
+      );
+      if (ok && mounted) Get.offAllNamed(AppRoute.HOME);
+    } on PlatformException {
+      // Biometric failed / cancelled — fall back to PIN silently.
+    }
+  }
+
+  // ── PIN verify ────────────────────────────────────────────────────────────
+  void _verifyPin(String pin) {
+    final ok = Get.find<NoteController>().verifyPassword(pin);
+    if (ok) {
+      Get.offAllNamed(AppRoute.HOME);
+    } else {
+      _pinController.clear();
+      setState(() => _pinError = true);
+    }
+  }
+
+  // ── Security-question setup ───────────────────────────────────────────────
+  void _submitAnswer() {
+    _collectedAnswers.add(_answerController.text.trim().toLowerCase());
+    _answerController.clear();
+    if (_collectedAnswers.length == _questions.length) {
+      Get.find<NoteController>().setSuggestions(_collectedAnswers);
+    }
+    setState(() {
+      _questionIndex++;
+      if (_questionIndex >= _questions.length) _mode = _Mode.createPin;
+    });
+  }
+
+  // ── Forgot-PIN verify ─────────────────────────────────────────────────────
+  Future<void> _verifySecurityAnswer() async {
+    final stored = await Get.find<NoteController>().getSuggestions();
+    if (!mounted) return;
+
+    final expected = stored?[_randomQuestionIndex].trim().toLowerCase() ?? '';
+    final given = _answerController.text.trim().toLowerCase();
+
+    if (expected == given) {
+      _answerController.clear();
+      Get.offNamed(AppRoute.forgetPass);
+    } else {
+      final errorColor = Theme.of(context).colorScheme.error;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Incorrect answer. Please try again.'),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: errorColor,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          margin: const EdgeInsets.all(16),
+        ),
+      );
+    }
+  }
+
+  // ── Build ─────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
+    return switch (_mode) {
+      _Mode.verify => _buildVerify(context),
+      _Mode.setupQuestions => _buildSetupQuestions(context),
+      _Mode.createPin => _buildCreatePin(context),
+      _Mode.forgotPin => _buildForgotPin(context),
+    };
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // SCREEN: Verify PIN
+  // ─────────────────────────────────────────────────────────────────────────
+  Widget _buildVerify(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: Theme.of(context).primaryColor,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
-        child: GetBuilder<NoteController>(
-          builder: (noteController) {
-
-            alreadyHavePassword = noteController.isContainPassword();
-
-            return isForgetPassword ? forgetPassView()
-                : !alreadyHavePassword ? createAccount()
-                : passwordView(noteController);
-          }
-        ),
-      ),
-    );
-  }
-
-  Widget forgetPassView() {
-    return Padding(
-      padding: const EdgeInsets.all(PaddingSize.small),
-      child: Column(mainAxisAlignment: MainAxisAlignment.center, mainAxisSize: MainAxisSize.min, children: [
-        const SizedBox(height: 50),
-
-        Text(
-          "Write the proper answer that you provided while creating password.",
-          style: fontStyleMedium.copyWith(fontSize: FontSize.medium), textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 25),
-
-        askQuestion(questions[randomQuestionIndex], fromForgetPass: true),
-      ]),
-    );
-  }
-
-  Widget createAccount() {
-    return Padding(
-      padding: const EdgeInsets.all(PaddingSize.small),
-      child: questions.length == questionIndex ? passwordView(Get.find<NoteController>()) : Column(spacing: PaddingSize.small, children: [
-        const SizedBox(height: 50),
-
-        Text(
-          'Welcome to ${AppConstants.appName}. Please provide some information for Setup your password. ',
-          style: fontStyleMedium.copyWith(fontSize: FontSize.medium, color: Theme.of(context).cardColor),
-        ),
-
-
-        Text(
-          "You'll reset your password with the help of these information. So please provide valid information.",
-          style: fontStyleMedium.copyWith(fontSize: FontSize.small, color: Colors.amber),
-        ),
-
-        const SizedBox(height: PaddingSize.large),
-
-        askQuestion(questions[questionIndex]),
-
-
-      ]),
-    );
-  }
-
-  Widget askQuestion(String question, {bool fromForgetPass = false}) {
-    bool isAllAnswerSubmitted = questions.length == questionIndex;
-    return Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-      Text(
-        'Q. $question',
-        style: fontStyleMedium.copyWith(fontSize: FontSize.mediumLarge, color: Theme.of(context).cardColor),
-      ),
-
-      Row(children: [
-        Text(
-          'Ans: ',
-          style: fontStyleMedium.copyWith(fontSize: FontSize.mediumLarge, color: Colors.amber),
-        ),
-        Expanded(
-          child: TextField(
-            controller: _textController,
-            decoration: InputDecoration(
-              hintText: 'Write your answer..',
-              focusColor: Colors.black,
-              focusedBorder: UnderlineInputBorder(),
-              hintStyle: fontStyleNormal.copyWith(color: Colors.black38),
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 40),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _lockIcon(theme, Icons.lock_outline_rounded),
+                const SizedBox(height: 24),
+                Text(
+                  AppConstants.appName,
+                  style: theme.textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Enter your 4-digit PIN',
+                  style: theme.textTheme.bodyMedium
+                      ?.copyWith(color: theme.hintColor),
+                ),
+                const SizedBox(height: 40),
+                _pinField(
+                  context,
+                  controller: _pinController,
+                  hasError: _pinError,
+                  onChanged: (_) {
+                    if (_pinError) setState(() => _pinError = false);
+                  },
+                  onCompleted: _verifyPin,
+                ),
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  child: _pinError
+                      ? Padding(
+                          key: const ValueKey('err'),
+                          padding: const EdgeInsets.only(top: 12),
+                          child: Text(
+                            'Incorrect PIN. Try again.',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.error,
+                            ),
+                          ),
+                        )
+                      : const SizedBox(key: ValueKey('no-err'), height: 12),
+                ),
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: () => setState(() {
+                    _mode = _Mode.forgotPin;
+                    _pinError = false;
+                    _pinController.clear();
+                  }),
+                  child: Text(
+                    'Forgot PIN?',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.hintColor,
+                      decoration: TextDecoration.underline,
+                      decorationColor: theme.hintColor,
+                    ),
+                  ),
+                ),
+                if (_biometricAvailable) ...[
+                  const SizedBox(height: 32),
+                  Row(children: [
+                    Expanded(child: Divider(color: theme.dividerColor)),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Text('or',
+                          style: theme.textTheme.labelSmall
+                              ?.copyWith(color: theme.hintColor)),
+                    ),
+                    Expanded(child: Divider(color: theme.dividerColor)),
+                  ]),
+                  const SizedBox(height: 24),
+                  OutlinedButton.icon(
+                    onPressed: _triggerBiometric,
+                    icon: const Icon(Icons.fingerprint_rounded, size: 22),
+                    label: const Text('Use Biometrics'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 28, vertical: 14),
+                      side: BorderSide(color: theme.dividerColor),
+                      shape: const StadiumBorder(),
+                    ),
+                  ),
+                ],
+              ],
             ),
-            cursorColor: Colors.black,
-            onChanged: (v) {
-              setState(() {
-
-              });
-            },
           ),
         ),
-      ]),
-      const SizedBox(height: PaddingSize.medium),
-
-      Center(
-        child: _textController.text.isNotEmpty ? ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            shadowColor: Colors.black45,
-            elevation: 3,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32.0)),
-            minimumSize: const Size(150, 40),
-          ),
-          onPressed: () async {
-            if(!fromForgetPass) {
-              answerList.add(_textController.text);
-              print('===yyyyy==> $answerList // $isAllAnswerSubmitted');
-              _textController.text = '';
-              if (!isAllAnswerSubmitted) {
-                questionIndex++;
-                if(answerList.length == questions.length) {
-                  Get.find<NoteController>().setSuggestions(answerList);
-                }
-              }/* else {
-                print('===xxxx==> $answerList');
-                Get.find<NoteController>().setSuggestions(answerList);
-              }*/
-              setState(() {});
-            } else {
-              suggestion = await Get.find<NoteController>().getSuggestions();
-              print('====s : $suggestion');
-              if(suggestion != null && suggestion![randomQuestionIndex] == _textController.text) {
-                Get.offNamed(AppRoute.forgetPass);
-                // setState(() {
-                //   isForgetPassword = false;
-                //   alreadyHavePassword = false;
-                //   takePassAgain = true;
-                // });
-              } else {
-                showToast(message: 'Not matched any answer');
-              }
-            }
-          },
-          child: Text('Submit'),
-        ) : const SizedBox(),
       ),
-
-    ]);
+    );
   }
 
-  Widget passwordView(NoteController noteController) {
-    return Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-
-      Text(
-        !alreadyHavePassword ? 'Please setup your password' : 'Please enter your password',
-        style: fontStyleMedium.copyWith(fontSize: 20, color: Theme.of(context).cardColor),
-      ),
-      SizedBox(height: 50),
-
-      Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 25),
-        child: PinCodeTextField(
-          length: 4,
-          appContext: context,
-          keyboardType: TextInputType.number,
-          animationType: AnimationType.slide,
-          pinTheme: PinTheme(
-            shape: PinCodeFieldShape.box,
-            fieldHeight: 60,
-            fieldWidth: 55,
-            borderWidth: 1,
-            borderRadius: BorderRadius.circular(15),
-            selectedColor: Theme.of(context).cardColor,
-            selectedFillColor: Colors.white,
-            inactiveFillColor: Colors.white,
-            inactiveColor: Theme.of(context).primaryColor,
-            activeColor: Theme.of(context).primaryColor,
-            activeFillColor: Colors.white,
-
+  // ─────────────────────────────────────────────────────────────────────────
+  // SCREEN: Security-question setup (step 1–3)
+  // ─────────────────────────────────────────────────────────────────────────
+  Widget _buildSetupQuestions(BuildContext context) {
+    final theme = Theme.of(context);
+    return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(28, 32, 28, 28),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Step progress bar
+              Row(
+                children: List.generate(_questions.length, (i) {
+                  final active = i <= _questionIndex;
+                  return Expanded(
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      margin: EdgeInsets.only(
+                          right: i < _questions.length - 1 ? 6 : 0),
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: active
+                            ? theme.colorScheme.onSurface
+                            : theme.dividerColor,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                  );
+                }),
+              ),
+              const SizedBox(height: 36),
+              Text(
+                'Security Setup',
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.5,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Answer these to recover your PIN if you ever forget it.',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.hintColor,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 40),
+              Text(
+                'Question ${_questionIndex + 1} of ${_questions.length}',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.hintColor,
+                  letterSpacing: 0.6,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                _questions[_questionIndex],
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  height: 1.45,
+                ),
+              ),
+              const SizedBox(height: 24),
+              TextField(
+                controller: _answerController,
+                autofocus: true,
+                textCapitalization: TextCapitalization.none,
+                decoration: const InputDecoration(hintText: 'Your answer'),
+                onChanged: (_) => setState(() {}),
+                onSubmitted: (_) {
+                  if (_answerController.text.trim().isNotEmpty) _submitAnswer();
+                },
+              ),
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: _answerController.text.trim().isEmpty
+                      ? null
+                      : _submitAnswer,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: theme.colorScheme.primary,
+                    foregroundColor: theme.colorScheme.onPrimary,
+                    disabledBackgroundColor: theme.dividerColor,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: const StadiumBorder(),
+                  ),
+                  child: Text(
+                    _questionIndex < _questions.length - 1 ? 'Next' : 'Continue',
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+            ],
           ),
-          textStyle: fontStyleBold.copyWith(color: Colors.black),
-          animationDuration: const Duration(milliseconds: 300),
-          backgroundColor: Colors.transparent,
-          enableActiveFill: true,
-          onChanged: (v) {
-            setState(() {
-              enterCode = v;
-            });
-          },
-          beforeTextPaste: (text) => true,
         ),
       ),
+    );
+  }
 
-      SizedBox(height: 50),
-
-      ElevatedButton(
-        onPressed: (){
-          if(enterCode == null || enterCode!.isEmpty) {
-            showToast(message: 'Please Enter Password');
-          } else if(alreadyHavePassword) {
-            if(enterCode == noteController.getPassword()) {
-              Get.offNamed(AppRoute.HOME);
-            } else {
-              showToast(message: 'Your password is wrong');
-            }
-          } else {
-            noteController.setPassword(enterCode!);
-            Get.offNamed(AppRoute.HOME);
-          }
-        },
-        style: ElevatedButton.styleFrom(
-          minimumSize: const Size(150, 40),
+  // ─────────────────────────────────────────────────────────────────────────
+  // SCREEN: Create PIN (step 4 of setup)
+  // ─────────────────────────────────────────────────────────────────────────
+  Widget _buildCreatePin(BuildContext context) {
+    final theme = Theme.of(context);
+    return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 40),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _lockIcon(theme, Icons.lock_open_rounded),
+                const SizedBox(height: 24),
+                Text(
+                  'Create your PIN',
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Choose a 4-digit PIN to protect your notes',
+                  style: theme.textTheme.bodyMedium
+                      ?.copyWith(color: theme.hintColor),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 40),
+                _pinField(
+                  context,
+                  controller: _pinController,
+                  hasError: false,
+                  onChanged: (_) {},
+                  onCompleted: (pin) {
+                    Get.find<NoteController>().setPassword(pin);
+                    Get.offAllNamed(AppRoute.HOME);
+                  },
+                ),
+              ],
+            ),
+          ),
         ),
-        child: Text(alreadyHavePassword ? 'Verify' : 'Set'),
       ),
-      const SizedBox(height: PaddingSize.medium),
+    );
+  }
 
-      alreadyHavePassword ? TextButton(
-        onPressed: (){
-          setState(() {
-            isForgetPassword = true;
-          });
-        },
-        child: Text('Forget password?', style: fontStyleNormal.copyWith(color: Theme.of(context).textTheme.bodyLarge!.color)),
-      ) : const SizedBox(),
-    ]);
+  // ─────────────────────────────────────────────────────────────────────────
+  // SCREEN: Forgot PIN (security-question answer)
+  // ─────────────────────────────────────────────────────────────────────────
+  Widget _buildForgotPin(BuildContext context) {
+    final theme = Theme.of(context);
+    return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
+      appBar: AppBar(
+        leading: BackButton(
+          onPressed: () => setState(() {
+            _mode = _Mode.verify;
+            _answerController.clear();
+          }),
+        ),
+        title: Text(
+          'Forgot PIN',
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            letterSpacing: -0.2,
+          ),
+        ),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(28, 20, 28, 28),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Answer your security question',
+              style: theme.textTheme.titleMedium
+                  ?.copyWith(fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: theme.cardColor,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: theme.dividerColor),
+              ),
+              child: Text(
+                _questions[_randomQuestionIndex],
+                style: theme.textTheme.bodyMedium?.copyWith(height: 1.5),
+              ),
+            ),
+            const SizedBox(height: 24),
+            TextField(
+              controller: _answerController,
+              autofocus: true,
+              decoration: const InputDecoration(hintText: 'Your answer'),
+              onChanged: (_) => setState(() {}),
+              onSubmitted: (_) {
+                if (_answerController.text.trim().isNotEmpty) {
+                  _verifySecurityAnswer();
+                }
+              },
+            ),
+            const SizedBox(height: 32),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: _answerController.text.trim().isEmpty
+                    ? null
+                    : _verifySecurityAnswer,
+                style: FilledButton.styleFrom(
+                  backgroundColor: theme.colorScheme.primary,
+                  foregroundColor: theme.colorScheme.onPrimary,
+                  disabledBackgroundColor: theme.dividerColor,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: const StadiumBorder(),
+                ),
+                child: const Text(
+                  'Verify',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Shared helpers
+  // ─────────────────────────────────────────────────────────────────────────
+  Widget _lockIcon(ThemeData theme, IconData icon) {
+    return Container(
+      width: 80,
+      height: 80,
+      decoration: BoxDecoration(
+        color: theme.cardColor,
+        shape: BoxShape.circle,
+        border: Border.all(color: theme.dividerColor),
+      ),
+      child: Icon(icon, size: 36, color: theme.colorScheme.onSurface),
+    );
+  }
+
+  Widget _pinField(
+    BuildContext context, {
+    required TextEditingController controller,
+    required bool hasError,
+    required void Function(String) onChanged,
+    required void Function(String) onCompleted,
+  }) {
+    final theme = Theme.of(context);
+    return PinCodeTextField(
+      appContext: context,
+      length: 4,
+      controller: controller,
+      keyboardType: TextInputType.number,
+      animationType: AnimationType.scale,
+      animationDuration: const Duration(milliseconds: 180),
+      backgroundColor: Colors.transparent,
+      enableActiveFill: true,
+      autoFocus: true,
+      pinTheme: PinTheme(
+        shape: PinCodeFieldShape.box,
+        borderRadius: BorderRadius.circular(14),
+        fieldHeight: 60,
+        fieldWidth: 54,
+        borderWidth: 1.5,
+        inactiveColor: theme.dividerColor,
+        inactiveFillColor: theme.cardColor,
+        selectedColor: theme.colorScheme.onSurface,
+        selectedFillColor: theme.cardColor,
+        activeColor: hasError
+            ? theme.colorScheme.error
+            : theme.colorScheme.onSurface,
+        activeFillColor: hasError
+            ? theme.colorScheme.error.withValues(alpha: 0.06)
+            : theme.cardColor,
+      ),
+      textStyle: theme.textTheme.titleLarge
+          ?.copyWith(fontWeight: FontWeight.w700, letterSpacing: 2),
+      onChanged: onChanged,
+      onCompleted: onCompleted,
+    );
   }
 }
-
-/*class _PassScreenState extends State<PassScreen> {
-
-  final LocalAuthentication auth = LocalAuthentication();
-  _SupportState _supportState = _SupportState.unknown;
-  bool? _canCheckBiometrics;
-  List<BiometricType>? _availableBiometrics;
-  String _authorized = 'Not Authorized';
-  bool _isAuthenticating = false;
-
-  @override
-  void initState() {
-  super.initState();
-  auth.isDeviceSupported().then(
-  (bool isSupported) => setState(() => _supportState = isSupported
-  ? _SupportState.supported
-      : _SupportState.unsupported),
-  );
-  }
-
-  Future<void> _checkBiometrics() async {
-  late bool canCheckBiometrics;
-  try {
-  canCheckBiometrics = await auth.canCheckBiometrics;
-  } on PlatformException catch (e) {
-  canCheckBiometrics = false;
-  print(e);
-  }
-  if (!mounted) {
-  return;
-  }
-
-  setState(() {
-  _canCheckBiometrics = canCheckBiometrics;
-  });
-  }
-
-  Future<void> _getAvailableBiometrics() async {
-  late List<BiometricType> availableBiometrics;
-  try {
-  availableBiometrics = await auth.getAvailableBiometrics();
-  } on PlatformException catch (e) {
-  availableBiometrics = <BiometricType>[];
-  print(e);
-  }
-  if (!mounted) {
-  return;
-  }
-
-  setState(() {
-  _availableBiometrics = availableBiometrics;
-  });
-  }
-
-  Future<void> _authenticate() async {
-  bool authenticated = false;
-  try {
-  setState(() {
-  _isAuthenticating = true;
-  _authorized = 'Authenticating';
-  });
-  authenticated = await auth.authenticate(
-  localizedReason: 'Let OS determine authentication method',
-  options: const AuthenticationOptions(
-  // stickyAuth: true,
-  ),
-  );
-  print('====d=d===> $authenticated');
-  setState(() {
-  _isAuthenticating = false;
-  });
-  } on PlatformException catch (e) {
-  print(e);
-  setState(() {
-  _isAuthenticating = false;
-  _authorized = 'Error - ${e.message}';
-  });
-  return;
-  }
-  if (!mounted) {
-  return;
-  }
-
-  setState(
-  () => _authorized = authenticated ? 'Authorized' : 'Not Authorized');
-  }
-
-  Future<void> _authenticateWithBiometrics() async {
-  bool authenticated = false;
-  try {
-  setState(() {
-  _isAuthenticating = true;
-  _authorized = 'Authenticating';
-  });
-  authenticated = await auth.authenticate(
-  localizedReason:
-  'Scan your fingerprint (or face or whatever) to authenticate',
-  options: const AuthenticationOptions(
-  stickyAuth: true,
-  biometricOnly: true,
-  ),
-  );
-  setState(() {
-  _isAuthenticating = false;
-  _authorized = 'Authenticating';
-  });
-  } on PlatformException catch (e) {
-  print(e);
-  setState(() {
-  _isAuthenticating = false;
-  _authorized = 'Error - ${e.message}';
-  });
-  return;
-  }
-  if (!mounted) {
-  return;
-  }
-
-  final String message = authenticated ? 'Authorized' : 'Not Authorized';
-  setState(() {
-  _authorized = message;
-  });
-  }
-
-  Future<void> _cancelAuthentication() async {
-  await auth.stopAuthentication();
-  setState(() => _isAuthenticating = false);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-  return MaterialApp(
-  home: Scaffold(
-  appBar: AppBar(
-  title: const Text('Plugin example app'),
-  ),
-  body: ListView(
-  padding: const EdgeInsets.only(top: 30),
-  children: <Widget>[
-  Column(
-  mainAxisAlignment: MainAxisAlignment.center,
-  children: <Widget>[
-  if (_supportState == _SupportState.unknown)
-  const CircularProgressIndicator()
-  else if (_supportState == _SupportState.supported)
-  const Text('This device is supported')
-  else
-  const Text('This device is not supported'),
-  const Divider(height: 100),
-  Text('Can check biometrics: $_canCheckBiometrics\n'),
-  ElevatedButton(
-  onPressed: _checkBiometrics,
-  child: const Text('Check biometrics'),
-  ),
-  const Divider(height: 100),
-  Text('Available biometrics: $_availableBiometrics\n'),
-  ElevatedButton(
-  onPressed: _getAvailableBiometrics,
-  child: const Text('Get available biometrics'),
-  ),
-  const Divider(height: 100),
-  Text('Current State: $_authorized\n'),
-  if (_isAuthenticating)
-  ElevatedButton(
-  onPressed: _cancelAuthentication,
-  child: const Row(
-  mainAxisSize: MainAxisSize.min,
-  children: <Widget>[
-  Text('Cancel Authentication'),
-  Icon(Icons.cancel),
-  ],
-  ),
-  )
-  else
-  Column(
-  children: <Widget>[
-  ElevatedButton(
-  onPressed: _authenticate,
-  child: const Row(
-  mainAxisSize: MainAxisSize.min,
-  children: <Widget>[
-  Text('Authenticate'),
-  Icon(Icons.perm_device_information),
-  ],
-  ),
-  ),
-  ElevatedButton(
-  onPressed: _authenticateWithBiometrics,
-  child: Row(
-  mainAxisSize: MainAxisSize.min,
-  children: <Widget>[
-  Text(_isAuthenticating
-  ? 'Cancel'
-      : 'Authenticate: biometrics only'),
-  const Icon(Icons.fingerprint),
-  ],
-  ),
-  ),
-  ],
-  ),
-  ],
-  ),
-  ],
-  ),
-  ),
-  );
-  }
-  }*/
-
-  // enum _SupportState {
-  // unknown,
-  // supported,
-  // unsupported,
-  // }

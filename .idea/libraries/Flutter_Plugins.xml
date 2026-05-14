@@ -55,6 +55,10 @@
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/image_picker_android-0.8.12+23" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/sqflite_darwin-2.4.2" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/sqflite_android-2.4.1" />
+      <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/local_auth_darwin-1.6.1" />
+      <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/local_auth_windows-1.0.11" />
+      <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/local_auth-2.3.0" />
+      <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/local_auth_android-1.0.56" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

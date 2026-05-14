@@ -1,86 +1,112 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
 import 'package:my_note_app/controller/note_controller.dart';
-import 'package:my_note_app/utils/padding_size.dart';
-import 'package:my_note_app/utils/style.dart';
-import 'package:my_note_app/widgets/toast.dart';
+import 'package:my_note_app/routing/app_routes.dart';
+import 'package:my_note_app/utils/app_constants.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 
-import '../../routing/app_routes.dart';
-class ForgetPassScreen extends StatefulWidget {
+class ForgetPassScreen extends StatelessWidget {
   const ForgetPassScreen({super.key});
 
   @override
-  State<ForgetPassScreen> createState() => _ForgetPassScreenState();
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 40),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: theme.cardColor,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: theme.dividerColor),
+                  ),
+                  child: Icon(
+                    Icons.lock_reset_rounded,
+                    size: 36,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  'Set New PIN',
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Choose a new 4-digit PIN for ${AppConstants.appName}',
+                  style: theme.textTheme.bodyMedium
+                      ?.copyWith(color: theme.hintColor),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 40),
+                _PinResetField(),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
-class _ForgetPassScreenState extends State<ForgetPassScreen> {
-  String? enterCode;
+class _PinResetField extends StatefulWidget {
+  @override
+  State<_PinResetField> createState() => _PinResetFieldState();
+}
+
+class _PinResetFieldState extends State<_PinResetField> {
+  final _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Theme.of(context).primaryColor,
-      body: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-
-        Text(
-          'Please setup your new password',
-          style: fontStyleMedium.copyWith(fontSize: 20, color: Theme.of(context).cardColor),
-        ),
-        SizedBox(height: 50),
-
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 25),
-          child: PinCodeTextField(
-            length: 4,
-            appContext: context,
-            keyboardType: TextInputType.number,
-            animationType: AnimationType.slide,
-            pinTheme: PinTheme(
-              shape: PinCodeFieldShape.box,
-              fieldHeight: 60,
-              fieldWidth: 55,
-              borderWidth: 1,
-              borderRadius: BorderRadius.circular(15),
-              selectedColor: Theme.of(context).cardColor,
-              selectedFillColor: Colors.white,
-              inactiveFillColor: Colors.white,
-              inactiveColor: Theme.of(context).primaryColor,
-              activeColor: Theme.of(context).primaryColor,
-              activeFillColor: Colors.white,
-            ),
-            animationDuration: const Duration(milliseconds: 300),
-            backgroundColor: Colors.transparent,
-            enableActiveFill: true,
-            onChanged: (v) {
-              setState(() {
-                enterCode = v;
-              });
-            },
-            beforeTextPaste: (text) => true,
-          ),
-        ),
-
-        SizedBox(height: 50),
-
-        ElevatedButton(
-          onPressed: (){
-            if(enterCode == null || enterCode!.isEmpty) {
-              showToast(message: 'Please Enter Password');
-            } else {
-              Get.find<NoteController>().setPassword(enterCode!);
-              Get.offNamed(AppRoute.HOME);
-            }
-          },
-          style: ElevatedButton.styleFrom(
-            minimumSize: const Size(150, 40),
-          ),
-          child: Text('Set New Password'),
-        ),
-        const SizedBox(height: PaddingSize.medium),
-
-      ]),
+    final theme = Theme.of(context);
+    return PinCodeTextField(
+      appContext: context,
+      length: 4,
+      controller: _controller,
+      keyboardType: TextInputType.number,
+      animationType: AnimationType.scale,
+      animationDuration: const Duration(milliseconds: 180),
+      backgroundColor: Colors.transparent,
+      enableActiveFill: true,
+      autoFocus: true,
+      pinTheme: PinTheme(
+        shape: PinCodeFieldShape.box,
+        borderRadius: BorderRadius.circular(14),
+        fieldHeight: 60,
+        fieldWidth: 54,
+        borderWidth: 1.5,
+        inactiveColor: theme.dividerColor,
+        inactiveFillColor: theme.cardColor,
+        selectedColor: theme.colorScheme.onSurface,
+        selectedFillColor: theme.cardColor,
+        activeColor: theme.colorScheme.onSurface,
+        activeFillColor: theme.cardColor,
+      ),
+      textStyle: theme.textTheme.titleLarge
+          ?.copyWith(fontWeight: FontWeight.w700, letterSpacing: 2),
+      onChanged: (_) {},
+      onCompleted: (pin) {
+        Get.find<NoteController>().setPassword(pin);
+        Get.offAllNamed(AppRoute.HOME);
+      },
     );
   }
 }

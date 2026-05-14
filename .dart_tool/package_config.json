@@ -422,6 +422,36 @@
       "languageVersion": "3.6"
     },
     {
+      "name": "local_auth",
+      "rootUri": "file:///Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/local_auth-2.3.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.2"
+    },
+    {
+      "name": "local_auth_android",
+      "rootUri": "file:///Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/local_auth_android-1.0.56",
+      "packageUri": "lib/",
+      "languageVersion": "3.9"
+    },
+    {
+      "name": "local_auth_darwin",
+      "rootUri": "file:///Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/local_auth_darwin-1.6.1",
+      "packageUri": "lib/",
+      "languageVersion": "3.9"
+    },
+    {
+      "name": "local_auth_platform_interface",
+      "rootUri": "file:///Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/local_auth_platform_interface-1.1.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.7"
+    },
+    {
+      "name": "local_auth_windows",
+      "rootUri": "file:///Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/local_auth_windows-1.0.11",
+      "packageUri": "lib/",
+      "languageVersion": "3.2"
+    },
+    {
       "name": "markdown",
       "rootUri": "file:///Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/markdown-7.3.0",
       "packageUri": "lib/",

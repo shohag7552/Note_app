@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -9,7 +12,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../database_helper/database_helper.dart';
 import '../routing/app_routes.dart';
 
-class NoteController extends GetxController implements GetxService{
+class NoteController extends GetxController implements GetxService {
   final SharedPreferences sharedPreferences;
   NoteController({required this.sharedPreferences}) {
     _loadCurrentTheme();
@@ -19,7 +22,6 @@ class NoteController extends GetxController implements GetxService{
   final contentController = TextEditingController();
 
   var notes = <Note>[];
-
   bool appLockStatus = false;
 
   bool _darkTheme = false;
@@ -30,26 +32,35 @@ class NoteController extends GetxController implements GetxService{
 
   bool showFavouritesOnly = false;
 
+  // ── PIN hashing ──────────────────────────────────────────────────────────
+  static String _hashPin(String pin) =>
+      sha256.convert(utf8.encode(pin)).toString();
+
+  // ── Lifecycle ────────────────────────────────────────────────────────────
+  @override
+  void onInit() {
+    _migratePasswordIfNeeded();
+    getAllNotes();
+    super.onInit();
+  }
+
+  // ── Notes ────────────────────────────────────────────────────────────────
+  bool isEmpty() => notes.isEmpty;
+
   void toggleFavouritesFilter() {
     showFavouritesOnly = !showFavouritesOnly;
     update();
   }
 
-  @override
-  void onInit() {
-    getAllNotes();
-    super.onInit();
-  }
-
-  bool isEmpty() {
-    return notes.isEmpty;
-  }
-
-  Future<void> addNoteToDatabase({required String title, required String content, String? color, Note? cloudNote}) async {
+  Future<void> addNoteToDatabase({
+    required String title,
+    required String content,
+    String? color,
+    Note? cloudNote,
+  }) async {
     Note note;
-    if(cloudNote != null) {
+    if (cloudNote != null) {
       note = Note(
-        // id: int.parse(cloudNote.id.toString()),
         title: cloudNote.title,
         content: cloudNote.content.toString(),
         dateTimeEdited: cloudNote.dateTimeEdited,
@@ -67,12 +78,10 @@ class NoteController extends GetxController implements GetxService{
         color: color,
       );
     }
-
-    print('=====> ${note.toJson()}');
     await DatabaseHelper.instance.addNote(note);
-    titleController.text = "";
-    contentController.text = "";
-    if(cloudNote == null) {
+    titleController.text = '';
+    contentController.text = '';
+    if (cloudNote == null) {
       getAllNotes();
       Get.offAllNamed(AppRoute.HOME);
     }
@@ -80,17 +89,14 @@ class NoteController extends GetxController implements GetxService{
 
   void updateNote(Note note) async {
     await DatabaseHelper.instance.updateNote(note);
-    titleController.text = "";
-    contentController.text = "";
+    titleController.text = '';
+    contentController.text = '';
     getAllNotes();
     Get.offAllNamed(AppRoute.HOME);
   }
 
   void deleteNote(int id) async {
-    Note note = Note(
-      id: id,
-    );
-    await DatabaseHelper.instance.deleteNote(note);
+    await DatabaseHelper.instance.deleteNote(Note(id: id));
     getAllNotes();
   }
 
@@ -102,12 +108,8 @@ class NoteController extends GetxController implements GetxService{
   }
 
   void favoriteNote(int id) async {
-    Note note = notes.firstWhere((note) => note.id == id);
-    if (note.isFavorite == 1) {
-      note.isFavorite = 0; // Mark as not favorite
-    } else {
-      note.isFavorite = 1; // Mark as favorite
-    }
+    final note = notes.firstWhere((n) => n.id == id);
+    note.isFavorite = note.isFavorite == 1 ? 0 : 1;
     await DatabaseHelper.instance.updateNote(note);
     getAllNotes();
   }
@@ -119,51 +121,53 @@ class NoteController extends GetxController implements GetxService{
 
   Future<void> getAllNotes() async {
     notes = await DatabaseHelper.instance.getNoteList();
-    for (var note in notes) {
-      print('===${notes.indexOf(note)}==> ${note.toJson()}');
-    }
     update();
   }
 
   void shareNote(String content) {
-    // Share.share(content);
-    SharePlus.instance.share(
-        ShareParams(text: content)
-    );
+    SharePlus.instance.share(ShareParams(text: content));
   }
 
-  bool isContainPassword() {
-    return sharedPreferences.containsKey(AppConstants.passKey);
-  }
+  // ── Password / Lock ──────────────────────────────────────────────────────
+  bool isContainPassword() =>
+      sharedPreferences.containsKey(AppConstants.passKey);
 
+  /// Stores a SHA-256 hash of [pass].
   Future<bool> setPassword(String pass) async {
-    return await sharedPreferences.setString(AppConstants.passKey, pass);
+    return sharedPreferences.setString(AppConstants.passKey, _hashPin(pass));
   }
 
-  String? getPassword() {
-    return sharedPreferences.getString(AppConstants.passKey);
+  /// Returns true when [pin] matches the stored hash.
+  bool verifyPassword(String pin) {
+    final stored = sharedPreferences.getString(AppConstants.passKey);
+    if (stored == null || stored.isEmpty) return false;
+    return _hashPin(pin) == stored;
   }
 
-  Future<bool> setSuggestions(List<String> answers) async {
-    return await sharedPreferences.setStringList(AppConstants.suggestionsKey, answers);
+  /// Migrates a plain-text PIN (length ≠ 64) to a SHA-256 hash transparently.
+  void _migratePasswordIfNeeded() {
+    final stored = sharedPreferences.getString(AppConstants.passKey);
+    if (stored != null && stored.length != 64) {
+      sharedPreferences.setString(AppConstants.passKey, _hashPin(stored));
+    }
   }
 
-  Future<List<String>?> getSuggestions() async {
-    return sharedPreferences.getStringList(AppConstants.suggestionsKey);
-  }
+  Future<bool> setSuggestions(List<String> answers) async =>
+      sharedPreferences.setStringList(AppConstants.suggestionsKey, answers);
 
-  bool isPasswordActive() {
-    return sharedPreferences.getBool(AppConstants.passActiveKey)?? false;
-    // return sharedPreferences.containsKey(AppConstants.passActiveKey);
-  }
+  Future<List<String>?> getSuggestions() async =>
+      sharedPreferences.getStringList(AppConstants.suggestionsKey);
+
+  bool isPasswordActive() =>
+      sharedPreferences.getBool(AppConstants.passActiveKey) ?? false;
 
   Future<bool> activePassword(bool status) async {
     appLockStatus = status;
     update();
-    print('=s0=-> $appLockStatus // ${await sharedPreferences.setBool(AppConstants.passActiveKey, status)}');
-    return await sharedPreferences.setBool(AppConstants.passActiveKey, status);
+    return sharedPreferences.setBool(AppConstants.passActiveKey, status);
   }
 
+  // ── Theme / Font ─────────────────────────────────────────────────────────
   void toggleTheme() {
     _darkTheme = !_darkTheme;
     sharedPreferences.setBool(AppConstants.theme, _darkTheme);
@@ -176,10 +180,9 @@ class NoteController extends GetxController implements GetxService{
     update();
   }
 
-  void _loadCurrentTheme() async {
+  void _loadCurrentTheme() {
     _darkTheme = sharedPreferences.getBool(AppConstants.theme) ?? false;
     _currentFont = sharedPreferences.getString(AppConstants.fontKey) ?? 'Inter';
     update();
   }
-
 }
