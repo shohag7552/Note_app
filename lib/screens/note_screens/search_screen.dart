@@ -1,12 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:get/get.dart';
-import 'package:my_note_app/helper/date_converter.dart';
 import 'package:my_note_app/helper/quill_helper.dart';
-import 'package:my_note_app/routing/app_routes.dart';
-import 'package:my_note_app/utils/font_size.dart';
-import 'package:my_note_app/utils/padding_size.dart';
-import 'package:my_note_app/utils/radius_size.dart';
-import 'package:my_note_app/utils/style.dart';
 import 'package:my_note_app/widgets/note_card.dart';
 import '../../controller/note_controller.dart';
 
@@ -44,131 +39,41 @@ class Search extends SearchDelegate {
     );
   }
 
-  @override
-  Widget buildSuggestions(BuildContext context) {
-    final suggestionList = query.isEmpty
-        ? controller.notes
-        : controller.notes.where((p) {
-              return /*p.title!.toLowerCase().contains(query.toLowerCase()) ||*/
-                  QuillHelper.convertStringDocumentToString(p.content!).toLowerCase().contains(query.toLowerCase());
-              },
-          ).toList();
-    return GridView.builder(
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          childAspectRatio: 0.7,
-          crossAxisCount: 2,
-          mainAxisSpacing: 7,
-          crossAxisSpacing: 7
+  List _filter(String q) => q.isEmpty
+      ? controller.notes
+      : controller.notes
+          .where((p) => QuillHelper.convertStringDocumentToString(p.content!)
+              .toLowerCase()
+              .contains(q.toLowerCase()))
+          .toList();
+
+  Widget _grid(BuildContext context, List notes) {
+    if (notes.isEmpty) {
+      return Center(
+        child: Text(
+          'No notes found',
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).hintColor,
+              ),
+        ),
+      );
+    }
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 6, 14, 14),
+      child: MasonryGridView.count(
+        crossAxisCount: 2,
+        mainAxisSpacing: 10,
+        crossAxisSpacing: 10,
+        itemCount: notes.length,
+        itemBuilder: (context, index) =>
+            NoteCart(note: notes[index], index: index),
       ),
-      itemCount: suggestionList.length,
-      padding: const EdgeInsets.symmetric(horizontal: PaddingSize.medium, vertical: PaddingSize.small),
-      itemBuilder: (context, index) {
-        return NoteCart(note: suggestionList[index], index: index);
-      },
-    );
-    return ListView.builder(
-      shrinkWrap: true,
-      itemCount: suggestionList.length,
-      itemBuilder: (context, index) {
-        return InkWell(
-          onTap: () => Get.toNamed(AppRoute.getNoteDetailsPage(suggestionList[index])),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Theme.of(context).cardColor,
-              borderRadius: BorderRadius.circular(RadiusSize.medium),
-              boxShadow: [BoxShadow(color: Colors.grey[300]!, blurRadius: 10, offset: const Offset(0, 0))],
-            ),
-            padding: const EdgeInsets.all(PaddingSize.medium),
-            margin: const EdgeInsets.symmetric(horizontal: PaddingSize.medium, vertical: PaddingSize.extraSmall),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Text(
-                //   controller.notes[index].title!,
-                //   style: fontStyleBold.copyWith(fontSize: FontSize.mediumLarge),
-                //   maxLines: 1, overflow: TextOverflow.ellipsis,
-                // ),
-                // const SizedBox(height: PaddingSize.small),
-
-                Text(
-                  QuillHelper.convertStringDocumentToString(suggestionList[index].content!),
-                  style: fontStyleNormal.copyWith(fontSize: FontSize.extraMedium),
-                  maxLines: 5, overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: PaddingSize.small),
-
-                Align(alignment: Alignment.bottomRight, child: Text(DateConverter.dateTimeStringToDateOnly(controller.notes[index].dateTimeEdited!))),
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
 
   @override
-  Widget buildResults(BuildContext context) {
-    // throw UnimplementedError();
-    final suggestionList = query.isEmpty
-        ? controller.notes
-        : controller.notes.where((p) {
-      return /*p.title!.toLowerCase().contains(query.toLowerCase()) ||*/
-        QuillHelper.convertStringDocumentToString(p.content!).toLowerCase().contains(query.toLowerCase());
-    },
-    ).toList();
-    return GridView.builder(
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          childAspectRatio: 0.7,
-          crossAxisCount: 2,
-          mainAxisSpacing: 7,
-          crossAxisSpacing: 7
-      ),
-      itemCount: suggestionList.length,
-      padding: const EdgeInsets.symmetric(horizontal: PaddingSize.small, vertical: PaddingSize.small),
-      itemBuilder: (context, index) {
-        return NoteCart(note: suggestionList[index], index: index);
-      },
-    );
+  Widget buildSuggestions(BuildContext context) => _grid(context, _filter(query));
 
-    return ListView.builder(
-      shrinkWrap: true,
-      itemCount: suggestionList.length,
-      itemBuilder: (context, index) {
-        return InkWell(
-          onTap: () => Get.toNamed(AppRoute.getNoteDetailsPage(suggestionList[index])),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Theme.of(context).cardColor,
-              borderRadius: BorderRadius.circular(RadiusSize.medium),
-              boxShadow: [BoxShadow(color: Colors.grey[300]!, blurRadius: 10, offset: const Offset(0, 0))],
-            ),
-            padding: const EdgeInsets.all(PaddingSize.medium),
-            margin: const EdgeInsets.symmetric(horizontal: PaddingSize.medium, vertical: PaddingSize.extraSmall),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Text(
-                //   controller.notes[index].title!,
-                //   style: fontStyleBold.copyWith(fontSize: FontSize.mediumLarge),
-                //   maxLines: 1, overflow: TextOverflow.ellipsis,
-                // ),
-                // const SizedBox(height: PaddingSize.small),
-
-                Text(
-                  QuillHelper.convertStringDocumentToString(suggestionList[index].content!),
-                  style: fontStyleNormal.copyWith(fontSize: FontSize.extraMedium),
-                  maxLines: 5, overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: PaddingSize.small),
-
-                Align(alignment: Alignment.bottomRight, child: Text(DateConverter.dateTimeStringToDateOnly(controller.notes[index].dateTimeEdited!))),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
+  @override
+  Widget buildResults(BuildContext context) => _grid(context, _filter(query));
 }

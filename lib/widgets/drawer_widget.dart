@@ -1,13 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:my_note_app/appwrite/repository/app_write_repository.dart';
 import 'package:my_note_app/controller/auth_controller.dart';
 import 'package:my_note_app/controller/background_controller.dart';
 import 'package:my_note_app/controller/note_controller.dart';
-import 'package:my_note_app/model/note_model.dart';
 
-import '../screens/auth_screen.dart';
 class DrawerWidget extends StatefulWidget {
   const DrawerWidget({super.key});
 
@@ -19,149 +16,227 @@ class _DrawerWidgetState extends State<DrawerWidget> {
   @override
   void initState() {
     super.initState();
-
-    Get.find<NoteController>().appLockStatus = Get.find<NoteController>().isPasswordActive();
+    Get.find<NoteController>().appLockStatus =
+        Get.find<NoteController>().isPasswordActive();
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Drawer(
-      backgroundColor: Theme.of(context).cardColor,
-      child: Container(
-        color: Theme.of(context).disabledColor.withValues(alpha: 0.1),
+      backgroundColor: theme.scaffoldBackgroundColor,
+      surfaceTintColor: Colors.transparent,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.horizontal(right: Radius.circular(24)),
+      ),
+      child: SafeArea(
         child: GetBuilder<NoteController>(
-            builder: (noteController) {
+          builder: (noteController) {
             return GetBuilder<AuthController>(
               builder: (authController) {
-                return ListView(
-                  padding: EdgeInsets.zero,
+                final loggedIn = authController.getUserToken() != null;
+                final user = authController.getUser();
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    DrawerHeader(
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).primaryColor,
-                      ),
-                      child: authController.getUserToken() != null ? Column(children: [
-                        CircleAvatar(
-                          radius: 40,
-                          backgroundColor: Colors.white,
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(50),
-                            child: Image.network(
-                              authController.getUser()?.imageUrl ?? 'https://www.gravatar.com/avatar/placeholder',
-                              fit: BoxFit.cover,
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+                      child: loggedIn
+                          ? Row(
+                              children: [
+                                Container(
+                                  width: 48,
+                                  height: 48,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    border: Border.all(color: theme.dividerColor),
+                                  ),
+                                  clipBehavior: Clip.antiAlias,
+                                  child: (user?.imageUrl ?? '').isNotEmpty
+                                      ? Image.network(
+                                          user!.imageUrl,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (_, __, ___) =>
+                                              _avatarFallback(theme),
+                                        )
+                                      : _avatarFallback(theme),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        (user?.name.isNotEmpty ?? false)
+                                            ? user!.name
+                                            : 'You',
+                                        style: theme.textTheme.titleMedium?.copyWith(
+                                          fontWeight: FontWeight.w600,
+                                          letterSpacing: -0.2,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        user?.email ?? '',
+                                        style: theme.textTheme.bodySmall?.copyWith(
+                                          color: theme.hintColor,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            )
+                          : Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Welcome',
+                                  style: theme.textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: -0.3,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Sign in to sync your notes to the cloud.',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.hintColor,
+                                  ),
+                                ),
+                                const SizedBox(height: 14),
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: FilledButton.icon(
+                                    onPressed: () =>
+                                        Get.find<AuthController>().googleLogin(),
+                                    style: FilledButton.styleFrom(
+                                      backgroundColor: theme.colorScheme.primary,
+                                      foregroundColor: theme.colorScheme.onPrimary,
+                                      shape: const StadiumBorder(),
+                                      padding: const EdgeInsets.symmetric(vertical: 12),
+                                    ),
+                                    icon: const Icon(Icons.login_rounded, size: 18),
+                                    label: const Text(
+                                      'Sign in with Google',
+                                      style: TextStyle(fontWeight: FontWeight.w600),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                        ),
-                        const SizedBox(height: 5),
-                        Text(
-                          authController.getUser()?.name ?? 'Guest User',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                          ),
-                        ),
-
-                        Text(
-                          authController.getUser()?.email ?? '',
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ]) : Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          spacing: 10,
-                          children: [
-                            const Text(
-                              'Welcome, Guest',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                              ),
-                            ),
-
-                            ElevatedButton(
-                              onPressed: () {
-                                Get.find<AuthController>().googleLogin();
-                              },
-                              child: const Text('Login'),
-                            ),
-                          ],
-                        ),
+                    ),
+                    Divider(color: theme.dividerColor, height: 1),
+                    const SizedBox(height: 8),
+                    if (loggedIn) ...[
+                      _row(
+                        context,
+                        icon: Icons.cloud_download_outlined,
+                        label: 'Pull notes from cloud',
+                        onTap: () =>
+                            Get.find<BackgroundController>().getAllNotes(),
                       ),
-                    ),
-
-                    ListTile(
-                      title: const Text('Home'),
-                      onTap: () {
-                        Navigator.pop(context);
-                      },
-                    ),
-
-                    ListTile(
-                      title: const Text('get user'),
-                      onTap: () async {
-
-                        Get.find<BackgroundController>().getAllNotes();
-
-                      },
-                    ),
-
-                    ListTile(
-                      title: const Text('upload notes'),
-                      onTap: () async {
-
-                        Get.find<BackgroundController>().uploadAllNotes().then((v) {
-
-                        });
-
-                      },
-                    ),
-
-                    ListTile(
-                      leading: Icon(Icons.lock),
-                      title: const Text('App Lock'),
-                      onTap: () {},
-                      trailing: CupertinoSwitch(
-                        value: noteController.appLockStatus,
-                        activeTrackColor: Theme.of(context).primaryColor,
-                        onChanged: (status){
-                          noteController.activePassword(status);
-                        },
+                      _row(
+                        context,
+                        icon: Icons.cloud_upload_outlined,
+                        label: 'Upload notes to cloud',
+                        onTap: () =>
+                            Get.find<BackgroundController>().uploadAllNotes(),
                       ),
+                      Divider(color: theme.dividerColor, height: 16, indent: 16, endIndent: 16),
+                    ],
+                    _toggleRow(
+                      context,
+                      icon: Icons.lock_outline_rounded,
+                      label: 'App lock',
+                      value: noteController.appLockStatus,
+                      onChanged: (s) => noteController.activePassword(s),
                     ),
-
-                    ListTile(
-                      leading: Icon(Icons.nights_stay),
-                      title: const Text('Dark Mode'),
-                      onTap: () {},
-                      trailing: CupertinoSwitch(
-                        value: noteController.darkTheme,
-                        activeTrackColor: Theme.of(context).primaryColor,
-                        onChanged: (status){
-                          noteController.toggleTheme();
-                        },
-                      ),
+                    _toggleRow(
+                      context,
+                      icon: noteController.darkTheme
+                          ? Icons.dark_mode_outlined
+                          : Icons.light_mode_outlined,
+                      label: 'Dark mode',
+                      value: noteController.darkTheme,
+                      onChanged: (_) => noteController.toggleTheme(),
                     ),
-
-
-                    if(authController.getUserToken() != null)
-                      ListTile(
-                        leading: Icon(Icons.logout_outlined),
-                        title: const Text('Logout'),
-                        onTap: () async {
-                          Get.find<AuthController>().googleLogOut();
-                        },
+                    const Spacer(),
+                    if (loggedIn)
+                      _row(
+                        context,
+                        icon: Icons.logout_rounded,
+                        label: 'Sign out',
+                        onTap: () => Get.find<AuthController>().googleLogOut(),
+                        destructive: true,
                       ),
-
+                    const SizedBox(height: 12),
                   ],
                 );
-              }
+              },
             );
-          }
+          },
         ),
       ),
+    );
+  }
+
+  Widget _avatarFallback(ThemeData theme) => Container(
+        color: theme.cardColor,
+        child: Icon(Icons.person_rounded, color: theme.hintColor),
+      );
+
+  Widget _row(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    bool destructive = false,
+  }) {
+    final theme = Theme.of(context);
+    final color = destructive ? theme.colorScheme.error : theme.colorScheme.onSurface;
+    return ListTile(
+      leading: Icon(icon, size: 20, color: color),
+      title: Text(
+        label,
+        style: theme.textTheme.bodyMedium?.copyWith(
+          color: color,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+      onTap: onTap,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+      visualDensity: const VisualDensity(vertical: -1),
+    );
+  }
+
+  Widget _toggleRow(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+  }) {
+    final theme = Theme.of(context);
+    return ListTile(
+      leading: Icon(icon, size: 20, color: theme.colorScheme.onSurface),
+      title: Text(
+        label,
+        style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+      ),
+      trailing: CupertinoSwitch(
+        value: value,
+        activeTrackColor: theme.colorScheme.primary,
+        onChanged: onChanged,
+      ),
+      onTap: () => onChanged(!value),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+      visualDensity: const VisualDensity(vertical: -1),
     );
   }
 }

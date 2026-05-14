@@ -27,7 +27,7 @@
     },
     {
       "name": "characters",
-      "rootUri": "file:///Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/characters-1.4.0",
+      "rootUri": "file:///Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/characters-1.4.1",
       "packageUri": "lib/",
       "languageVersion": "3.4"
     },
@@ -167,7 +167,7 @@
       "name": "flutter",
       "rootUri": "file:///Users/mehedihasanshohag/development/flutter/packages/flutter",
       "packageUri": "lib/",
-      "languageVersion": "3.8"
+      "languageVersion": "3.9"
     },
     {
       "name": "flutter_colorpicker",
@@ -215,7 +215,7 @@
       "name": "flutter_localizations",
       "rootUri": "file:///Users/mehedihasanshohag/development/flutter/packages/flutter_localizations",
       "packageUri": "lib/",
-      "languageVersion": "3.8"
+      "languageVersion": "3.9"
     },
     {
       "name": "flutter_plugin_android_lifecycle",
@@ -236,10 +236,16 @@
       "languageVersion": "3.0"
     },
     {
+      "name": "flutter_staggered_grid_view",
+      "rootUri": "file:///Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/flutter_staggered_grid_view-0.7.0",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
       "name": "flutter_test",
       "rootUri": "file:///Users/mehedihasanshohag/development/flutter/packages/flutter_test",
       "packageUri": "lib/",
-      "languageVersion": "3.8"
+      "languageVersion": "3.9"
     },
     {
       "name": "flutter_web_auth_2",
@@ -257,7 +263,7 @@
       "name": "flutter_web_plugins",
       "rootUri": "file:///Users/mehedihasanshohag/development/flutter/packages/flutter_web_plugins",
       "packageUri": "lib/",
-      "languageVersion": "3.8"
+      "languageVersion": "3.9"
     },
     {
       "name": "fluttertoast",
@@ -270,6 +276,12 @@
       "rootUri": "file:///Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/get-4.7.2",
       "packageUri": "lib/",
       "languageVersion": "2.15"
+    },
+    {
+      "name": "google_fonts",
+      "rootUri": "file:///Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/google_fonts-6.3.3",
+      "packageUri": "lib/",
+      "languageVersion": "3.9"
     },
     {
       "name": "google_identity_services_web",
@@ -417,21 +429,21 @@
     },
     {
       "name": "matcher",
-      "rootUri": "file:///Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/matcher-0.12.17",
+      "rootUri": "file:///Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/matcher-0.12.19",
       "packageUri": "lib/",
-      "languageVersion": "3.4"
+      "languageVersion": "3.7"
     },
     {
       "name": "material_color_utilities",
-      "rootUri": "file:///Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/material_color_utilities-0.11.1",
+      "rootUri": "file:///Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/material_color_utilities-0.13.0",
       "packageUri": "lib/",
-      "languageVersion": "2.17"
+      "languageVersion": "3.5"
     },
     {
       "name": "meta",
-      "rootUri": "file:///Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/meta-1.16.0",
+      "rootUri": "file:///Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/meta-1.17.0",
       "packageUri": "lib/",
-      "languageVersion": "2.12"
+      "languageVersion": "3.5"
     },
     {
       "name": "mime",
@@ -647,7 +659,7 @@
       "name": "sky_engine",
       "rootUri": "file:///Users/mehedihasanshohag/development/flutter/bin/cache/pkg/sky_engine",
       "packageUri": "lib/",
-      "languageVersion": "3.8"
+      "languageVersion": "3.9"
     },
     {
       "name": "source_span",
@@ -735,9 +747,9 @@
     },
     {
       "name": "test_api",
-      "rootUri": "file:///Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/test_api-0.7.6",
+      "rootUri": "file:///Users/mehedihasanshohag/.pub-cache/hosted/pub.dev/test_api-0.7.10",
       "packageUri": "lib/",
-      "languageVersion": "3.5"
+      "languageVersion": "3.7"
     },
     {
       "name": "typed_data",
@@ -867,8 +879,8 @@
     }
   ],
   "generator": "pub",
-  "generatorVersion": "3.9.0",
+  "generatorVersion": "3.11.4",
   "flutterRoot": "file:///Users/mehedihasanshohag/development/flutter",
-  "flutterVersion": "3.35.2",
+  "flutterVersion": "3.41.6",
   "pubCache": "file:///Users/mehedihasanshohag/.pub-cache"
 }

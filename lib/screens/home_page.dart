@@ -1,185 +1,181 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:get/get.dart';
 import 'package:my_note_app/routing/app_routes.dart';
-import 'package:my_note_app/screens/auth_screen.dart';
 import 'package:my_note_app/screens/note_screens/search_screen.dart';
-import 'package:my_note_app/screens/paper_view_widget.dart';
-import 'package:my_note_app/utils/font_size.dart';
-import 'package:my_note_app/utils/images.dart';
-import 'package:my_note_app/utils/padding_size.dart';
-import 'package:my_note_app/utils/style.dart';
 import 'package:my_note_app/widgets/drawer_widget.dart';
 import 'package:my_note_app/widgets/note_card.dart';
 import '../controller/note_controller.dart';
 import '../widgets/alert_dialog.dart';
 
-class HomePage extends StatefulWidget {
+class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
-}
-
-class _HomePageState extends State<HomePage> {
-
-  @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return GetBuilder<NoteController>(
       builder: (controller) {
         return Scaffold(
-
           appBar: AppBar(
-            title: Text("Notes", style: fontStyleLarge.copyWith(fontSize: FontSize.large)),
-            backgroundColor: Theme.of(context).cardColor,
-            iconTheme: const IconThemeData(color: Colors.black),
-            leading: Builder(
-              builder: (context) {
-                return IconButton(
-                  icon: Icon(Icons.menu, color: Theme.of(context).textTheme.bodyLarge!.color!),
-                  onPressed: () {
-                    Scaffold.of(context).openDrawer();
-                  },
-                );
-              },
+            title: Row(
+              children: [
+                Text(
+                  'Notes',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                if (controller.notes.isNotEmpty)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: theme.dividerColor.withValues(alpha: 0.6),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      '${controller.notes.length}',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.hintColor,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+              ],
             ),
             actions: [
               IconButton(
-                icon: Icon(Icons.search, color: Theme.of(context).textTheme.bodyLarge!.color!),
-                onPressed: () {
-                  showSearch(context: context, delegate: Search());
-                },
+                tooltip: 'Search',
+                icon: const Icon(Icons.search_rounded),
+                onPressed: () => showSearch(context: context, delegate: Search()),
               ),
-              PopupMenuButton(
-                // color: Theme.of(context).textTheme.bodyLarge!.color!,
-                child: Icon(Icons.more_vert_sharp, color: Theme.of(context).textTheme.bodyLarge!.color!),
+              PopupMenuButton<int>(
+                tooltip: 'More',
+                icon: const Icon(Icons.more_vert_rounded),
                 onSelected: (val) {
                   if (val == 0) {
                     showDialog(
                       context: context,
                       builder: (context) {
                         return AlertDialogWidget(
-                          headingText: "Are you sure you want to delete all notes?",
-                          contentText: "This will delete all notes permanently. You cannot undo this action.",
+                          headingText: 'Delete all notes?',
+                          contentText:
+                              'This will delete all notes permanently. You cannot undo this action.',
                           confirmFunction: () {
                             controller.deleteAllNotes();
                             Get.back();
                           },
-                          declineFunction: () {
-                            Get.back();
-                          },
+                          declineFunction: () => Get.back(),
                         );
                       },
                     );
                   }
                 },
-                itemBuilder: (context) => [
-                  const PopupMenuItem(
-                    value: 0,
-                    child: Text(
-                      "Delete All Notes",
-                      style: TextStyle(
-                        fontWeight: FontWeight.normal,
-                      ),
-                    ),
-                  )
+                itemBuilder: (context) => const [
+                  PopupMenuItem(value: 0, child: Text('Delete all notes')),
                 ],
               ),
+              const SizedBox(width: 4),
             ],
-            systemOverlayStyle: SystemUiOverlayStyle.dark,
           ),
-          drawer: DrawerWidget(),
+          drawer: const DrawerWidget(),
           body: GetBuilder<NoteController>(
-            builder: (_) => controller.isEmpty() ? emptyNotes() : viewNotes(controller),
+            builder: (_) => controller.isEmpty()
+                ? _emptyState(context)
+                : _notesGrid(context, controller),
           ),
-          floatingActionButton: Material(
-            child: FloatingActionButton(
-              elevation: 6,
-              onPressed: () => Get.toNamed(AppRoute.ADD_NEW_NOTE),
-              backgroundColor: Theme.of(context).primaryColor,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(500)),
-              child: Icon(Icons.add, color: Theme.of(context).cardColor),
+          floatingActionButton: FloatingActionButton.extended(
+            onPressed: () => Get.toNamed(AppRoute.ADD_NEW_NOTE),
+            icon: const Icon(Icons.edit_outlined, size: 20),
+            label: const Text(
+              'New note',
+              style: TextStyle(fontWeight: FontWeight.w600, letterSpacing: -0.1),
             ),
           ),
         );
-      }
+      },
     );
   }
 
-  Widget viewNotes(NoteController controller) {
-    return Scrollbar(
-      child: Container(
-        padding: const EdgeInsets.only(top: PaddingSize.small, right: PaddingSize.small, left: PaddingSize.small),
-        // child: ListView.builder(
-        //   itemCount: controller.notes.length,
-        //   shrinkWrap: true,
-        //   itemBuilder: (context, index) {
-        //     // return Container(
-        //     //   margin: const EdgeInsets.only(bottom: PaddingSize.small),
-        //     //   height: 150, width: double.infinity,
-        //     //   decoration: BoxDecoration(
-        //     //     color: Theme.of(context).cardColor,
-        //     //     borderRadius: BorderRadius.circular(10),
-        //     //     boxShadow: [
-        //     //       BoxShadow(
-        //     //         color: Colors.grey.withOpacity(0.2),
-        //     //         spreadRadius: 1,
-        //     //         blurRadius: 5,
-        //     //         offset: const Offset(0, 3),
-        //     //       ),
-        //     //     ],
-        //     //   ),
-        //     // );
-        //     return Padding(
-        //       padding: const EdgeInsets.only(bottom: 10),
-        //       child: NoteCart(note: controller.notes[index], index: index),
-        //     );
-        //   },
-        // ),
-        child: GridView.builder(
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            childAspectRatio: 0.7,
-            crossAxisCount: 2,
-            mainAxisSpacing: 7,
-            crossAxisSpacing: 7
-          ),
-            itemCount: controller.notes.length,
-            itemBuilder: (context, index) {
-            // return PageCurlEffectExample(child: NoteCart(note: controller.notes[index], index: index));
-              return NoteCart(note: controller.notes[index], index: index);
+  Widget _notesGrid(BuildContext context, NoteController controller) {
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 6, 14, 90),
+        child: MasonryGridView.count(
+          crossAxisCount: 2,
+          mainAxisSpacing: 10,
+          crossAxisSpacing: 10,
+          itemCount: controller.notes.length,
+          itemBuilder: (context, index) {
+            return NoteCart(note: controller.notes[index], index: index);
           },
         ),
-
-        // child: PaperViewWidget(data: controller.notes),
       ),
     );
   }
 
-  Widget emptyNotes() {
-    return const Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Image(
-            height: 200, width: 200,
-            image: AssetImage(Images.empty),
-          ),
-          Text(
-            "Create your first note!",
-            style: TextStyle(fontSize: 30, fontWeight: FontWeight.w500),
-          ),
-        ],
+  Widget _emptyState(BuildContext context) {
+    final theme = Theme.of(context);
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 88,
+              height: 88,
+              decoration: BoxDecoration(
+                color: theme.cardColor,
+                shape: BoxShape.circle,
+                border: Border.all(color: theme.dividerColor),
+              ),
+              child: Icon(
+                Icons.edit_note_rounded,
+                size: 44,
+                color: theme.hintColor,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'No notes yet',
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.4,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Capture an idea, a thought, or a reminder.\nTap the button below to begin.',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.hintColor,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 24),
+            FilledButton.icon(
+              onPressed: () => Get.toNamed(AppRoute.ADD_NEW_NOTE),
+              style: FilledButton.styleFrom(
+                backgroundColor: theme.colorScheme.primary,
+                foregroundColor: theme.colorScheme.onPrimary,
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                shape: const StadiumBorder(),
+              ),
+              icon: const Icon(Icons.add_rounded, size: 20),
+              label: const Text(
+                'Create your first note',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
+        ),
       ),
     );
-  }
-}
-
-class DemoPage extends StatelessWidget {
-  final int page;
-  const DemoPage({super.key, required this.page});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Placeholder();
   }
 }

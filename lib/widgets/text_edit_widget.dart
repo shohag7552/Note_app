@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:my_note_app/controller/background_controller.dart';
 import 'package:my_note_app/controller/note_controller.dart';
+import 'package:my_note_app/helper/quill_helper.dart';
 import 'package:my_note_app/model/note_model.dart';
 import 'package:my_note_app/utils/padding_size.dart';
 
@@ -113,8 +114,9 @@ class _TextEditWidgetState extends State<TextEditWidget> {
                 final json = jsonEncode(controller.document.toDelta().toJson());
 
                 if(widget.isAddNote) {
+                  final (title, _) = QuillHelper.deriveTitleAndBody(json);
                   Get.find<NoteController>().addNoteToDatabase(
-                    title: 'This is title',
+                    title: title,
                     content: json, color: '#FFA0A4A8',
                   );
                 } else {
