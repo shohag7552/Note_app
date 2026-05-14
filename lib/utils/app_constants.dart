@@ -11,4 +11,5 @@ class AppConstants{
   static const String theme = 'theme';
   static const String opacityKey = 'opacity';
   static const String backgroundImageKey = 'backgroundImage';
+  static const String fontKey = 'font';
 }

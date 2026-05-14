@@ -4,11 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:my_note_app/controller/background_controller.dart';
 import 'package:my_note_app/controller/note_controller.dart';
+import 'package:my_note_app/helper/color_extension.dart';
 import 'package:my_note_app/helper/quill_helper.dart';
 import 'package:my_note_app/model/note_model.dart';
 import 'package:my_note_app/utils/padding_size.dart';
+import 'package:my_note_app/widgets/color_picker_sheet.dart';
 
 class TextEditWidget extends StatefulWidget {
   final bool readOnly;
@@ -24,23 +25,32 @@ class TextEditWidget extends StatefulWidget {
 class _TextEditWidgetState extends State<TextEditWidget> {
 
   final QuillController controller = QuillController.basic();
+  late String _selectedColor;
+
   @override
   void initState() {
     super.initState();
-
     controller.readOnly = widget.readOnly;
     controller.document = widget.content != null ? widget.content! : controller.document;
+    _selectedColor = widget.note?.color ?? '#FFA0A4A8';
+  }
 
-    // controller.formatTextStyle(index, len, style)
-    // controller.formatText(
-    //   0,
-    //   controller.document.length,
-    //   Attribute.color.withValue('FFFFFF'), // Hex color for white
-    // );
+  void _showColorPicker(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => ColorPickerSheet(
+        currentColor: _selectedColor,
+        onSelected: (hex) => setState(() => _selectedColor = hex),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: PaddingSize.medium),
@@ -49,19 +59,7 @@ class _TextEditWidgetState extends State<TextEditWidget> {
         Expanded(
           child: QuillEditor.basic(
             controller: controller,
-            config: QuillEditorConfig(
-              // customStyles: Get.find<BackgroundController>().backgroundImage != null ? DefaultStyles(
-              //     paragraph: DefaultTextBlockStyle(
-              //       TextStyle(
-              //         // color: Colors.white, // Set default text color to white
-              //         fontSize: 16, // You can also set other default styles here
-              //       ),
-              //       HorizontalSpacing(0, 0), // Default line spacing
-              //       VerticalSpacing(0, 0),
-              //       VerticalSpacing(0,0), // No text decoration
-              //       BoxDecoration(),
-              //     )) : null,
-            ),
+            config: const QuillEditorConfig(),
           ),
         ),
 
@@ -73,7 +71,6 @@ class _TextEditWidgetState extends State<TextEditWidget> {
                 controller: controller,
                 config: QuillSimpleToolbarConfig(
                   color: Colors.transparent,
-                  // iconTheme: QuillIconTheme(iconButtonUnselectedData: IconButtonData(color: Colors.white, disabledColor: Colors.lightGreenAccent, focusColor: Colors.white, highlightColor: Colors.white), iconButtonSelectedData: ),
                   multiRowsDisplay: false,
                   showDirection: false,
                   showFontFamily: false,
@@ -108,6 +105,35 @@ class _TextEditWidgetState extends State<TextEditWidget> {
               ),
             ),
 
+            // Color picker button
+            IconButton(
+              tooltip: 'Card color',
+              onPressed: () => _showColorPicker(context),
+              icon: Stack(
+                alignment: Alignment.center,
+                clipBehavior: Clip.none,
+                children: [
+                  Icon(Icons.palette_outlined, color: theme.iconTheme.color),
+                  Positioned(
+                    bottom: -2,
+                    right: -2,
+                    child: Container(
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: _selectedColor.toColor() as Color,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: theme.scaffoldBackgroundColor,
+                          width: 1.5,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
             IconButton(
               icon: const Icon(Icons.check),
               onPressed: () async {
@@ -117,21 +143,21 @@ class _TextEditWidgetState extends State<TextEditWidget> {
                   final (title, _) = QuillHelper.deriveTitleAndBody(json);
                   Get.find<NoteController>().addNoteToDatabase(
                     title: title,
-                    content: json, color: '#FFA0A4A8',
+                    content: json,
+                    color: _selectedColor,
                   );
                 } else {
                   Get.find<NoteController>().updateNote(
-                      Note(
-                        id: widget.note!.id,
-                        title: widget.note!.title,
-                        content: json,
-                        dateTimeEdited: DateFormat("dd-MM-yyyy hh:mm a").format(DateTime.now()),
-                        dateTimeCreated: widget.note!.dateTimeCreated,
-                        isFavorite: widget.note!.isFavorite??0,
-                        color: widget.note!.color,
-                      )
+                    Note(
+                      id: widget.note!.id,
+                      title: widget.note!.title,
+                      content: json,
+                      dateTimeEdited: DateFormat("dd-MM-yyyy hh:mm a").format(DateTime.now()),
+                      dateTimeCreated: widget.note!.dateTimeCreated,
+                      isFavorite: widget.note!.isFavorite ?? 0,
+                      color: _selectedColor,
+                    ),
                   );
-
                 }
               },
             ),

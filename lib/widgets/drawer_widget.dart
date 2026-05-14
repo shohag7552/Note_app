@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:my_note_app/controller/auth_controller.dart';
 import 'package:my_note_app/controller/background_controller.dart';
 import 'package:my_note_app/controller/note_controller.dart';
+import 'package:my_note_app/screens/setting_screen/font_style_screen.dart';
 
 class DrawerWidget extends StatefulWidget {
   const DrawerWidget({super.key});
@@ -150,6 +151,15 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                       ),
                       Divider(color: theme.dividerColor, height: 16, indent: 16, endIndent: 16),
                     ],
+                    _row(
+                      context,
+                      icon: Icons.font_download_outlined,
+                      label: 'Change font style',
+                      onTap: () {
+                        Get.back();
+                        Get.to(() => const FontStyleScreen());
+                      },
+                    ),
                     _toggleRow(
                       context,
                       icon: Icons.lock_outline_rounded,

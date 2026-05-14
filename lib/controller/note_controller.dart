@@ -25,6 +25,9 @@ class NoteController extends GetxController implements GetxService{
   bool _darkTheme = false;
   bool get darkTheme => _darkTheme;
 
+  String _currentFont = 'Inter';
+  String get currentFont => _currentFont;
+
   @override
   void onInit() {
     getAllNotes();
@@ -81,6 +84,13 @@ class NoteController extends GetxController implements GetxService{
       id: id,
     );
     await DatabaseHelper.instance.deleteNote(note);
+    getAllNotes();
+  }
+
+  Future<void> updateNoteColor(int id, String color) async {
+    final note = notes.firstWhere((n) => n.id == id);
+    note.color = color;
+    await DatabaseHelper.instance.updateNote(note);
     getAllNotes();
   }
 
@@ -153,8 +163,15 @@ class NoteController extends GetxController implements GetxService{
     update();
   }
 
+  void changeFont(String fontFamily) {
+    _currentFont = fontFamily;
+    sharedPreferences.setString(AppConstants.fontKey, fontFamily);
+    update();
+  }
+
   void _loadCurrentTheme() async {
-    _darkTheme = sharedPreferences.getBool(AppConstants.theme) ?? false;;
+    _darkTheme = sharedPreferences.getBool(AppConstants.theme) ?? false;
+    _currentFont = sharedPreferences.getString(AppConstants.fontKey) ?? 'Inter';
     update();
   }
 

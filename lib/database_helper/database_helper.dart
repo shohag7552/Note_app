@@ -61,7 +61,7 @@ class DatabaseHelper {
     Database db = await instance.database;
     return await db.delete(
       _tableName,
-      where: "id = ?",
+      where: "note_id = ?",
       whereArgs: [note.id],
     );
   }
@@ -79,7 +79,7 @@ class DatabaseHelper {
     return await db.update(
       _tableName,
       note.toJson(),
-      where: "id = ?",
+      where: "note_id = ?",
       whereArgs: [note.id],
     );
   }

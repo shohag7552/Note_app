@@ -7,6 +7,7 @@ import 'package:my_note_app/helper/quill_helper.dart';
 import 'package:my_note_app/model/note_model.dart';
 import 'package:my_note_app/routing/app_routes.dart';
 import 'package:my_note_app/widgets/alert_dialog.dart';
+import 'package:my_note_app/widgets/color_picker_sheet.dart';
 
 class NoteCart extends StatelessWidget {
   final Note note;
@@ -183,11 +184,25 @@ class NoteCart extends StatelessWidget {
             Get.find<NoteController>()
                 .shareNote(QuillHelper.convertStringDocumentToString(note.content!));
             break;
+          case 3:
+            showModalBottomSheet(
+              context: context,
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+              ),
+              builder: (_) => ColorPickerSheet(
+                currentColor: note.color ?? '#FFA0A4A8',
+                onSelected: (hex) =>
+                    Get.find<NoteController>().updateNoteColor(note.id!, hex),
+              ),
+            );
+            break;
         }
       },
       itemBuilder: (context) => const [
         PopupMenuItem(value: 0, child: Text('Edit')),
         PopupMenuItem(value: 2, child: Text('Share')),
+        PopupMenuItem(value: 3, child: Text('Change color')),
         PopupMenuItem(value: 1, child: Text('Delete')),
       ],
     );
