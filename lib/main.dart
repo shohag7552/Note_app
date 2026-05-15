@@ -51,7 +51,10 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       final current = Get.currentRoute;
       final anyLockActive =
           controller.isPasswordActive() || controller.isBiometricLockActive();
-      if (anyLockActive && current.isNotEmpty && current != AppRoute.pass) {
+      if (anyLockActive &&
+          current.isNotEmpty &&
+          current != AppRoute.pass &&
+          current != AppRoute.forgetPass) {
         Get.offAllNamed(AppRoute.pass);
       }
     }
