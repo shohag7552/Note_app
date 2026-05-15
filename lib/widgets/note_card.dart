@@ -338,15 +338,21 @@ class _NoteCartState extends State<NoteCart>
   }
 
   Widget _buildMinimalistCard(ThemeData theme, NoteController ctrl, String derivedTitle, String derivedBody, bool hasTitle, bool isFav, bool isSelecting, bool isSelected) {
+    final baseColor = _accent(context);
+    final hasColor = widget.note.color != null && widget.note.color!.isNotEmpty && widget.note.color != '#FFA0A4A8';
+    final borderColor = isSelected 
+        ? theme.colorScheme.primary 
+        : (hasColor ? baseColor.withValues(alpha: 0.8) : theme.dividerColor);
+
     return AnimatedContainer(
       duration: const Duration(milliseconds: 220),
       curve: Curves.easeInOut,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.scaffoldBackgroundColor,
+        color: hasColor ? baseColor.withValues(alpha: 0.05) : theme.scaffoldBackgroundColor,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isSelected ? theme.colorScheme.primary : theme.dividerColor,
+          color: borderColor,
           width: isSelected ? 2.0 : 1.5,
         ),
       ),
