@@ -50,13 +50,13 @@ dependencies:
 
   google_sign_in: ^6.2.1
   shared_preferences: ^2.2.3
-  speech_to_text: ^7.0.0
+#  speech_to_text: ^7.0.0
   json_annotation: ^4.9.0
   local_auth: ^2.3.0
   crypto: ^3.0.3
 
   image_picker: ^1.1.2
-  page_curl_effect: ^1.0.1
+#  page_curl_effect: ^1.0.1
 
   appwrite: ^19.0.0
 

@@ -446,20 +446,62 @@ class _NotesGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final layoutIndex = Get.find<NoteController>().layoutIndex;
-    final crossAxisCount = layoutIndex == 1 ? 1 : (layoutIndex == 2 ? 3 : 2);
 
     return SafeArea(
       top: false,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(14, 6, 14, 10),
-        child: MasonryGridView.count(
-          crossAxisCount: crossAxisCount,
-          mainAxisSpacing: 10,
-          crossAxisSpacing: 10,
-          itemCount: notes.length,
-          itemBuilder: (context, index) =>
-              NoteCart(note: notes[index], index: index),
-        ),
+        child: layoutIndex == 2
+            ? SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: StaggeredGrid.count(
+                  crossAxisCount: 3,
+                  mainAxisSpacing: 10,
+                  crossAxisSpacing: 10,
+                  children: List.generate(notes.length, (index) {
+                    // Mathematically perfect pattern to avoid empty space
+                    // [2, 1] = 3, [1, 1, 1] = 3, [1, 2] = 3
+                    const pattern = [2, 1, 1, 1, 1, 1, 2];
+                    final span = pattern[index % pattern.length];
+                    return StaggeredGridTile.fit(
+                      crossAxisCellCount: span,
+                      child: NoteCart(note: notes[index], index: index),
+                    );
+                  }),
+                ),
+              )
+            : layoutIndex == 3
+                ? GridView.custom(
+                    physics: const BouncingScrollPhysics(),
+                    gridDelegate: SliverQuiltedGridDelegate(
+                      crossAxisCount: 3,
+                      mainAxisSpacing: 10,
+                      crossAxisSpacing: 10,
+                      repeatPattern: QuiltedGridRepeatPattern.inverted,
+                      pattern: const [
+                        QuiltedGridTile(2, 2),
+                        QuiltedGridTile(1, 1),
+                        QuiltedGridTile(1, 1),
+                      ],
+                    ),
+                    childrenDelegate: SliverChildBuilderDelegate(
+                      (context, index) => ClipRect(
+                        child: SingleChildScrollView(
+                          physics: const NeverScrollableScrollPhysics(),
+                          child: NoteCart(note: notes[index], index: index),
+                        ),
+                      ),
+                      childCount: notes.length,
+                    ),
+                  )
+                : MasonryGridView.count(
+                    crossAxisCount: layoutIndex == 1 ? 1 : 2,
+                    mainAxisSpacing: 10,
+                    crossAxisSpacing: 10,
+                    itemCount: notes.length,
+                    itemBuilder: (context, index) =>
+                        NoteCart(note: notes[index], index: index),
+                  ),
       ),
     );
   }

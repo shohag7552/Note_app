@@ -30,8 +30,11 @@ class NoteController extends GetxController implements GetxService {
   String _currentFont = 'Inter';
   String get currentFont => _currentFont;
 
-  int _layoutIndex = 0; // 0: Masonry, 1: List, 2: Dense Grid
+  int _layoutIndex = 0; // 0: Masonry, 1: List, 2: Dense Grid, 3: Quilted
   int get layoutIndex => _layoutIndex;
+
+  int _cardDesignIndex = 0; // 0: Classic, 1: Tinted, 2: Minimalist
+  int get cardDesignIndex => _cardDesignIndex;
 
   bool showFavouritesOnly = false;
 
@@ -250,10 +253,17 @@ class NoteController extends GetxController implements GetxService {
     update();
   }
 
+  void changeCardDesign(int index) {
+    _cardDesignIndex = index;
+    sharedPreferences.setInt('card_design', index);
+    update();
+  }
+
   void _loadCurrentTheme() {
     _darkTheme = sharedPreferences.getBool(AppConstants.theme) ?? false;
     _currentFont = sharedPreferences.getString(AppConstants.fontKey) ?? 'Inter';
     _layoutIndex = sharedPreferences.getInt(AppConstants.layoutKey) ?? 0;
+    _cardDesignIndex = sharedPreferences.getInt('card_design') ?? 0;
     update();
   }
 }

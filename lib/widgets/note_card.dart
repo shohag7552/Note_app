@@ -114,155 +114,315 @@ class _NoteCartState extends State<NoteCart>
             },
             onTapCancel: () => _pressController.reverse(),
             onLongPress: () => _handleLongPress(ctrl),
-            child: AnimatedContainer(
+            child: ctrl.cardDesignIndex == 1
+                ? _buildTintedCard(theme, ctrl, derivedTitle, derivedBody, hasTitle, isFav, isSelecting, isSelected)
+                : ctrl.cardDesignIndex == 2
+                    ? _buildMinimalistCard(theme, ctrl, derivedTitle, derivedBody, hasTitle, isFav, isSelecting, isSelected)
+                    : _buildClassicCard(theme, ctrl, derivedTitle, derivedBody, hasTitle, isFav, isSelecting, isSelected),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildClassicCard(ThemeData theme, NoteController ctrl, String derivedTitle, String derivedBody, bool hasTitle, bool isFav, bool isSelecting, bool isSelected) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeInOut,
+      decoration: BoxDecoration(
+        color: isSelected
+            ? theme.colorScheme.primary.withValues(alpha: 0.08)
+            : theme.cardColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isSelected
+              ? theme.colorScheme.primary
+              : theme.dividerColor,
+          width: isSelected ? 1.5 : 1.0,
+        ),
+      ),
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            AnimatedContainer(
               duration: const Duration(milliseconds: 220),
               curve: Curves.easeInOut,
+              width: 4,
               decoration: BoxDecoration(
-                color: isSelected
-                    ? theme.colorScheme.primary.withValues(alpha: 0.08)
-                    : theme.cardColor,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: isSelected
-                      ? theme.colorScheme.primary
-                      : theme.dividerColor,
-                  width: isSelected ? 1.5 : 1.0,
+                color: isSelected ? theme.colorScheme.primary : _accent(context),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(16),
+                  bottomLeft: Radius.circular(16),
                 ),
               ),
-              child: IntrinsicHeight(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 14, 8, 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Left colour accent bar
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 220),
-                      curve: Curves.easeInOut,
-                      width: 4,
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? theme.colorScheme.primary
-                            : _accent(context),
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(16),
-                          bottomLeft: Radius.circular(16),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            derivedTitle,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              height: 1.25,
+                              letterSpacing: -0.2,
+                              color: hasTitle ? theme.colorScheme.onSurface : theme.hintColor,
+                            ),
+                          ),
                         ),
-                      ),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 4, top: 2),
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 260),
+                            switchInCurve: Curves.elasticOut,
+                            switchOutCurve: Curves.easeIn,
+                            transitionBuilder: (child, animation) => ScaleTransition(scale: animation, child: child),
+                            child: isSelecting
+                                ? _SelectionCircle(key: const ValueKey('circle'), isSelected: isSelected, theme: theme)
+                                : GestureDetector(
+                                    key: const ValueKey('bookmark'),
+                                    onTap: () => ctrl.favoriteNote(widget.note.id!),
+                                    child: Icon(
+                                      isFav ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
+                                      size: 18,
+                                      color: isFav ? theme.colorScheme.onSurface : theme.hintColor,
+                                    ),
+                                  ),
+                          ),
+                        ),
+                      ],
                     ),
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(14, 14, 8, 12),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    derivedTitle,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: theme.textTheme.titleMedium?.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                      height: 1.25,
-                                      letterSpacing: -0.2,
-                                      color: hasTitle
-                                          ? theme.colorScheme.onSurface
-                                          : theme.hintColor,
-                                    ),
-                                  ),
-                                ),
-                                // Bookmark / selection indicator — animated switch
-                                Padding(
-                                  padding: const EdgeInsets.only(left: 4, top: 2),
-                                  child: AnimatedSwitcher(
-                                    duration: const Duration(milliseconds: 260),
-                                    switchInCurve: Curves.elasticOut,
-                                    switchOutCurve: Curves.easeIn,
-                                    transitionBuilder: (child, animation) =>
-                                        ScaleTransition(
-                                          scale: animation,
-                                          child: child,
-                                        ),
-                                    child: isSelecting
-                                        ? _SelectionCircle(
-                                            key: const ValueKey('circle'),
-                                            isSelected: isSelected,
-                                            theme: theme,
-                                          )
-                                        : GestureDetector(
-                                            key: const ValueKey('bookmark'),
-                                            onTap: () =>
-                                                ctrl.favoriteNote(widget.note.id!),
-                                            child: Icon(
-                                              isFav
-                                                  ? Icons.bookmark_rounded
-                                                  : Icons.bookmark_border_rounded,
-                                              size: 18,
-                                              color: isFav
-                                                  ? theme.colorScheme.onSurface
-                                                  : theme.hintColor,
-                                            ),
-                                          ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            if (derivedBody.isNotEmpty) ...[
-                              const SizedBox(height: 8),
-                              Expanded(
-                                child: Text(
-                                  derivedBody,
-                                  maxLines: 6,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.hintColor,
-                                    height: 1.45,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ),
-                            ],
-                            const SizedBox(height: 10),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    _editedLabel(),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: theme.textTheme.labelSmall?.copyWith(
-                                      color: theme.hintColor,
-                                      fontSize: 11,
-                                      letterSpacing: 0.1,
-                                    ),
-                                  ),
-                                ),
-                                // Hide ••• menu while in selection mode
-                                AnimatedSwitcher(
-                                  duration: const Duration(milliseconds: 180),
-                                  child: isSelecting
-                                      ? const SizedBox(
-                                          key: ValueKey('no-menu'), width: 24)
-                                      : _MenuButton(
-                                          key: const ValueKey('menu'),
-                                          note: widget.note,
-                                          onDeleteTap: () =>
-                                              _confirmDelete(context),
-                                        ),
-                                ),
-                              ],
-                            ),
-                          ],
+                    if (derivedBody.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Expanded(
+                        child: Text(
+                          derivedBody,
+                          maxLines: 6,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor, height: 1.45, fontSize: 13),
                         ),
                       ),
+                    ],
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            _editedLabel(),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.labelSmall?.copyWith(color: theme.hintColor, fontSize: 11, letterSpacing: 0.1),
+                          ),
+                        ),
+                        AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 180),
+                          child: isSelecting
+                              ? const SizedBox(key: ValueKey('no-menu'), width: 24)
+                              : _MenuButton(key: const ValueKey('menu'), note: widget.note, onDeleteTap: () => _confirmDelete(context)),
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
             ),
-          ),
+          ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildTintedCard(ThemeData theme, NoteController ctrl, String derivedTitle, String derivedBody, bool hasTitle, bool isFav, bool isSelecting, bool isSelected) {
+    final baseColor = _accent(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final backgroundColor = isSelected
+        ? theme.colorScheme.primary.withValues(alpha: 0.15)
+        : Color.alphaBlend(baseColor.withValues(alpha: isDark ? 0.12 : 0.08), theme.cardColor);
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeInOut,
+      padding: const EdgeInsets.fromLTRB(16, 16, 12, 16),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isSelected ? theme.colorScheme.primary : baseColor.withValues(alpha: 0.3),
+          width: isSelected ? 1.5 : 1.0,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  derivedTitle,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    height: 1.25,
+                    letterSpacing: -0.3,
+                    color: hasTitle ? theme.colorScheme.onSurface : theme.hintColor,
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 8),
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 260),
+                  transitionBuilder: (child, animation) => ScaleTransition(scale: animation, child: child),
+                  child: isSelecting
+                      ? _SelectionCircle(key: const ValueKey('circle'), isSelected: isSelected, theme: theme)
+                      : GestureDetector(
+                          key: const ValueKey('bookmark'),
+                          onTap: () => ctrl.favoriteNote(widget.note.id!),
+                          child: Icon(
+                            isFav ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
+                            size: 20,
+                            color: isFav ? baseColor : theme.hintColor,
+                          ),
+                        ),
+                ),
+              ),
+            ],
+          ),
+          if (derivedBody.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Text(
+              derivedBody,
+              maxLines: 6,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.75),
+                height: 1.5,
+                fontSize: 13.5,
+              ),
+            ),
+          ],
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  _editedLabel(),
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 180),
+                child: isSelecting
+                    ? const SizedBox(key: ValueKey('no-menu'), width: 24)
+                    : _MenuButton(key: const ValueKey('menu'), note: widget.note, onDeleteTap: () => _confirmDelete(context)),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMinimalistCard(ThemeData theme, NoteController ctrl, String derivedTitle, String derivedBody, bool hasTitle, bool isFav, bool isSelecting, bool isSelected) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeInOut,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.scaffoldBackgroundColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isSelected ? theme.colorScheme.primary : theme.dividerColor,
+          width: isSelected ? 2.0 : 1.5,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  derivedTitle,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: -0.5,
+                    color: hasTitle ? theme.colorScheme.onSurface : theme.hintColor,
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 8),
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 260),
+                  transitionBuilder: (child, animation) => ScaleTransition(scale: animation, child: child),
+                  child: isSelecting
+                      ? _SelectionCircle(key: const ValueKey('circle'), isSelected: isSelected, theme: theme)
+                      : GestureDetector(
+                          key: const ValueKey('bookmark'),
+                          onTap: () => ctrl.favoriteNote(widget.note.id!),
+                          child: Icon(
+                            isFav ? Icons.star_rounded : Icons.star_border_rounded,
+                            size: 20,
+                            color: isFav ? Colors.amber.shade600 : theme.hintColor.withValues(alpha: 0.4),
+                          ),
+                        ),
+                ),
+              ),
+            ],
+          ),
+          if (derivedBody.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Text(
+              derivedBody,
+              maxLines: 6,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.hintColor,
+                height: 1.6,
+              ),
+            ),
+          ],
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  _editedLabel().toUpperCase(),
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.hintColor.withValues(alpha: 0.6),
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.5,
+                    fontSize: 10,
+                  ),
+                ),
+              ),
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 180),
+                child: isSelecting
+                    ? const SizedBox(key: ValueKey('no-menu'), width: 24)
+                    : _MenuButton(key: const ValueKey('menu'), note: widget.note, onDeleteTap: () => _confirmDelete(context)),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

@@ -16,7 +16,6 @@ import 'package:package_info_plus/src/package_info_plus_web.dart';
 import 'package:quill_native_bridge_web/quill_native_bridge_web.dart';
 import 'package:share_plus/src/share_plus_web.dart';
 import 'package:shared_preferences_web/shared_preferences_web.dart';
-import 'package:speech_to_text/speech_to_text_web.dart';
 import 'package:url_launcher_web/url_launcher_web.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 
@@ -32,7 +31,6 @@ void registerPlugins([final Registrar? pluginRegistrar]) {
   QuillNativeBridgeWeb.registerWith(registrar);
   SharePlusWebPlugin.registerWith(registrar);
   SharedPreferencesPlugin.registerWith(registrar);
-  SpeechToTextPlugin.registerWith(registrar);
   UrlLauncherPlugin.registerWith(registrar);
   registrar.registerMessageHandler();
 }

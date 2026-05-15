@@ -11,6 +11,7 @@ import 'package:my_note_app/screens/note_screens/note_detail_page.dart';
 import 'package:my_note_app/screens/pass_screen/app_lock_screen.dart';
 import 'package:my_note_app/screens/pass_screen/forget_pass_screen.dart';
 import 'package:my_note_app/screens/pass_screen/pass_screen.dart';
+import 'package:my_note_app/screens/appearance_screen.dart';
 
 class AppRoute {
   static const String SPLASH = '/';
@@ -23,6 +24,7 @@ class AppRoute {
   static const String ADD_NEW_NOTE = '/add_new_note';
   static const String EDIT_NOTE = '/edit_note';
   static const String NOTE_DETAILS = '/note_details';
+  static const String APPEARANCE = '/appearance';
 
   static String getNoteDetailsPage(Note note) {
     List<int> encoded = utf8.encode(jsonEncode(note.toJson()));
@@ -43,6 +45,7 @@ class AppRoute {
     GetPage(name: AppRoute.forgetPass, page: () => const ForgetPassScreen()),
     GetPage(name: AppRoute.appLock, page: () => const AppLockScreen()),
     GetPage(name: AppRoute.HOME, page: () => const HomePage()),
+    GetPage(name: AppRoute.APPEARANCE, page: () => const AppearanceScreen()),
     GetPage(name: AppRoute.ADD_NEW_NOTE, page: () => const AddNewNotePage()),
     GetPage(name: AppRoute.EDIT_NOTE, page: () {
       List<int> decode = base64Decode(Get.parameters['note']!.replaceAll(' ', '+'));

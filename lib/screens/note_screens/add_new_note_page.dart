@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:my_note_app/widgets/text_edit_widget.dart';
-import 'package:speech_to_text/speech_recognition_result.dart';
-import 'package:speech_to_text/speech_to_text.dart';
+// import 'package:speech_to_text/speech_recognition_result.dart';
+// import 'package:speech_to_text/speech_to_text.dart';
 
 import '../../controller/note_controller.dart';
 
@@ -14,7 +14,7 @@ class AddNewNotePage extends StatefulWidget {
 }
 
 class _AddNewNotePageState extends State<AddNewNotePage> {
-  final SpeechToText _speechToText = SpeechToText();
+  // final SpeechToText _speechToText = SpeechToText();
   String _lastWord = '';
 
   @override
@@ -24,19 +24,19 @@ class _AddNewNotePageState extends State<AddNewNotePage> {
     Get.find<NoteController>().contentController.text = '';
   }
 
-  Future<void> voiceAction() async {
-    bool available = await _speechToText.initialize(
-      onStatus: (_) {},
-      onError: (_) {},
-    );
-    if (available) {
-      _speechToText.listen(onResult: _resultListener);
-    }
-  }
-
-  void _resultListener(SpeechRecognitionResult result) {
-    setState(() => _lastWord = result.recognizedWords);
-  }
+  // Future<void> voiceAction() async {
+  //   bool available = await _speechToText.initialize(
+  //     onStatus: (_) {},
+  //     onError: (_) {},
+  //   );
+  //   if (available) {
+  //     _speechToText.listen(onResult: _resultListener);
+  //   }
+  // }
+  //
+  // void _resultListener(SpeechRecognitionResult result) {
+  //   setState(() => _lastWord = result.recognizedWords);
+  // }
 
   @override
   Widget build(BuildContext context) {

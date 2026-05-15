@@ -156,11 +156,11 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                     ),
                     _row(
                       context,
-                      icon: Icons.dashboard_customize_outlined,
-                      label: 'Change layout',
+                      icon: Icons.palette_outlined,
+                      label: 'Appearance',
                       onTap: () {
                         Get.back();
-                        _showLayoutPicker(context, noteController);
+                        Get.toNamed(AppRoute.APPEARANCE);
                       },
                     ),
                     _row(
@@ -255,108 +255,5 @@ class _DrawerWidgetState extends State<DrawerWidget> {
     );
   }
 
-  void _showLayoutPicker(BuildContext context, NoteController ctrl) {
-    final theme = Theme.of(context);
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      backgroundColor: theme.scaffoldBackgroundColor,
-      builder: (_) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Text(
-                    'Choose Layout',
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: -0.3,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                _layoutOption(
-                  context,
-                  ctrl,
-                  index: 0,
-                  icon: Icons.dashboard_outlined,
-                  label: 'Masonry Grid',
-                  description: 'Staggered dual-column layout',
-                ),
-                _layoutOption(
-                  context,
-                  ctrl,
-                  index: 1,
-                  icon: Icons.view_agenda_outlined,
-                  label: 'List View',
-                  description: 'Single-column full-width list',
-                ),
-                _layoutOption(
-                  context,
-                  ctrl,
-                  index: 2,
-                  icon: Icons.grid_view_outlined,
-                  label: 'Dense Grid',
-                  description: 'Compact 3-column layout',
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _layoutOption(
-    BuildContext context,
-    NoteController ctrl, {
-    required int index,
-    required IconData icon,
-    required String label,
-    required String description,
-  }) {
-    final theme = Theme.of(context);
-    final isSelected = ctrl.layoutIndex == index;
-    final color = isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurface;
-
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 6),
-      leading: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: isSelected ? theme.colorScheme.primary.withValues(alpha: 0.1) : theme.cardColor,
-          shape: BoxShape.circle,
-        ),
-        child: Icon(icon, color: color, size: 22),
-      ),
-      title: Text(
-        label,
-        style: theme.textTheme.titleMedium?.copyWith(
-          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-          color: color,
-        ),
-      ),
-      subtitle: Text(
-        description,
-        style: theme.textTheme.bodySmall?.copyWith(
-          color: theme.hintColor,
-          height: 1.4,
-        ),
-      ),
-      trailing: isSelected
-          ? Icon(Icons.check_circle_rounded, color: theme.colorScheme.primary)
-          : null,
-      onTap: () {
-        ctrl.changeLayout(index);
-        Get.back();
-      },
-    );
-  }
 }
+
