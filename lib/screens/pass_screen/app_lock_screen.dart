@@ -50,9 +50,10 @@ class _AppLockScreenState extends State<AppLockScreen> {
       ),
       body: GetBuilder<NoteController>(
         builder: (ctrl) {
-          final lockActive = ctrl.isPasswordActive();
+          final pinLockActive = ctrl.isPasswordActive();
           final hasPin = ctrl.isContainPassword();
-          final biometricEnabled = ctrl.isBiometricEnabled();
+          final biometricLockActive = ctrl.isBiometricLockActive();
+          final anyLockActive = pinLockActive || biometricLockActive;
 
           return ListView(
             padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
@@ -65,40 +66,42 @@ class _AppLockScreenState extends State<AppLockScreen> {
                   _ToggleTile(
                     theme: theme,
                     icon: Icons.lock_outline_rounded,
-                    title: 'App Lock',
-                    subtitle: lockActive
-                        ? 'Your notes are protected with a PIN'
+                    title: 'PIN Lock',
+                    subtitle: pinLockActive
+                        ? 'Your notes are protected with a 4-digit PIN'
                         : 'Lock the app with a 4-digit PIN',
-                    value: lockActive,
-                    onChanged: (enable) => _handleLockToggle(ctrl, enable, hasPin),
+                    value: pinLockActive,
+                    onChanged: (enable) =>
+                        _handlePinLockToggle(ctrl, enable, hasPin),
                   ),
-                  if (lockActive && hasPin && _deviceSupportsBiometrics) ...[
+                  if (_deviceSupportsBiometrics) ...[
                     Divider(height: 1, indent: 56, color: theme.dividerColor),
                     _ToggleTile(
                       theme: theme,
                       icon: Icons.fingerprint_rounded,
-                      title: 'Biometric Unlock',
-                      subtitle: biometricEnabled
-                          ? 'Use fingerprint to unlock the app'
-                          : 'Enable fingerprint unlock',
-                      value: biometricEnabled,
-                      onChanged: (enable) => ctrl.setBiometricEnabled(enable),
+                      title: 'Biometric Lock',
+                      subtitle: biometricLockActive
+                          ? 'Fingerprint required to open the app'
+                          : 'Lock the app with your fingerprint',
+                      value: biometricLockActive,
+                      onChanged: (enable) =>
+                          _handleBiometricLockToggle(ctrl, enable),
                     ),
                   ],
                 ],
               ),
-              if (!lockActive)
+              if (!anyLockActive)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(4, 12, 4, 0),
                   child: Text(
-                    'When enabled, you\'ll need to enter a 4-digit PIN every time you open the app.',
+                    'Choose a lock method to protect your notes. Only one lock can be active at a time.',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.hintColor,
                       height: 1.5,
                     ),
                   ),
                 ),
-              if (lockActive && hasPin) ...[
+              if (pinLockActive && hasPin) ...[
                 const SizedBox(height: 24),
                 _SectionLabel(text: 'Security', theme: theme),
                 const SizedBox(height: 8),
@@ -136,17 +139,21 @@ class _AppLockScreenState extends State<AppLockScreen> {
     );
   }
 
-  void _handleLockToggle(NoteController ctrl, bool enable, bool hasPin) {
+  void _handlePinLockToggle(
+      NoteController ctrl, bool enable, bool hasPin) {
     if (enable) {
-      ctrl.activePassword(true);
+      ctrl.activePassword(true); // also clears biometric lock
       if (!hasPin) {
         Get.toNamed(AppRoute.pass, arguments: {'intent': 'setup'});
       }
     } else {
       ctrl.activePassword(false);
-      // Also disable biometric when app lock is turned off
-      ctrl.setBiometricEnabled(false);
     }
+  }
+
+  Future<void> _handleBiometricLockToggle(
+      NoteController ctrl, bool enable) async {
+    await ctrl.setBiometricLockActive(enable); // also clears PIN lock when enabling
   }
 }
 

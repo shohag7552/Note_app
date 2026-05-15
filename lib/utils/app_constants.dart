@@ -13,4 +13,5 @@ class AppConstants{
   static const String backgroundImageKey = 'backgroundImage';
   static const String fontKey = 'font';
   static const String biometricKey = 'biometric-enabled';
+  static const String biometricLockActiveKey = 'biometric-lock-active';
 }

@@ -1,7 +1,6 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:my_note_app/controller/note_controller.dart';
@@ -11,6 +10,7 @@ import 'package:pin_code_fields/pin_code_fields.dart';
 
 enum _Mode {
   verify,
+  biometricOnly,
   setupQuestions,
   createPin,
   forgotPin,
@@ -32,7 +32,6 @@ class _PassScreenState extends State<PassScreen> {
   final _pinController = TextEditingController();
 
   late _Mode _mode;
-  bool _biometricAvailable = false;
   bool _pinError = false;
   bool _fromSettings = false;
 
@@ -63,7 +62,8 @@ class _PassScreenState extends State<PassScreen> {
     final intent = args?['intent'] as String?;
     _fromSettings = intent != null;
 
-    final hasPin = Get.find<NoteController>().isContainPassword();
+    final ctrl = Get.find<NoteController>();
+    final hasPin = ctrl.isContainPassword();
 
     if (intent == 'changePin') {
       _mode = _Mode.changePinVerify;
@@ -71,9 +71,11 @@ class _PassScreenState extends State<PassScreen> {
       _mode = _Mode.changeQuestionsOnly;
     } else if (intent == 'setup') {
       _mode = _Mode.setupQuestions;
+    } else if (ctrl.isBiometricLockActive()) {
+      _mode = _Mode.biometricOnly;
+      _initBiometricOnly();
     } else {
       _mode = hasPin ? _Mode.verify : _Mode.setupQuestions;
-      if (_mode == _Mode.verify) _initBiometrics();
     }
   }
 
@@ -85,15 +87,17 @@ class _PassScreenState extends State<PassScreen> {
   }
 
   // ── Biometrics ────────────────────────────────────────────────────────────
-  Future<void> _initBiometrics() async {
+  Future<void> _initBiometricOnly() async {
     try {
       final canCheck = await _localAuth.canCheckBiometrics;
       final isSupported = await _localAuth.isDeviceSupported();
       if (!mounted) return;
-      final userEnabled = Get.find<NoteController>().isBiometricEnabled();
-      final deviceReady = canCheck && isSupported;
-      setState(() => _biometricAvailable = deviceReady && userEnabled);
-      if (_biometricAvailable) _triggerBiometric();
+      if (canCheck && isSupported) {
+        WidgetsBinding.instance.addPostFrameCallback((_) async {
+          await Future.delayed(const Duration(milliseconds: 300));
+          if (mounted) _triggerBiometric();
+        });
+      }
     } catch (_) {}
   }
 
@@ -106,9 +110,12 @@ class _PassScreenState extends State<PassScreen> {
           stickyAuth: true,
         ),
       );
-      if (ok && mounted) Get.offAllNamed(AppRoute.HOME);
-    } on PlatformException {
-      // fall back to PIN silently
+      if (ok && mounted) {
+        Get.find<NoteController>().setSessionUnlocked(true);
+        Get.offAllNamed(AppRoute.HOME);
+      }
+    } catch (_) {
+      // dialog dismissed or unavailable — user can tap the button to retry
     }
   }
 
@@ -123,6 +130,7 @@ class _PassScreenState extends State<PassScreen> {
           _pinError = false;
         });
       } else {
+        Get.find<NoteController>().setSessionUnlocked(true);
         Get.offAllNamed(AppRoute.HOME);
       }
     } else {
@@ -227,6 +235,7 @@ class _PassScreenState extends State<PassScreen> {
   Widget build(BuildContext context) {
     return switch (_mode) {
       _Mode.verify => _buildVerify(context),
+      _Mode.biometricOnly => _buildBiometricOnly(context),
       _Mode.setupQuestions ||
       _Mode.changeQuestionsOnly =>
         _buildSetupQuestions(context),
@@ -292,33 +301,56 @@ class _PassScreenState extends State<PassScreen> {
                     ),
                   ),
                 ),
-                if (_biometricAvailable) ...[
-                  const SizedBox(height: 32),
-                  Row(children: [
-                    Expanded(child: Divider(color: theme.dividerColor)),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: Text(
-                        'or',
-                        style: theme.textTheme.labelSmall
-                            ?.copyWith(color: theme.hintColor),
-                      ),
-                    ),
-                    Expanded(child: Divider(color: theme.dividerColor)),
-                  ]),
-                  const SizedBox(height: 24),
-                  OutlinedButton.icon(
-                    onPressed: _triggerBiometric,
-                    icon: const Icon(Icons.fingerprint_rounded, size: 22),
-                    label: const Text('Use Biometrics'),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 28, vertical: 14),
-                      side: BorderSide(color: theme.dividerColor),
-                      shape: const StadiumBorder(),
-                    ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // SCREEN: Biometric-only unlock (no PIN fallback)
+  // ─────────────────────────────────────────────────────────────────────────
+  Widget _buildBiometricOnly(BuildContext context) {
+    final theme = Theme.of(context);
+    return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 40),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _lockIcon(theme, Icons.fingerprint_rounded),
+                const SizedBox(height: 24),
+                Text(
+                  AppConstants.appName,
+                  style: theme.textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.5,
                   ),
-                ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Verify your identity to continue',
+                  style: theme.textTheme.bodyMedium
+                      ?.copyWith(color: theme.hintColor),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 40),
+                OutlinedButton.icon(
+                  onPressed: _triggerBiometric,
+                  icon: const Icon(Icons.fingerprint_rounded, size: 22),
+                  label: const Text('Use Fingerprint'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 28, vertical: 14),
+                    side: BorderSide(color: theme.dividerColor),
+                    shape: const StadiumBorder(),
+                  ),
+                ),
               ],
             ),
           ),
@@ -754,3 +786,4 @@ class _PassScreenState extends State<PassScreen> {
     );
   }
 }
+

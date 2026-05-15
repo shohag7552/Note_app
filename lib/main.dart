@@ -36,15 +36,22 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     super.dispose();
   }
 
-  /// Re-lock the app whenever it returns to foreground and lock is active.
+  /// Re-lock the app whenever it returns to foreground and any lock is active.
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    final controller = Get.find<NoteController>();
+    if (state == AppLifecycleState.paused) {
+      // App went to background — clear the session so it re-locks on next resume.
+      controller.setSessionUnlocked(false);
+    }
     if (state == AppLifecycleState.resumed) {
-      final controller = Get.find<NoteController>();
+      // Skip re-lock if the user just authenticated (avoids race with biometric
+      // dialog dismissal triggering resumed before navigation completes).
+      if (controller.isSessionUnlocked) return;
       final current = Get.currentRoute;
-      if (controller.isPasswordActive() &&
-          current.isNotEmpty &&
-          current != AppRoute.pass) {
+      final anyLockActive =
+          controller.isPasswordActive() || controller.isBiometricLockActive();
+      if (anyLockActive && current.isNotEmpty && current != AppRoute.pass) {
         Get.offAllNamed(AppRoute.pass);
       }
     }
@@ -74,8 +81,10 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   }
 
   String _initialRoute() {
-    return Get.find<NoteController>().isPasswordActive()
-        ? AppRoute.pass
-        : AppRoute.HOME;
+    final ctrl = Get.find<NoteController>();
+    if (ctrl.isPasswordActive() || ctrl.isBiometricLockActive()) {
+      return AppRoute.pass;
+    }
+    return AppRoute.HOME;
   }
 }

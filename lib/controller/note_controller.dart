@@ -192,6 +192,10 @@ class NoteController extends GetxController implements GetxService {
 
   Future<bool> activePassword(bool status) async {
     appLockStatus = status;
+    if (status) {
+      // Disable biometric lock when PIN lock is enabled (one lock at a time)
+      await sharedPreferences.setBool(AppConstants.biometricLockActiveKey, false);
+    }
     update();
     return sharedPreferences.setBool(AppConstants.passActiveKey, status);
   }
@@ -201,6 +205,26 @@ class NoteController extends GetxController implements GetxService {
 
   Future<void> setBiometricEnabled(bool status) async {
     await sharedPreferences.setBool(AppConstants.biometricKey, status);
+    update();
+  }
+
+  bool isBiometricLockActive() =>
+      sharedPreferences.getBool(AppConstants.biometricLockActiveKey) ?? false;
+
+  // Tracks whether the user has authenticated in the current foreground session.
+  // Prevents the lifecycle observer from re-locking immediately after auth.
+  bool _sessionUnlocked = false;
+  bool get isSessionUnlocked => _sessionUnlocked;
+  void setSessionUnlocked(bool value) => _sessionUnlocked = value;
+
+  Future<void> setBiometricLockActive(bool status) async {
+    await sharedPreferences.setBool(AppConstants.biometricLockActiveKey, status);
+    if (status) {
+      // Disable PIN lock when biometric lock is enabled (one lock at a time)
+      await sharedPreferences.setBool(AppConstants.passActiveKey, false);
+      await sharedPreferences.setBool(AppConstants.biometricKey, false);
+      appLockStatus = false;
+    }
     update();
   }
 
