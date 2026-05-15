@@ -30,6 +30,9 @@ class NoteController extends GetxController implements GetxService {
   String _currentFont = 'Inter';
   String get currentFont => _currentFont;
 
+  int _layoutIndex = 0; // 0: Masonry, 1: List, 2: Dense Grid
+  int get layoutIndex => _layoutIndex;
+
   bool showFavouritesOnly = false;
 
   // ── Multi-select ─────────────────────────────────────────────────────────
@@ -241,9 +244,16 @@ class NoteController extends GetxController implements GetxService {
     update();
   }
 
+  void changeLayout(int index) {
+    _layoutIndex = index;
+    sharedPreferences.setInt(AppConstants.layoutKey, index);
+    update();
+  }
+
   void _loadCurrentTheme() {
     _darkTheme = sharedPreferences.getBool(AppConstants.theme) ?? false;
     _currentFont = sharedPreferences.getString(AppConstants.fontKey) ?? 'Inter';
+    _layoutIndex = sharedPreferences.getInt(AppConstants.layoutKey) ?? 0;
     update();
   }
 }

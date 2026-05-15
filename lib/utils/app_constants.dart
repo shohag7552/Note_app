@@ -14,4 +14,5 @@ class AppConstants{
   static const String fontKey = 'font';
   static const String biometricKey = 'biometric-enabled';
   static const String biometricLockActiveKey = 'biometric-lock-active';
+  static const String layoutKey = 'layout';
 }

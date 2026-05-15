@@ -445,12 +445,15 @@ class _NotesGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final layoutIndex = Get.find<NoteController>().layoutIndex;
+    final crossAxisCount = layoutIndex == 1 ? 1 : (layoutIndex == 2 ? 3 : 2);
+
     return SafeArea(
       top: false,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(14, 6, 14, 10),
         child: MasonryGridView.count(
-          crossAxisCount: 2,
+          crossAxisCount: crossAxisCount,
           mainAxisSpacing: 10,
           crossAxisSpacing: 10,
           itemCount: notes.length,
