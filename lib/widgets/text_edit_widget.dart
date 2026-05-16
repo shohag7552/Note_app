@@ -78,12 +78,16 @@ class _TextEditWidgetState extends State<TextEditWidget> {
                 final data = jsonDecode(details.data);
                 final path = data['path'];
                 final width = data['w'];
+                final dx = data['dx'] ?? 0.0;
+                final dy = data['dy'] ?? 0.0;
                 
                 final RenderObject? rootRender = _editorKey.currentContext?.findRenderObject();
                 dynamic renderEditor = _findRenderEditor(rootRender);
                 
                 if (renderEditor != null) {
-                  final localOffset = renderEditor.globalToLocal(details.offset);
+                  // Adjust offset by where the user was holding the image
+                  final touchOffset = details.offset + Offset(dx, dy);
+                  final localOffset = renderEditor.globalToLocal(touchOffset);
                   final position = renderEditor.getPositionForOffset(localOffset);
                   
                   final index = position.offset;

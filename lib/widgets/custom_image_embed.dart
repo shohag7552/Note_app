@@ -65,6 +65,9 @@ class _ResizableImageWidgetState extends State<_ResizableImageWidget> {
     widget.controller.replaceText(offset, length, BlockEmbed.image(newUrl), null);
   }
 
+  Offset _dragOffset = Offset.zero;
+  int _originalOffset = 0;
+
   @override
   Widget build(BuildContext context) {
     final imageWidget = Container(
@@ -123,31 +126,37 @@ class _ResizableImageWidgetState extends State<_ResizableImageWidget> {
       ),
     );
 
-    return LongPressDraggable<String>(
-      data: jsonEncode({'path': _filePath, 'w': _width.toInt()}),
-      feedback: Opacity(
-        opacity: 0.7,
-        child: Material(
-          color: Colors.transparent,
+    return Listener(
+      onPointerDown: (event) => _dragOffset = event.localPosition,
+      child: LongPressDraggable<String>(
+        data: jsonEncode({
+          'path': _filePath, 
+          'w': _width.toInt(),
+          'dx': _dragOffset.dx,
+          'dy': _dragOffset.dy,
+        }),
+        feedback: Opacity(
+          opacity: 0.7,
+          child: Material(
+            color: Colors.transparent,
+            child: imageWidget,
+          ),
+        ),
+        childWhenDragging: Opacity(
+          opacity: 0.3,
           child: imageWidget,
         ),
+        onDragStarted: () {
+          _originalOffset = widget.node.documentOffset;
+          final length = widget.node.length;
+          widget.controller.replaceText(_originalOffset, length, '', null);
+        },
+        onDraggableCanceled: (velocity, offset) {
+          final embed = BlockEmbed.image('$_filePath?w=${_width.toInt()}');
+          widget.controller.replaceText(_originalOffset, 0, embed, null);
+        },
+        child: interactiveImage,
       ),
-      childWhenDragging: Opacity(
-        opacity: 0.3,
-        child: imageWidget,
-      ),
-      onDragStarted: () {
-        // Delete from current location so it visually moves
-        final offset = widget.node.documentOffset;
-        final length = widget.node.length;
-        widget.controller.replaceText(offset, length, '', null);
-      },
-      onDraggableCanceled: (velocity, offset) {
-        // Restore image if canceled
-        final embed = BlockEmbed.image('$_filePath?w=${_width.toInt()}');
-        widget.controller.replaceText(widget.node.documentOffset, 0, embed, null);
-      },
-      child: interactiveImage,
     );
   }
 }
