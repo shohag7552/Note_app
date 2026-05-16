@@ -246,6 +246,15 @@ class _NormalActions extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
+        if (controller.isPasswordActive() || controller.isBiometricLockActive())
+          IconButton(
+            tooltip: 'Lock App',
+            icon: const Icon(Icons.lock_outline_rounded),
+            onPressed: () {
+              controller.setSessionUnlocked(false);
+              Get.offAllNamed(AppRoute.pass);
+            },
+          ),
         IconButton(
           tooltip: 'Search',
           icon: const Icon(Icons.search_rounded),
