@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:get/get.dart';
+import 'package:image_cropper/image_cropper.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:my_note_app/controller/note_controller.dart';
 import 'package:my_note_app/helper/color_extension.dart';
@@ -10,6 +12,8 @@ import 'package:my_note_app/helper/quill_helper.dart';
 import 'package:my_note_app/model/note_model.dart';
 import 'package:my_note_app/utils/padding_size.dart';
 import 'package:my_note_app/widgets/color_picker_sheet.dart';
+import 'package:flutter_quill_extensions/flutter_quill_extensions.dart';
+import 'package:my_note_app/widgets/custom_image_embed.dart';
 
 class TextEditWidget extends StatefulWidget {
   final bool readOnly;
@@ -24,6 +28,7 @@ class TextEditWidget extends StatefulWidget {
 
 class _TextEditWidgetState extends State<TextEditWidget> {
 
+  final GlobalKey _editorKey = GlobalKey();
   final QuillController controller = QuillController.basic();
   late String _selectedColor;
 
@@ -48,6 +53,16 @@ class _TextEditWidgetState extends State<TextEditWidget> {
     );
   }
 
+  RenderObject? _findRenderEditor(RenderObject? root) {
+    if (root == null) return null;
+    if (root.runtimeType.toString() == 'RenderEditor') return root;
+    RenderObject? result;
+    root.visitChildren((child) {
+      result ??= _findRenderEditor(child);
+    });
+    return result;
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -57,9 +72,46 @@ class _TextEditWidgetState extends State<TextEditWidget> {
       child: Column(children: [
 
         Expanded(
-          child: QuillEditor.basic(
-            controller: controller,
-            config: const QuillEditorConfig(),
+          child: DragTarget<String>(
+            onAcceptWithDetails: (details) {
+              try {
+                final data = jsonDecode(details.data);
+                final path = data['path'];
+                final width = data['w'];
+                
+                final RenderObject? rootRender = _editorKey.currentContext?.findRenderObject();
+                dynamic renderEditor = _findRenderEditor(rootRender);
+                
+                if (renderEditor != null) {
+                  final localOffset = renderEditor.globalToLocal(details.offset);
+                  final position = renderEditor.getPositionForOffset(localOffset);
+                  
+                  final index = position.offset;
+                  final embed = BlockEmbed.image('$path?w=$width');
+                  
+                  controller.replaceText(index, 0, embed, null);
+                  controller.replaceText(index + 1, 0, '\n', null);
+                  
+                  controller.updateSelection(
+                    TextSelection.collapsed(offset: index + 1),
+                    ChangeSource.local,
+                  );
+                }
+              } catch (e) {
+                // Ignore
+              }
+            },
+            builder: (context, candidateData, rejectedData) {
+              return QuillEditor.basic(
+                key: _editorKey,
+                controller: controller,
+                config: QuillEditorConfig(
+                  embedBuilders: [
+                    CustomImageEmbedBuilder(),
+                  ],
+                ),
+              );
+            },
           ),
         ),
 
@@ -103,6 +155,60 @@ class _TextEditWidgetState extends State<TextEditWidget> {
                   showClipboardPaste: false,
                 ),
               ),
+            ),
+
+            // Image picker button
+            IconButton(
+              tooltip: 'Add Image',
+              onPressed: () async {
+                // Save selection before focus is lost to the image picker
+                int index = controller.selection.baseOffset;
+                int length = controller.selection.extentOffset - index;
+                
+                if (index < 0) {
+                  index = controller.document.length - 1;
+                  if (index < 0) index = 0;
+                  length = 0;
+                } else if (length < 0) {
+                  index = controller.selection.extentOffset;
+                  length = controller.selection.baseOffset - index;
+                }
+
+                final picker = ImagePicker();
+                final image = await picker.pickImage(source: ImageSource.gallery);
+                if (image != null && mounted) {
+                  final croppedFile = await ImageCropper().cropImage(
+                    sourcePath: image.path,
+                    uiSettings: [
+                      AndroidUiSettings(
+                        toolbarTitle: 'Crop Image',
+                        toolbarColor: theme.colorScheme.primary,
+                        toolbarWidgetColor: theme.colorScheme.onPrimary,
+                        initAspectRatio: CropAspectRatioPreset.original,
+                        lockAspectRatio: false,
+                      ),
+                      IOSUiSettings(
+                        title: 'Crop Image',
+                      ),
+                    ],
+                  );
+                  if (croppedFile != null) {
+                    controller.replaceText(
+                      index,
+                      length,
+                      BlockEmbed.image('${croppedFile.path}?w=300'),
+                      null,
+                    );
+                    
+                    // Move cursor past the inserted image
+                    controller.updateSelection(
+                      TextSelection.collapsed(offset: index + 1),
+                      ChangeSource.local,
+                    );
+                  }
+                }
+              },
+              icon: Icon(Icons.image_outlined, color: theme.iconTheme.color),
             ),
 
             // Color picker button

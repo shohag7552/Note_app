@@ -49,12 +49,14 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       // dialog dismissal triggering resumed before navigation completes).
       if (controller.isSessionUnlocked) return;
       final current = Get.currentRoute;
+      print("==========App resumed, current route: $current");
       final anyLockActive =
           controller.isPasswordActive() || controller.isBiometricLockActive();
       if (anyLockActive &&
           current.isNotEmpty &&
           current != AppRoute.pass &&
-          current != AppRoute.forgetPass) {
+          current != AppRoute.forgetPass &&
+          current != AppRoute.ADD_NEW_NOTE) {
         Get.offAllNamed(AppRoute.pass);
       }
     }
