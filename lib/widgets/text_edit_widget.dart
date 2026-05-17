@@ -110,6 +110,7 @@ class _TextEditWidgetState extends State<TextEditWidget> {
                 key: _editorKey,
                 controller: controller,
                 config: QuillEditorConfig(
+                  placeholder: widget.isAddNote ? 'Type here...' : null,
                   embedBuilders: [
                     CustomImageEmbedBuilder(),
                   ],

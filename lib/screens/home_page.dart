@@ -190,7 +190,7 @@ class HomePage extends StatelessWidget {
                 scale: animation,
                 child: FadeTransition(opacity: animation, child: child),
               ),
-              child: isSelecting
+              child: (isSelecting || controller.notes.isEmpty)
                   ? const SizedBox.shrink()
                   : FloatingActionButton.extended(
                       key: const ValueKey('fab'),
