@@ -3,10 +3,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:get/get.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:my_note_app/controller/background_controller.dart';
 import 'package:my_note_app/model/note_model.dart';
-import 'package:my_note_app/widgets/background_color_opacity_dialog.dart';
 import 'package:my_note_app/widgets/text_edit_widget.dart';
 
 import '../../controller/note_controller.dart';
@@ -27,7 +25,6 @@ class _EditNotePageState extends State<EditNotePage> {
     super.initState();
     Get.find<NoteController>().titleController.text = widget.note.title!;
     Get.find<NoteController>().contentController.text = widget.note.content!;
-    bgOpacity = Get.find<BackgroundController>().getOpacity();
   }
 
   @override
@@ -45,21 +42,6 @@ class _EditNotePageState extends State<EditNotePage> {
           ),
         ),
         actions: [
-          if (Get.find<BackgroundController>().backgroundImage != null)
-            IconButton(
-              tooltip: 'Adjust brightness',
-              icon: const Icon(Icons.brightness_4_outlined),
-              onPressed: britenessWidget,
-            ),
-          IconButton(
-            tooltip: 'Set background image',
-            icon: const Icon(Icons.image_outlined),
-            onPressed: () async {
-              XFile? image =
-                  await Get.find<BackgroundController>().pickBackgroundImage();
-              if (image != null) britenessWidget();
-            },
-          ),
           const SizedBox(width: 4),
         ],
       ),
@@ -74,15 +56,5 @@ class _EditNotePageState extends State<EditNotePage> {
         },
       ),
     );
-  }
-
-  void britenessWidget() {
-    Get.dialog(BackgroundColorOpacityDialog(), barrierColor: Colors.transparent)
-        .then((v) {
-      setState(() {
-        bgOpacity = v;
-        Get.find<BackgroundController>().setOpacity(bgOpacity);
-      });
-    });
   }
 }

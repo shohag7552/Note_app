@@ -25,7 +25,6 @@ class _NoteDetailPageState extends State<NoteDetailPage> {
   @override
   void initState() {
     super.initState();
-    Get.find<BackgroundController>().getOpacity();
   }
 
   String _editedLabel() {
