@@ -1,8 +1,10 @@
 import 'package:appwrite/appwrite.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:my_note_app/controller/auth_controller.dart';
 import 'package:my_note_app/controller/note_controller.dart';
 import 'package:my_note_app/routing/app_routes.dart';
+import 'package:my_note_app/services/sync_service.dart';
 import 'package:my_note_app/theme/dark_theme.dart' show buildDarkTheme;
 import 'package:my_note_app/theme/light_theme.dart' show buildLightTheme;
 import 'helper/dependency.dart' as di;
@@ -12,12 +14,11 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await di.init();
-  runApp(MyApp(account: Account(Client())));
+  runApp(const MyApp());
 }
 
 class MyApp extends StatefulWidget {
-  final Account account;
-  const MyApp({super.key, required this.account});
+  const MyApp({super.key});
 
   @override
   State<MyApp> createState() => _MyAppState();
@@ -41,15 +42,11 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     final controller = Get.find<NoteController>();
     if (state == AppLifecycleState.paused) {
-      // App went to background — clear the session so it re-locks on next resume.
       controller.setSessionUnlocked(false);
     }
     if (state == AppLifecycleState.resumed) {
-      // Skip re-lock if the user just authenticated (avoids race with biometric
-      // dialog dismissal triggering resumed before navigation completes).
       if (controller.isSessionUnlocked) return;
       final current = Get.currentRoute;
-      print("==========App resumed, current route: $current");
       final anyLockActive =
           controller.isPasswordActive() || controller.isBiometricLockActive();
       if (anyLockActive &&
@@ -59,6 +56,28 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
           current != AppRoute.ADD_NEW_NOTE) {
         Get.offAllNamed(AppRoute.pass);
       }
+
+      // ── Auto-Retry: push any pending notes when app returns to foreground.
+      // Also re-checks the Appwrite session and re-authenticates if expired.
+      _onAppResumed();
+    }
+  }
+
+  void _onAppResumed() async {
+    try {
+      final authCtrl = Get.find<AuthController>();
+      if (!authCtrl.isLoggedIn()) return;
+      // Ensure Appwrite session is still valid (re-auth silently if expired).
+      await authCtrl.ensureSession();
+      // Push any notes that were created/edited while offline.
+      final email = authCtrl.getUserToken();
+      if (email != null) {
+        await Get.find<SyncService>().pushAllPending(email);
+        // Refresh the notes list to reflect any sync status changes.
+        Get.find<NoteController>().getAllNotes();
+      }
+    } catch (e) {
+      print('[main] App resume sync error: $e');
     }
   }
 

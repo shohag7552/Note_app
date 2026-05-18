@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:my_note_app/model/note_model.dart';
+import 'package:my_note_app/services/sync_service.dart';
 import 'package:my_note_app/utils/app_constants.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -62,8 +63,13 @@ class NoteController extends GetxController implements GetxService {
   }
 
   Future<void> deleteSelectedNotes() async {
-    await DatabaseHelper.instance.deleteNotesByIds(selectedIds.toList());
+    final notesToDelete =
+        notes.where((n) => selectedIds.contains(n.id)).toList();
     selectedIds.clear();
+
+    for (final note in notesToDelete) {
+      await _deleteNoteWithSync(note);
+    }
     getAllNotes();
   }
 
@@ -93,63 +99,89 @@ class NoteController extends GetxController implements GetxService {
     String? color,
     Note? cloudNote,
   }) async {
-    Note note;
-    if (cloudNote != null) {
-      note = Note(
-        title: cloudNote.title,
-        content: cloudNote.content.toString(),
-        dateTimeEdited: cloudNote.dateTimeEdited,
-        dateTimeCreated: cloudNote.dateTimeCreated,
-        isFavorite: cloudNote.isFavorite,
-        color: cloudNote.color,
-      );
-    } else {
-      note = Note(
-        title: title,
-        content: content,
-        dateTimeEdited: DateFormat("dd-MM-yyyy hh:mm a").format(DateTime.now()),
-        dateTimeCreated: DateFormat("dd-MM-yyyy hh:mm a").format(DateTime.now()),
-        isFavorite: 0,
-        color: color,
-      );
-    }
+    final now = DateFormat("dd-MM-yyyy hh:mm a").format(DateTime.now());
+
+    final Note note = cloudNote != null
+        ? Note(
+            title: cloudNote.title,
+            content: cloudNote.content.toString(),
+            dateTimeEdited: cloudNote.dateTimeEdited,
+            dateTimeCreated: cloudNote.dateTimeCreated,
+            isFavorite: cloudNote.isFavorite,
+            color: cloudNote.color,
+            syncStatus: 'pending',
+          )
+        : Note(
+            title: title,
+            content: content,
+            dateTimeEdited: now,
+            dateTimeCreated: now,
+            isFavorite: 0,
+            color: color,
+            syncStatus: 'pending',
+          );
+
+    // 1. Save locally first — UI updates instantly.
     await DatabaseHelper.instance.addNote(note);
+
     titleController.text = '';
     contentController.text = '';
+
     if (cloudNote == null) {
       getAllNotes();
       Get.offAllNamed(AppRoute.HOME);
     }
+
+    // 2. Push to cloud in background (fire-and-forget).
+    _trySyncNote(note);
   }
 
   void updateNote(Note note) async {
+    note.syncStatus = 'pending';
+
+    // 1. Update locally first.
     await DatabaseHelper.instance.updateNote(note);
     titleController.text = '';
     contentController.text = '';
     getAllNotes();
     Get.offAllNamed(AppRoute.HOME);
+
+    // 2. Push to cloud in background.
+    _trySyncNote(note);
   }
 
   void deleteNote(int id) async {
-    await DatabaseHelper.instance.deleteNote(Note(id: id));
+    final note = notes.firstWhere((n) => n.id == id, orElse: () => Note(id: id));
+    await _deleteNoteWithSync(note);
     getAllNotes();
   }
 
   Future<void> updateNoteColor(int id, String color) async {
     final note = notes.firstWhere((n) => n.id == id);
     note.color = color;
+    note.syncStatus = 'pending';
     await DatabaseHelper.instance.updateNote(note);
     getAllNotes();
+    _trySyncNote(note);
   }
 
   void favoriteNote(int id) async {
     final note = notes.firstWhere((n) => n.id == id);
     note.isFavorite = note.isFavorite == 1 ? 0 : 1;
+    note.syncStatus = 'pending';
     await DatabaseHelper.instance.updateNote(note);
     getAllNotes();
+    _trySyncNote(note);
   }
 
   Future<void> deleteAllNotes() async {
+    // Push deletes for all cloud-synced notes.
+    for (final note in notes) {
+      if (note.cloudId != null) {
+        note.syncStatus = 'pendingDelete';
+        _trySyncNote(note);
+      }
+    }
     await DatabaseHelper.instance.deleteAllNotes();
     getAllNotes();
   }
@@ -161,6 +193,45 @@ class NoteController extends GetxController implements GetxService {
 
   void shareNote(String content) {
     SharePlus.instance.share(ShareParams(text: content));
+  }
+
+  // ── Sync helpers ─────────────────────────────────────────────────────────
+
+  /// Attempts to sync [note] to Appwrite if the user is logged in.
+  /// Silently fails — the note stays 'pending' and will be retried next sync.
+  void _trySyncNote(Note note) async {
+    final email = _getLoggedInEmail();
+    if (email == null) return;
+    try {
+      await Get.find<SyncService>().pushNote(note, email);
+      // Refresh list to show updated syncStatus.
+      getAllNotes();
+    } catch (e) {
+      print('[NoteController] Background sync failed for note ${note.id}: $e');
+    }
+  }
+
+  /// Deletes a note locally and marks it for cloud deletion.
+  Future<void> _deleteNoteWithSync(Note note) async {
+    if (note.cloudId != null) {
+      // If it has a cloud counterpart, try to delete it too.
+      try {
+        await Get.find<SyncService>().pushNote(
+          note..syncStatus = 'pendingDelete',
+          _getLoggedInEmail() ?? '',
+        );
+        return; // SyncService.pushNote handles local deletion in this case.
+      } catch (e) {
+        print('[NoteController] Cloud delete failed for note ${note.id}: $e');
+      }
+    }
+    // Fall back to local-only delete.
+    await DatabaseHelper.instance.deleteNote(note);
+  }
+
+  String? _getLoggedInEmail() {
+    final email = sharedPreferences.getString(AppConstants.authKey);
+    return (email != null && email.isNotEmpty) ? email : null;
   }
 
   // ── Password / Lock ──────────────────────────────────────────────────────

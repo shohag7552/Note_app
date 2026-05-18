@@ -1,97 +1,104 @@
-// lib/services/appwrite_service.dart
 import 'package:appwrite/appwrite.dart';
-import 'package:appwrite/enums.dart';
 import 'package:appwrite/models.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:my_note_app/appwrite/app_write_config.dart';
 
 class AppwriteService {
   late final Client client;
-  late final Databases databases;
-  late final Account account;
   late final TablesDB tablesDB;
-  static final AppwriteService _instance = AppwriteService._internal();
+  late final Account account;
+  late final Realtime realtime;
 
+  static final AppwriteService _instance = AppwriteService._internal();
   factory AppwriteService() => _instance;
 
   AppwriteService._internal() {
     client = Client()
         .setEndpoint(AppwriteConfig.endpoint)
         .setProject(AppwriteConfig.projectId);
-
-    databases = Databases(client);
-    account = Account(client);
     tablesDB = TablesDB(client);
+    account = Account(client);
+    realtime = Realtime(client);
   }
 
-  // Database operations
-  Future<void> createDocument({
-    required String collectionId,
-    required Map<String, dynamic> data,
-    String? documentId,
-  }) async {
-    print('======mmmm===> $data // $collectionId // $documentId // ${AppwriteConfig.databaseId}');
-    // return await databases.createDocument(
-    //   databaseId: AppwriteConfig.databaseId,
-    //   collectionId: collectionId,
-    //   documentId: documentId ?? ID.unique(),
-    //   data: data,
-    // );
+  // ── Auth helpers ────────────────────────────────────────────────────────────
+
+  /// Returns true if there is a valid active Appwrite session.
+  Future<bool> hasActiveSession() async {
     try {
-      tablesDB.createRow(
-        databaseId: AppwriteConfig.databaseId,
-        tableId: collectionId,
-        rowId: documentId ?? ID.unique(),
-        data: data,
-      );
-    } catch (e) {
-      print("Error: $e");
+      await account.get();
+      return true;
+    } catch (_) {
+      return false;
     }
   }
 
-  Future<Document> getDocument({
+  /// Deletes the current Appwrite session (logout).
+  Future<void> deleteCurrentSession() async {
+    try {
+      await account.deleteSession(sessionId: 'current');
+    } catch (_) {}
+  }
+
+  // ── Database CRUD (TablesDB — Appwrite SDK v19+) ────────────────────────────
+
+  Future<Row> createRow({
     required String collectionId,
-    required String documentId,
+    required Map<String, dynamic> data,
+    String? rowId,
+    List<String>? permissions,
   }) async {
-    return await databases.getDocument(
+    return await tablesDB.createRow(
       databaseId: AppwriteConfig.databaseId,
-      collectionId: collectionId,
-      documentId: documentId,
+      tableId: collectionId,
+      rowId: rowId ?? ID.unique(),
+      data: data,
+      permissions: permissions,
     );
   }
 
-  Future<DocumentList> listDocuments({
+  Future<Row> getRow({
+    required String collectionId,
+    required String rowId,
+  }) async {
+    return await tablesDB.getRow(
+      databaseId: AppwriteConfig.databaseId,
+      tableId: collectionId,
+      rowId: rowId,
+    );
+  }
+
+  Future<RowList> listRows({
     required String collectionId,
     List<String>? queries,
   }) async {
-    return await databases.listDocuments(
+    return await tablesDB.listRows(
       databaseId: AppwriteConfig.databaseId,
-      collectionId: collectionId,
+      tableId: collectionId,
       queries: queries ?? [],
     );
   }
 
-  Future<Document> updateDocument({
+  Future<Row> updateRow({
     required String collectionId,
-    required String documentId,
+    required String rowId,
     required Map<String, dynamic> data,
   }) async {
-    return await databases.updateDocument(
+    return await tablesDB.updateRow(
       databaseId: AppwriteConfig.databaseId,
-      collectionId: collectionId,
-      documentId: documentId,
+      tableId: collectionId,
+      rowId: rowId,
       data: data,
     );
   }
 
-  Future<void> deleteDocument({
+  Future<void> deleteRow({
     required String collectionId,
-    required String documentId,
+    required String rowId,
   }) async {
-    return await databases.deleteDocument(
+    await tablesDB.deleteRow(
       databaseId: AppwriteConfig.databaseId,
-      collectionId: collectionId,
-      documentId: documentId,
+      tableId: collectionId,
+      rowId: rowId,
     );
   }
 }

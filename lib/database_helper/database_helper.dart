@@ -12,7 +12,7 @@ class DatabaseHelper {
   late Database _database;
 
   static const _dbName = "notes.db";
-  static const _dbVersion = 1;
+  static const _dbVersion = 2; // bumped: added cloudId, syncStatus columns
   static const _tableName = "notes";
 
   Future<Database> get database async {
@@ -23,13 +23,20 @@ class DatabaseHelper {
   initiateDatabase() async {
     Directory directory = await getApplicationDocumentsDirectory();
     String path = join(directory.path, _dbName);
-    return await openDatabase(path, version: _dbVersion, onCreate: _onCreate);
+    return await openDatabase(
+      path,
+      version: _dbVersion,
+      onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
+    );
   }
 
   void _onCreate(Database db, int version) async {
     await db.execute('''
       CREATE TABLE $_tableName(
         note_id INTEGER PRIMARY KEY,
+        cloudId TEXT,
+        syncStatus TEXT NOT NULL DEFAULT 'synced',
         title TEXT NOT NULL,
         content TEXT NOT NULL,
         dateTimeEdited TEXT NOT NULL,
@@ -38,6 +45,16 @@ class DatabaseHelper {
         color TEXT NOT NULL
       )
       ''');
+  }
+
+  /// Migrate existing installs to schema v2 — safely adds new columns.
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute(
+          "ALTER TABLE $_tableName ADD COLUMN cloudId TEXT");
+      await db.execute(
+          "ALTER TABLE $_tableName ADD COLUMN syncStatus TEXT NOT NULL DEFAULT 'synced'");
+    }
   }
 
   Future<int> getNextId() async {
@@ -98,20 +115,96 @@ class DatabaseHelper {
 
   Future<List<Note>> getNoteList() async {
     Database db = await instance.database;
-    final List<Map<String, dynamic>> maps = await db.query(_tableName, orderBy: 'dateTimeCreated DESC');
+    final List<Map<String, dynamic>> maps =
+        await db.query(_tableName, orderBy: 'dateTimeCreated DESC');
     return List.generate(
       maps.length,
       (index) {
         return Note(
-          id: maps[index]["note_id"],
-          title: maps[index]["title"],
-          content: maps[index]["content"],
-          dateTimeEdited: maps[index]["dateTimeEdited"],
-          dateTimeCreated: maps[index]["dateTimeCreated"],
-          isFavorite: maps[index]["isFavorite"],
-          color: maps[index]["color"],
+          id: maps[index]['note_id'],
+          cloudId: maps[index]['cloudId'] as String?,
+          syncStatus: maps[index]['syncStatus'] as String? ?? 'synced',
+          title: maps[index]['title'],
+          content: maps[index]['content'],
+          dateTimeEdited: maps[index]['dateTimeEdited'],
+          dateTimeCreated: maps[index]['dateTimeCreated'],
+          isFavorite: maps[index]['isFavorite'],
+          color: maps[index]['color'],
         );
       },
+    );
+  }
+
+  /// Fetch only notes that haven't been synced to the cloud yet.
+  Future<List<Note>> getPendingNotes() async {
+    final db = await instance.database;
+    final maps = await db.query(
+      _tableName,
+      where: "syncStatus = ? OR syncStatus = ?",
+      whereArgs: ['pending', 'pendingDelete'],
+    );
+    return maps
+        .map((m) => Note(
+              id: m['note_id'] as int?,
+              cloudId: m['cloudId'] as String?,
+              syncStatus: m['syncStatus'] as String?,
+              title: m['title'] as String?,
+              content: m['content'] as String?,
+              dateTimeEdited: m['dateTimeEdited'] as String?,
+              dateTimeCreated: m['dateTimeCreated'] as String?,
+              isFavorite: m['isFavorite'] as int?,
+              color: m['color'] as String?,
+            ))
+        .toList();
+  }
+
+  /// Update only cloudId and syncStatus after a successful cloud push.
+  Future<void> updateCloudSync({
+    required int localId,
+    required String cloudId,
+    required String syncStatus,
+  }) async {
+    final db = await instance.database;
+    await db.update(
+      _tableName,
+      {'cloudId': cloudId, 'syncStatus': syncStatus},
+      where: 'note_id = ?',
+      whereArgs: [localId],
+    );
+  }
+
+  /// Mark a note by its cloudId for deletion (soft delete for sync).
+  Future<void> markPendingDelete(String cloudId) async {
+    final db = await instance.database;
+    await db.update(
+      _tableName,
+      {'syncStatus': 'pendingDelete'},
+      where: 'cloudId = ?',
+      whereArgs: [cloudId],
+    );
+  }
+
+  /// Check if a note with the given cloudId already exists locally.
+  Future<Note?> getNoteByCloudId(String cloudId) async {
+    final db = await instance.database;
+    final maps = await db.query(
+      _tableName,
+      where: 'cloudId = ?',
+      whereArgs: [cloudId],
+      limit: 1,
+    );
+    if (maps.isEmpty) return null;
+    final m = maps.first;
+    return Note(
+      id: m['note_id'] as int?,
+      cloudId: m['cloudId'] as String?,
+      syncStatus: m['syncStatus'] as String?,
+      title: m['title'] as String?,
+      content: m['content'] as String?,
+      dateTimeEdited: m['dateTimeEdited'] as String?,
+      dateTimeCreated: m['dateTimeCreated'] as String?,
+      isFavorite: m['isFavorite'] as int?,
+      color: m['color'] as String?,
     );
   }
 }

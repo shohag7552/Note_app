@@ -1,7 +1,7 @@
-import 'package:appwrite/appwrite.dart';
-
 class Note {
-  int? id;
+  int? id;            // local SQLite primary key
+  String? cloudId;    // Appwrite document $id (null when not synced yet)
+  String? syncStatus; // 'synced' | 'pending' | 'pendingDelete'
   String? title;
   String? dateTimeEdited;
   String? dateTimeCreated;
@@ -12,6 +12,8 @@ class Note {
 
   Note({
     this.id,
+    this.cloudId,
+    this.syncStatus = 'synced',
     this.title,
     this.content,
     this.dateTimeEdited,
@@ -21,26 +23,62 @@ class Note {
     this.authorEmail,
   });
 
+  /// Deserialise from local SQLite row.
   Note.fromJson(Map<String, dynamic> json) {
     id = json['note_id'];
+    cloudId = json['cloudId'] as String?;
+    syncStatus = (json['syncStatus'] as String?) ?? 'synced';
     title = json['title'];
     content = json['content'];
     dateTimeEdited = json['dateTimeEdited'];
     dateTimeCreated = json['dateTimeCreated'];
     isFavorite = json['isFavorite'];
     color = json['color'];
+    authorEmail = json['authorEmail'] as String?;
   }
 
+  /// Deserialise from Appwrite document data.
+  factory Note.fromAppwrite(Map<String, dynamic> data, String documentId) {
+    return Note(
+      cloudId: documentId,
+      syncStatus: 'synced',
+      title: data['title'] as String?,
+      content: data['content'] as String?,
+      dateTimeEdited: data['dateTimeEdited'] as String?,
+      dateTimeCreated: data['dateTimeCreated'] as String?,
+      isFavorite: data['isFavorite'] as int? ?? 0,
+      color: data['color'] as String? ?? '#FFA0A4A8',
+      authorEmail: data['authorEmail'] as String?,
+    );
+  }
+
+  /// Serialise for local SQLite (includes all local fields).
   Map<String, dynamic> toJson() {
     return {
-      "note_id": id,
-      "title": title,
-      "content": content,
-      "dateTimeEdited": dateTimeEdited,
-      "dateTimeCreated": dateTimeCreated,
-      "isFavorite": isFavorite,
-      "color": color,
-      if(authorEmail != null) 'authorEmail': authorEmail,
+      'note_id': id,
+      'cloudId': cloudId,
+      'syncStatus': syncStatus ?? 'synced',
+      'title': title,
+      'content': content,
+      'dateTimeEdited': dateTimeEdited,
+      'dateTimeCreated': dateTimeCreated,
+      'isFavorite': isFavorite,
+      'color': color,
+      if (authorEmail != null) 'authorEmail': authorEmail,
+    };
+  }
+
+  /// Serialise for Appwrite cloud (excludes local-only fields).
+  Map<String, dynamic> toCloudMap() {
+    return {
+      'title': title ?? '',
+      'content': content ?? '',
+      'dateTimeEdited': dateTimeEdited ?? DateTime.now().toUtc().toIso8601String(),
+      'dateTimeCreated': dateTimeCreated ?? DateTime.now().toUtc().toIso8601String(),
+      'isFavorite': isFavorite ?? 0,
+      'color': color ?? '#FFA0A4A8',
+      if (authorEmail != null) 'authorEmail': authorEmail,
+      if (id != null) 'localId': id,
     };
   }
 

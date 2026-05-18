@@ -3,6 +3,7 @@ class AppConstants{
   static const String authKey = 'account';
   static const String authName = 'account_name';
   static const String authImage = 'account_image';
+  static const String authId = 'account_appwrite_id'; // Appwrite user.$id
 
 
   static const String passKey = 'password';
