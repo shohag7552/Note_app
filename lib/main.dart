@@ -106,8 +106,14 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
   String _initialRoute() {
     final ctrl = Get.find<NoteController>();
+    final auth = Get.find<AuthController>();
+    // Lock screen takes priority
     if (ctrl.isPasswordActive() || ctrl.isBiometricLockActive()) {
       return AppRoute.pass;
+    }
+    // Brand-new user: not logged in AND no local notes → welcome screen
+    if (!auth.isLoggedIn() && ctrl.notes.isEmpty) {
+      return AppRoute.WELCOME;
     }
     return AppRoute.HOME;
   }

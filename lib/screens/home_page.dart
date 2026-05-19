@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:my_note_app/model/note_model.dart';
 import 'package:my_note_app/routing/app_routes.dart';
 import 'package:my_note_app/screens/note_screens/search_screen.dart';
+import 'package:my_note_app/services/sync_service.dart';
 import 'package:my_note_app/widgets/drawer_widget.dart';
 import 'package:my_note_app/widgets/note_card.dart';
 import '../controller/note_controller.dart';
@@ -126,6 +127,50 @@ class HomePage extends StatelessWidget {
                                 ),
                               ),
                             ),
+                          // Sync indicator
+                          GetBuilder<SyncService>(
+                            builder: (sync) => AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 250),
+                              child: sync.isSyncing
+                                  ? Padding(
+                                      key: const ValueKey('syncing'),
+                                      padding: const EdgeInsets.only(left: 8),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 8, vertical: 3),
+                                        decoration: BoxDecoration(
+                                          color: theme.colorScheme.primary
+                                              .withValues(alpha: 0.1),
+                                          borderRadius:
+                                              BorderRadius.circular(20),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            SizedBox(
+                                              width: 10,
+                                              height: 10,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 1.5,
+                                                color: theme.colorScheme.primary,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 5),
+                                            Text('syncing',
+                                                style: theme.textTheme.labelSmall
+                                                    ?.copyWith(
+                                                        color: theme
+                                                            .colorScheme.primary,
+                                                        fontWeight:
+                                                            FontWeight.w600)),
+                                          ],
+                                        ),
+                                      ),
+                                    )
+                                  : const SizedBox.shrink(
+                                      key: ValueKey('idle')),
+                            ),
+                          ),
                         ],
                       ),
               ),
@@ -588,3 +633,4 @@ class _EmptyState extends StatelessWidget {
     );
   }
 }
+

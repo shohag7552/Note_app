@@ -7,6 +7,7 @@ import 'package:get/get.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:my_note_app/appwrite/app_write_service.dart';
 import 'package:my_note_app/model/user_model.dart';
+import 'package:my_note_app/routing/app_routes.dart';
 import 'package:my_note_app/services/sync_service.dart';
 import 'package:my_note_app/utils/app_constants.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -60,7 +61,10 @@ class AuthController extends GetxController implements GetxService {
       _isLoading = false;
       update();
 
-      // Step 5: Start real-time subscription + trigger full sync.
+      // Step 5: Navigate to sync progress screen for visual feedback.
+      Get.offAllNamed(AppRoute.SYNC_PROGRESS);
+
+      // Step 6: Start real-time subscription + trigger full sync (background).
       Get.find<SyncService>().startRealtimeSync(googleAccount.email);
       _triggerSync(googleAccount.email);
     } catch (e) {

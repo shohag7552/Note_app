@@ -4,6 +4,8 @@ import 'dart:convert';
 
 import 'package:get/get.dart';
 import 'package:my_note_app/model/note_model.dart';
+import 'package:my_note_app/screens/auth/welcome_screen.dart';
+import 'package:my_note_app/screens/auth/sync_progress_screen.dart';
 import 'package:my_note_app/screens/home_page.dart';
 import 'package:my_note_app/screens/note_screens/add_new_note_page.dart';
 import 'package:my_note_app/screens/note_screens/edit_note_page.dart';
@@ -15,7 +17,8 @@ import 'package:my_note_app/screens/appearance_screen.dart';
 
 class AppRoute {
   static const String SPLASH = '/';
-  // static const String DASHBOARD = '/dashboard';
+  static const String WELCOME = '/welcome';
+  static const String SYNC_PROGRESS = '/sync_progress';
   static const String pass = '/password';
   static const String forgetPass = '/forget_password';
   static const String appLock = '/app_lock';
@@ -39,8 +42,8 @@ class AppRoute {
   }
 
   static var getRoutes = [
-    //GetPage(name: AppRoute.SPLASH, page: () => Login()),
-    // GetPage(name: AppRoute.DASHBOARD, page: () => DashboardScreen()),
+    GetPage(name: AppRoute.WELCOME, page: () => const WelcomeScreen()),
+    GetPage(name: AppRoute.SYNC_PROGRESS, page: () => const SyncProgressScreen()),
     GetPage(name: AppRoute.pass, page: () => const PassScreen()),
     GetPage(name: AppRoute.forgetPass, page: () => const ForgetPassScreen()),
     GetPage(name: AppRoute.appLock, page: () => const AppLockScreen()),
