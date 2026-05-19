@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:appwrite/appwrite.dart';
 import 'package:crypto/crypto.dart';
@@ -33,6 +34,7 @@ class AuthController extends GetxController implements GetxService {
     try {
       // Step 1: Google Sign-In (native popup).
       final GoogleSignInAccount? googleAccount = await _googleSignIn.signIn();
+      log('[AuthController] Google Sign-In result: ${googleAccount?.email} // ${googleAccount?.displayName}');
       if (googleAccount == null) {
         _isLoading = false;
         update();
@@ -129,6 +131,7 @@ class AuthController extends GetxController implements GetxService {
   }) async {
     final acc = AppwriteService().account;
 
+    log('[AuthController] Attempting Appwrite login for $email // $password');
     // Fast path: session for existing account.
     try {
       await acc.createEmailPasswordSession(email: email, password: password);

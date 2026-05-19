@@ -68,11 +68,30 @@ Future<void> main() async {
   // 1. Ensure database exists
   await seeder.ensureDatabase(id: _databaseId, name: _databaseName);
 
-  // 2. Ensure notes table (collection) exists
+  // 2. Ensure notes table (collection) exists + always sync permissions.
+  //
+  // Permission model:
+  //   • Collection-level  → any authenticated user can CREATE a new note
+  //   • Document-level    → only the note owner (by userId) can READ /
+  //                         UPDATE / DELETE their own note.
+  //                         (AppWriteRepository.createNote() sets these
+  //                          per-document permissions at write time.)
+  //
+  // NOTE: ensureCollection calls updateCollectionPermissions internally,
+  // so permissions are applied even when the collection already existed.
   await seeder.ensureCollection(
     databaseId: _databaseId,
     collectionId: _tableId,
     collectionName: _tableName,
+    // Collection-level permissions for all authenticated users.
+    // documentSecurity=true ensures each document is still locked to its
+    // owner via per-document permissions set in AppWriteRepository.createNote().
+    permissions: [
+      'create("users")', // authenticated users can create notes
+      'read("users")',   // authenticated users can read notes
+      'update("users")', // authenticated users can update notes
+      'delete("users")', // authenticated users can delete notes
+    ],
   );
 
   // 3. Create all columns (attributes)
@@ -252,27 +271,71 @@ class _AppwriteSeeder {
 
   // ── Collection / Table ────────────────────────────────────────────────────
 
+  /// Creates (or skips) an Appwrite collection.
+  ///
+  /// [permissions] are the **collection-level** Appwrite permission strings,
+  /// e.g. `['create("users")']`. Per-document permissions are controlled
+  /// separately when each row is written, because [documentSecurity] is `true`.
+  ///
+  /// Appwrite role references:
+  ///   `"users"`             → any authenticated user
+  ///   `"user:USER_ID"`      → a specific user
+  ///   `"guests"`            → unauthenticated visitors (not used here)
+  /// Creates the collection if it doesn't exist, then **always** updates its
+  /// permissions and documentSecurity flag — so re-running the seed script
+  /// on a pre-existing collection will still apply the correct permissions.
   Future<void> ensureCollection({
     required String databaseId,
     required String collectionId,
     required String collectionName,
+    List<String> permissions = const [],
   }) async {
     final url = '$endpoint/databases/$databaseId/collections/$collectionId';
     _log('\n📁  Checking collection "$collectionName" ($collectionId)…');
 
     final exists = await _resourceExists(url);
-    if (exists) {
-      _log('    ✔ Collection already exists – skipping.');
-      return;
+    if (!exists) {
+      _log('    Creating collection…');
+      await _post('$endpoint/databases/$databaseId/collections', {
+        'collectionId': collectionId,
+        'name': collectionName,
+        'documentSecurity': true,
+        if (permissions.isNotEmpty) 'permissions': permissions,
+      });
+      _log('    ✔ Collection created.');
+    } else {
+      _log('    ✔ Collection already exists.');
     }
 
-    _log('    Creating collection…');
-    await _post('$endpoint/databases/$databaseId/collections', {
-      'collectionId': collectionId,
-      'name': collectionName,
-      'documentSecurity': true, // per-document permissions (used by the app)
-    });
-    _log('    ✔ Collection created.');
+    // Always patch permissions, even on pre-existing collections.
+    // This ensures a re-run always reflects the desired permission set.
+    await _updateCollectionPermissions(
+      databaseId: databaseId,
+      collectionId: collectionId,
+      collectionName: collectionName,
+      permissions: permissions,
+    );
+  }
+
+  /// PUTs the collection to update its permissions and documentSecurity flag.
+  /// Appwrite's collection update endpoint is:
+  ///   PUT /v1/databases/{databaseId}/collections/{collectionId}
+  Future<void> _updateCollectionPermissions({
+    required String databaseId,
+    required String collectionId,
+    required String collectionName,
+    required List<String> permissions,
+  }) async {
+    _log('    🔐 Applying permissions: $permissions');
+    await _put(
+      '$endpoint/databases/$databaseId/collections/$collectionId',
+      {
+        'name': collectionName,
+        'documentSecurity': true,
+        'permissions': permissions,
+      },
+    );
+    _log('    ✔ Permissions applied.');
   }
 
   // ── Attributes ────────────────────────────────────────────────────────────
@@ -438,6 +501,22 @@ class _AppwriteSeeder {
       // 409 Conflict → resource already exists, that is fine
       return body;
     }
+    if (response.statusCode >= 400) {
+      throw HttpException(
+          'HTTP ${response.statusCode}: $body', uri: uri);
+    }
+    return body;
+  }
+
+  Future<String> _put(String url, Map<String, dynamic> payload) async {
+    final uri = Uri.parse(url);
+    final request = await _client.putUrl(uri);
+    _setHeaders(request);
+    request.headers.contentType = ContentType.json;
+    request.write(jsonEncode(payload));
+    final response = await request.close();
+    final body = await response.transform(utf8.decoder).join();
+
     if (response.statusCode >= 400) {
       throw HttpException(
           'HTTP ${response.statusCode}: $body', uri: uri);
