@@ -261,6 +261,12 @@ class _TextEditWidgetState extends State<TextEditWidget> {
                   Get.find<NoteController>().updateNote(
                     Note(
                       id: widget.note!.id,
+                      // ✅ CRITICAL: carry cloudId & syncStatus forward so
+                      // SyncService knows this is an UPDATE (not a new create).
+                      // Without cloudId, pushNote() would call createRow()
+                      // and add a duplicate document in Appwrite.
+                      cloudId: widget.note!.cloudId,
+                      syncStatus: widget.note!.syncStatus,
                       title: widget.note!.title,
                       content: json,
                       dateTimeEdited: DateFormat("dd-MM-yyyy hh:mm a").format(DateTime.now()),
