@@ -6,6 +6,8 @@ import 'package:my_note_app/controller/auth_controller.dart';
 import 'package:my_note_app/routing/app_routes.dart';
 import 'package:my_note_app/widgets/google_logo_icon.dart';
 
+import '../../utils/images.dart';
+
 /// Full-screen branded login / welcome screen.
 ///
 /// Shown only to truly new users (no notes + not logged in).
@@ -128,10 +130,12 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                                   ),
                                 ],
                               ),
-                              child: Icon(
-                                Icons.edit_note_rounded,
-                                size: 44,
-                                color: theme.colorScheme.surface,
+                              child: Center(
+                                child: Image.asset(
+                                  Images.logo,
+                                  width: 52,
+                                  height: 52,
+                                ),
                               ),
                             ),
                           ),

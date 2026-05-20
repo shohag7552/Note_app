@@ -1,4 +1,5 @@
-import 'package:appwrite/appwrite.dart';
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:my_note_app/controller/auth_controller.dart';
@@ -7,6 +8,7 @@ import 'package:my_note_app/routing/app_routes.dart';
 import 'package:my_note_app/services/sync_service.dart';
 import 'package:my_note_app/theme/dark_theme.dart' show buildDarkTheme;
 import 'package:my_note_app/theme/light_theme.dart' show buildLightTheme;
+import 'package:my_note_app/utils/app_constants.dart';
 import 'helper/dependency.dart' as di;
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -77,7 +79,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         Get.find<NoteController>().getAllNotes();
       }
     } catch (e) {
-      print('[main] App resume sync error: $e');
+      log('[main] App resume sync error: $e');
     }
   }
 
@@ -87,7 +89,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       builder: (noteController) {
         return GetMaterialApp(
           debugShowCheckedModeBanner: false,
-          title: 'Note App',
+          title: AppConstants.appName,
           theme: noteController.darkTheme
               ? buildDarkTheme(noteController.currentFont)
               : buildLightTheme(noteController.currentFont),
