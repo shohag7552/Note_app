@@ -64,7 +64,6 @@ class Note {
       'dateTimeCreated': dateTimeCreated,
       'isFavorite': isFavorite,
       'color': color,
-      if (authorEmail != null) 'authorEmail': authorEmail,
     };
   }
 
