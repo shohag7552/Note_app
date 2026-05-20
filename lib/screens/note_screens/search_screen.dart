@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:get/get.dart';
 import 'package:my_note_app/helper/quill_helper.dart';
+import 'package:my_note_app/model/note_model.dart';
 import 'package:my_note_app/widgets/note_card.dart';
 import '../../controller/note_controller.dart';
 
@@ -13,13 +14,13 @@ class Search extends SearchDelegate {
     return [
       IconButton(
         onPressed: () {
-          if(query.isNotEmpty) {
+          if (query.isNotEmpty) {
             query = "";
           } else {
             Get.back();
           }
         },
-        icon: Icon(Icons.clear, color:  Theme.of(context).textTheme.bodyLarge!.color),
+        icon: Icon(Icons.clear, color: Theme.of(context).textTheme.bodyLarge!.color),
       )
     ];
   }
@@ -39,7 +40,7 @@ class Search extends SearchDelegate {
     );
   }
 
-  List _filter(String q) => q.isEmpty
+  List<Note> _filter(String q) => q.isEmpty
       ? controller.notes
       : controller.notes
           .where((p) => QuillHelper.convertStringDocumentToString(p.content!)
@@ -47,7 +48,7 @@ class Search extends SearchDelegate {
               .contains(q.toLowerCase()))
           .toList();
 
-  Widget _grid(BuildContext context, List notes) {
+  Widget _grid(BuildContext context, List<Note> notes) {
     if (notes.isEmpty) {
       return Center(
         child: Text(
@@ -58,15 +59,64 @@ class Search extends SearchDelegate {
         ),
       );
     }
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(14, 6, 14, 14),
-      child: MasonryGridView.count(
-        crossAxisCount: 2,
-        mainAxisSpacing: 10,
-        crossAxisSpacing: 10,
-        itemCount: notes.length,
-        itemBuilder: (context, index) =>
-            NoteCart(note: notes[index], index: index),
+
+    final layoutIndex = controller.layoutIndex;
+
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 6, 14, 10),
+        child: layoutIndex == 2
+            ? SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: StaggeredGrid.count(
+                  crossAxisCount: 3,
+                  mainAxisSpacing: 10,
+                  crossAxisSpacing: 10,
+                  children: List.generate(notes.length, (index) {
+                    // Mathematically perfect pattern to avoid empty space
+                    // [2, 1] = 3, [1, 1, 1] = 3, [1, 2] = 3
+                    const pattern = [2, 1, 1, 1, 1, 1, 2];
+                    final span = pattern[index % pattern.length];
+                    return StaggeredGridTile.fit(
+                      crossAxisCellCount: span,
+                      child: NoteCart(note: notes[index], index: index),
+                    );
+                  }),
+                ),
+              )
+            : layoutIndex == 3
+                ? GridView.custom(
+                    physics: const BouncingScrollPhysics(),
+                    gridDelegate: SliverQuiltedGridDelegate(
+                      crossAxisCount: 3,
+                      mainAxisSpacing: 10,
+                      crossAxisSpacing: 10,
+                      repeatPattern: QuiltedGridRepeatPattern.inverted,
+                      pattern: const [
+                        QuiltedGridTile(2, 2),
+                        QuiltedGridTile(1, 1),
+                        QuiltedGridTile(1, 1),
+                      ],
+                    ),
+                    childrenDelegate: SliverChildBuilderDelegate(
+                      (context, index) => ClipRect(
+                        child: SingleChildScrollView(
+                          physics: const NeverScrollableScrollPhysics(),
+                          child: NoteCart(note: notes[index], index: index),
+                        ),
+                      ),
+                      childCount: notes.length,
+                    ),
+                  )
+                : MasonryGridView.count(
+                    crossAxisCount: layoutIndex == 1 ? 1 : 2,
+                    mainAxisSpacing: 10,
+                    crossAxisSpacing: 10,
+                    itemCount: notes.length,
+                    itemBuilder: (context, index) =>
+                        NoteCart(note: notes[index], index: index),
+                  ),
       ),
     );
   }

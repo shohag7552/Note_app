@@ -135,7 +135,7 @@ class AuthController extends GetxController implements GetxService {
   }) async {
     final acc = AppwriteService().account;
 
-    log('[AuthController] Attempting Appwrite login for $email // $password');
+    log('[AuthController] Attempting Appwrite login for $email');
     // Fast path: session for existing account.
     try {
       await acc.createEmailPasswordSession(email: email, password: password);

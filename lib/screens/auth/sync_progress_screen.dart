@@ -78,105 +78,109 @@ class _SyncProgressScreenState extends State<SyncProgressScreen>
           }
 
           return SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(32),
-              child: Column(
-                children: [
-                  // Top progress bar
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 400),
-                    child: isDone
-                        ? const SizedBox(
-                            key: ValueKey('done-bar'),
-                            height: 3,
-                          )
-                        : LinearProgressIndicator(
-                            key: const ValueKey('progress-bar'),
-                            backgroundColor:
-                                theme.colorScheme.outline.withValues(alpha: 0.3),
-                            color: theme.colorScheme.primary,
-                            minHeight: 3,
-                          ),
-                  ),
+            child: SizedBox(
+              width: double.infinity,
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // Top progress bar
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 400),
+                      child: isDone
+                          ? const SizedBox(
+                              key: ValueKey('done-bar'),
+                              height: 3,
+                            )
+                          : LinearProgressIndicator(
+                              key: const ValueKey('progress-bar'),
+                              backgroundColor:
+                                  theme.colorScheme.outline.withValues(alpha: 0.3),
+                              color: theme.colorScheme.primary,
+                              minHeight: 3,
+                            ),
+                    ),
 
-                  const Spacer(flex: 2),
+                    const Spacer(flex: 2),
 
-                  // Animated icon
-                  AnimatedBuilder(
-                    animation: _pulseCtrl,
-                    builder: (_, __) {
-                      final pulse =
-                          isDone ? 1.0 : 0.85 + _pulseCtrl.value * 0.15;
-                      return Transform.scale(
-                        scale: pulse,
-                        child: Container(
-                          width: 96,
-                          height: 96,
-                          decoration: BoxDecoration(
-                            color: isDone
-                                ? const Color(0xFF22C55E).withValues(alpha: 0.12)
-                                : theme.colorScheme.primary.withValues(alpha: 0.1),
-                            shape: BoxShape.circle,
+                    // Animated icon
+                    AnimatedBuilder(
+                      animation: _pulseCtrl,
+                      builder: (_, __) {
+                        final pulse =
+                            isDone ? 1.0 : 0.85 + _pulseCtrl.value * 0.15;
+                        return Transform.scale(
+                          scale: pulse,
+                          child: Container(
+                            width: 96,
+                            height: 96,
+                            decoration: BoxDecoration(
+                              color: isDone
+                                  ? const Color(0xFF22C55E).withValues(alpha: 0.12)
+                                  : theme.colorScheme.primary.withValues(alpha: 0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 400),
+                              child: isDone
+                                  ? Icon(
+                                      Icons.check_circle_rounded,
+                                      key: const ValueKey('check'),
+                                      size: 48,
+                                      color: const Color(0xFF22C55E),
+                                    )
+                                  : _RotatingCloudIcon(
+                                      key: const ValueKey('cloud'),
+                                      color: theme.colorScheme.primary,
+                                    ),
+                            ),
                           ),
-                          child: AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 400),
-                            child: isDone
-                                ? Icon(
-                                    Icons.check_circle_rounded,
-                                    key: const ValueKey('check'),
-                                    size: 48,
-                                    color: const Color(0xFF22C55E),
-                                  )
-                                : _RotatingCloudIcon(
-                                    key: const ValueKey('cloud'),
-                                    color: theme.colorScheme.primary,
-                                  ),
-                          ),
+                        );
+                      },
+                    ),
+
+                    const SizedBox(height: 32),
+
+                    // Status text
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      child: Text(
+                        _statusMessage(sync.syncStatus),
+                        key: ValueKey(sync.syncStatus),
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: -0.2,
                         ),
-                      );
-                    },
-                  ),
+                      ),
+                    ),
 
-                  const SizedBox(height: 32),
+                    const SizedBox(height: 8),
 
-                  // Status text
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 300),
-                    child: Text(
-                      _statusMessage(sync.syncStatus),
-                      key: ValueKey(sync.syncStatus),
+                    Text(
+                      'Your notes are being backed up securely.',
                       textAlign: TextAlign.center,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: -0.2,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.hintColor,
                       ),
                     ),
-                  ),
 
-                  const SizedBox(height: 8),
+                    const Spacer(flex: 3),
 
-                  Text(
-                    'Your notes are being backed up securely.',
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.hintColor,
-                    ),
-                  ),
-
-                  const Spacer(flex: 3),
-
-                  // Skip button
-                  if (!isDone)
-                    TextButton(
-                      onPressed: _navigateHome,
-                      style: TextButton.styleFrom(
-                        foregroundColor: theme.hintColor,
+                    // Skip button
+                    if (!isDone)
+                      TextButton(
+                        onPressed: _navigateHome,
+                        style: TextButton.styleFrom(
+                          foregroundColor: theme.hintColor,
+                        ),
+                        child: const Text('Open app'),
                       ),
-                      child: const Text('Open app'),
-                    ),
 
-                  const SizedBox(height: 16),
-                ],
+                    const SizedBox(height: 16),
+                  ],
+                ),
               ),
             ),
           );
