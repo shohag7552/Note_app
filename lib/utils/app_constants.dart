@@ -1,5 +1,8 @@
 class AppConstants{
-  static const String appName = 'My Note';
+  static const String appName = 'Slate Notes';
+  static const double appVersion = 1.0;
+
+
   static const String authKey = 'account';
   static const String authName = 'account_name';
   static const String authImage = 'account_image';

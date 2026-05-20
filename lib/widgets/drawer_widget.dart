@@ -6,6 +6,7 @@ import 'package:my_note_app/controller/note_controller.dart';
 import 'package:my_note_app/routing/app_routes.dart';
 import 'package:my_note_app/screens/setting_screen/font_style_screen.dart';
 import 'package:my_note_app/services/sync_service.dart';
+import 'package:my_note_app/utils/app_constants.dart';
 import 'package:my_note_app/widgets/google_logo_icon.dart';
 import 'package:my_note_app/widgets/signout_dialog.dart';
 
@@ -104,6 +105,16 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                       destructive: true,
                     ),
                   ],
+                  const SizedBox(height: 12),
+                  Text(
+                    'Version ${AppConstants.appVersion}',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.hintColor.withValues(alpha: 0.5),
+                      fontWeight: FontWeight.w500,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
                   const SizedBox(height: 8),
                 ],
               );

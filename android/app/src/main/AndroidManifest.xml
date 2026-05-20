@@ -4,7 +4,7 @@
     <uses-permission android:name="android.permission.USE_BIOMETRIC"/>
 
     <application
-        android:label="My Note"
+        android:label="Slate Notes"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
