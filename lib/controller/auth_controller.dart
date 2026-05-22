@@ -3,9 +3,12 @@ import 'dart:developer';
 
 import 'package:appwrite/appwrite.dart';
 import 'package:crypto/crypto.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:my_note_app/appwrite/app_write_service.dart';
+import 'package:my_note_app/controller/note_controller.dart';
+import 'package:my_note_app/database_helper/database_helper.dart';
 import 'package:my_note_app/model/user_model.dart';
 import 'package:my_note_app/routing/app_routes.dart';
 import 'package:my_note_app/services/sync_service.dart';
@@ -52,6 +55,28 @@ class AuthController extends GetxController implements GetxService {
         name: googleAccount.displayName ?? '',
       );
 
+      // Check if user account was previously deactivated
+      final prefs = await AppwriteService().account.getPrefs();
+      if (prefs.data['status'] == 'deactivated') {
+        // Immediately terminate session & log out
+        await AppwriteService().deleteCurrentSession();
+        await _googleSignIn.signOut();
+        
+        _isLoading = false;
+        update();
+
+        // Show deactivated warning toaster/dialog
+        Get.defaultDialog(
+          title: 'Account Deactivated',
+          middleText: 'This account has been deactivated/scheduled for deletion.\n\n'
+              'If you wish to restore your account, please contact support.',
+          textConfirm: 'OK',
+          confirmTextColor: Colors.white,
+          onConfirm: () => Get.back(),
+        );
+        return;
+      }
+
       // Step 4: Persist user info locally.
       await sharedPreferences.setString(AppConstants.authKey, googleAccount.email);
       await sharedPreferences.setString(AppConstants.authName, googleAccount.displayName ?? '');
@@ -74,7 +99,7 @@ class AuthController extends GetxController implements GetxService {
     }
   }
 
-  // ── Logout ─────────────────────────────────────────────────────────────────
+  // ── Logout & Deactivation ──────────────────────────────────────────────────
 
   Future<void> googleLogOut() async {
     try {
@@ -89,6 +114,53 @@ class AuthController extends GetxController implements GetxService {
       print('[AuthController] Logout error: $error');
     }
     update();
+  }
+
+  Future<bool> deactivateAccount() async {
+    _isLoading = true;
+    update();
+
+    try {
+      // 1. Update preferences to mark status as deactivated in Appwrite
+      await AppwriteService().account.updatePrefs(prefs: {
+        'status': 'deactivated',
+        'deactivatedAt': DateTime.now().toIso8601String(),
+      });
+
+      // 2. Stop real-time sync subscription
+      Get.find<SyncService>().stopRealtimeSync();
+
+      // 3. Delete Appwrite session & sign out from Google
+      await AppwriteService().deleteCurrentSession();
+      await _googleSignIn.signOut();
+
+      // 4. Wipe local offline SQLite notes for privacy
+      await DatabaseHelper.instance.deleteAllNotes();
+
+      // 5. Clear GetX NoteController's cached notes
+      if (Get.isRegistered<NoteController>()) {
+        Get.find<NoteController>().notes.clear();
+        Get.find<NoteController>().update();
+      }
+
+      // 6. Delete all auth credentials from SharedPreferences
+      await sharedPreferences.remove(AppConstants.authKey);
+      await sharedPreferences.remove(AppConstants.authName);
+      await sharedPreferences.remove(AppConstants.authImage);
+      await sharedPreferences.remove(AppConstants.authId);
+
+      _isLoading = false;
+      update();
+
+      // Navigate to Welcome Screen
+      Get.offAllNamed(AppRoute.WELCOME);
+      return true;
+    } catch (e) {
+      print('[AuthController] Deactivation error: $e');
+      _isLoading = false;
+      update();
+      return false;
+    }
   }
 
   // ── Session Management ─────────────────────────────────────────────────────

@@ -181,77 +181,102 @@ class _ProfileCard extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
       child: Container(
-        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: theme.cardColor,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: theme.colorScheme.outline),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                // Avatar
-                Container(
-                  width: 52,
-                  height: 52,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                        color: theme.colorScheme.primary.withValues(alpha: 0.4),
-                        width: 2),
-                  ),
-                  clipBehavior: Clip.antiAlias,
-                  child: (user?.imageUrl ?? '').isNotEmpty
-                      ? Image.network(user!.imageUrl,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) =>
-                              _avatarFallback(theme))
-                      : _avatarFallback(theme),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        (user?.name.isNotEmpty ?? false)
-                            ? user!.name
-                            : 'You',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: -0.2),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 2),
-                      Text(user?.email ?? '',
-                          style: theme.textTheme.bodySmall
-                              ?.copyWith(color: theme.hintColor),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            // Stats row
-            Row(
-              children: [
-                _StatChip(
-                    label: '$noteCount ${noteCount == 1 ? 'note' : 'notes'}',
-                    icon: Icons.edit_note_rounded,
-                    theme: theme),
-                const SizedBox(width: 8),
-                GetBuilder<SyncService>(
-                  builder: (sync) => _SyncStatusChip(
-                      status: sync.syncStatus, theme: theme),
-                ),
-              ],
+          boxShadow: [
+            BoxShadow(
+              color: theme.shadowColor.withValues(alpha: 0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
           ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () {
+                Get.back(); // close drawer
+                Get.toNamed(AppRoute.PROFILE);
+              },
+              splashColor: theme.colorScheme.primary.withValues(alpha: 0.08),
+              highlightColor: theme.colorScheme.primary.withValues(alpha: 0.04),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        // Avatar
+                        Container(
+                          width: 52,
+                          height: 52,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                                color: theme.colorScheme.primary.withValues(alpha: 0.4),
+                                width: 2),
+                          ),
+                          clipBehavior: Clip.antiAlias,
+                          child: (user?.imageUrl ?? '').isNotEmpty
+                              ? Image.network(user!.imageUrl,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) =>
+                                      _avatarFallback(theme))
+                              : _avatarFallback(theme),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                (user?.name.isNotEmpty ?? false)
+                                    ? user!.name
+                                    : 'You',
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: -0.2),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 2),
+                              Text(user?.email ?? '',
+                                  style: theme.textTheme.bodySmall
+                                      ?.copyWith(color: theme.hintColor),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis),
+                            ],
+                          ),
+                        ),
+                        Icon(Icons.chevron_right_rounded,
+                            color: theme.hintColor, size: 20),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    // Stats row
+                    Row(
+                      children: [
+                        _StatChip(
+                            label: '$noteCount ${noteCount == 1 ? 'note' : 'notes'}',
+                            icon: Icons.edit_note_rounded,
+                            theme: theme),
+                        const SizedBox(width: 8),
+                        GetBuilder<SyncService>(
+                          builder: (sync) => _SyncStatusChip(
+                              status: sync.syncStatus, theme: theme),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
         ),
       ),
     );
