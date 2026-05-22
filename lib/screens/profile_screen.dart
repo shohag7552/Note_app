@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:my_note_app/controller/auth_controller.dart';
 import 'package:my_note_app/controller/note_controller.dart';
 import 'package:my_note_app/services/sync_service.dart';
+import 'package:my_note_app/widgets/signout_dialog.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -142,6 +143,30 @@ class ProfileScreen extends StatelessWidget {
                       label: 'Sync Status',
                       trailing: _syncChip(theme, syncStatus),
                     ),
+                    Divider(color: theme.dividerColor, height: 20),
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      dense: true,
+                      visualDensity: const VisualDensity(vertical: -4, horizontal: -4),
+                      leading: Icon(
+                        Icons.logout_rounded,
+                        color: Colors.orange,
+                      ),
+                      title: Text(
+                        'Sign out',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: Colors.orange,
+                          // color: theme.colorScheme.error,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      trailing: Icon(
+                        Icons.chevron_right_rounded,
+                        size: 20,
+                        color: Colors.orange,
+                      ),
+                      onTap: () => SignOutDialog.show(),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 24),
@@ -164,24 +189,24 @@ class ProfileScreen extends StatelessWidget {
                     ListTile(
                       contentPadding: EdgeInsets.zero,
                       leading: Icon(
-                        Icons.no_accounts_rounded,
+                        Icons.delete_forever_rounded,
                         color: theme.colorScheme.error,
                       ),
                       title: Text(
-                        'Deactivate Account',
+                        'Delete Account',
                         style: theme.textTheme.bodyLarge?.copyWith(
                           color: theme.colorScheme.error,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                       subtitle: Text(
-                        'Temporarily close account and delete local/cloud note copies.',
+                        'Delete your account and erase all local and cloud note copies.',
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.hintColor,
                           height: 1.3,
                         ),
                       ),
-                      onTap: () => _showDeactivateDialog(context, auth),
+                      onTap: () => _showDeleteDialog(context, auth),
                     ),
                   ],
                 ),
@@ -228,7 +253,7 @@ class ProfileScreen extends StatelessWidget {
         const SizedBox(width: 14),
         Text(
           label,
-          style: theme.textTheme.bodyLarge?.copyWith(
+          style: theme.textTheme.bodySmall?.copyWith(
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -274,7 +299,7 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  void _showDeactivateDialog(BuildContext context, AuthController auth) {
+  void _showDeleteDialog(BuildContext context, AuthController auth) {
     final theme = Theme.of(context);
     
     Get.dialog(
@@ -284,14 +309,14 @@ class ProfileScreen extends StatelessWidget {
           children: [
             Icon(Icons.warning_amber_rounded, color: theme.colorScheme.error),
             const SizedBox(width: 10),
-            const Text('Deactivate Account?'),
+            const Text('Delete Account?'),
           ],
         ),
         content: const Text(
-          'Are you sure you want to deactivate your account?\n\n'
+          'Are you sure you want to delete your account?\n\n'
           'All your synchronized cloud notes will be permanently erased. '
           'You will be signed out, and you will not be able to log '
-          'back into this account without contacting support.',
+          'back into this account.',
         ),
         actions: [
           TextButton(
@@ -312,7 +337,7 @@ class ProfileScreen extends StatelessWidget {
                           Get.back();
                           Get.snackbar(
                             'Error',
-                            'Failed to deactivate account. Please try again.',
+                            'Failed to delete account. Please try again.',
                             snackPosition: SnackPosition.BOTTOM,
                             backgroundColor: theme.colorScheme.error.withValues(alpha: 0.9),
                             colorText: Colors.white,
@@ -326,7 +351,7 @@ class ProfileScreen extends StatelessWidget {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : Text(
-                        'Deactivate',
+                        'Delete',
                         style: TextStyle(
                           color: theme.colorScheme.error,
                           fontWeight: FontWeight.bold,

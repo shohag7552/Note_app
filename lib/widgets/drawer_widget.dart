@@ -8,7 +8,6 @@ import 'package:my_note_app/screens/setting_screen/font_style_screen.dart';
 import 'package:my_note_app/services/sync_service.dart';
 import 'package:my_note_app/utils/app_constants.dart';
 import 'package:my_note_app/widgets/google_logo_icon.dart';
-import 'package:my_note_app/widgets/signout_dialog.dart';
 
 class DrawerWidget extends StatefulWidget {
   const DrawerWidget({super.key});
@@ -85,26 +84,6 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                   ),
 
                   const Spacer(),
-
-                  // ── Sign out ───────────────────────────────────────
-                  if (loggedIn) ...[
-                    Divider(
-                        color: theme.dividerColor,
-                        height: 1,
-                        indent: 16,
-                        endIndent: 16),
-                    const SizedBox(height: 4),
-                    _row(
-                      context,
-                      icon: Icons.logout_rounded,
-                      label: 'Sign out',
-                      onTap: () {
-                        Get.back();
-                        SignOutDialog.show();
-                      },
-                      destructive: true,
-                    ),
-                  ],
                   const SizedBox(height: 12),
                   Text(
                     'Version ${AppConstants.appVersion}',
