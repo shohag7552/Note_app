@@ -261,7 +261,7 @@ class HomePage extends StatelessWidget {
       builder: (context) => AlertDialogWidget(
         headingText: 'Delete $count ${count == 1 ? 'note' : 'notes'}?',
         contentText:
-            'This will permanently delete the selected ${count == 1 ? 'note' : 'notes'}. You cannot undo this action.',
+            'The selected ${count == 1 ? 'note' : 'notes'} will be moved to the Recycle Bin. You can restore ${count == 1 ? 'it' : 'them'} within 30 days.',
         confirmFunction: () {
           controller.deleteSelectedNotes();
           Get.back();
@@ -286,6 +286,159 @@ class _NormalActions extends StatelessWidget {
   final BuildContext context;
   final NoteController controller;
 
+  void _showSortBottomSheet(BuildContext context) {
+    final theme = Theme.of(context);
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      backgroundColor: theme.scaffoldBackgroundColor,
+      builder: (context) {
+        return GetBuilder<NoteController>(
+          builder: (controller) {
+            return Container(
+              padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: theme.dividerColor.withValues(alpha: 0.6),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    'Sort Notes',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 18,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // Criteria section
+                  Text(
+                    'Sort by',
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: theme.hintColor,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  _buildSortTile(
+                    context,
+                    title: 'Recently Edited (updatedAt)',
+                    icon: Icons.edit_note_rounded,
+                    isSelected: controller.sortBy == 'edited',
+                    onTap: () {
+                      controller.changeSortOption('edited', controller.sortOrder);
+                    },
+                  ),
+                  _buildSortTile(
+                    context,
+                    title: 'Recently Added',
+                    icon: Icons.calendar_today_rounded,
+                    isSelected: controller.sortBy == 'created',
+                    onTap: () {
+                      controller.changeSortOption('created', controller.sortOrder);
+                    },
+                  ),
+                  
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                    child: Divider(height: 1),
+                  ),
+                  
+                  // Order section
+                  Text(
+                    'Order',
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: theme.hintColor,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  _buildSortTile(
+                    context,
+                    title: 'Newest First',
+                    icon: Icons.arrow_downward_rounded,
+                    isSelected: controller.sortOrder == 'desc',
+                    onTap: () {
+                      controller.changeSortOption(controller.sortBy, 'desc');
+                    },
+                  ),
+                  _buildSortTile(
+                    context,
+                    title: 'Oldest First',
+                    icon: Icons.arrow_upward_rounded,
+                    isSelected: controller.sortOrder == 'asc',
+                    onTap: () {
+                      controller.changeSortOption(controller.sortBy, 'asc');
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildSortTile(
+    BuildContext context, {
+    required String title,
+    required IconData icon,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    final theme = Theme.of(context);
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+        decoration: BoxDecoration(
+          color: isSelected ? theme.colorScheme.primary.withValues(alpha: 0.08) : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              size: 22,
+              color: isSelected ? theme.colorScheme.primary : theme.hintColor,
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(
+                title,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                  color: isSelected ? theme.colorScheme.primary : theme.textTheme.bodyLarge?.color,
+                ),
+              ),
+            ),
+            if (isSelected)
+              Icon(
+                Icons.check_circle_rounded,
+                size: 20,
+                color: theme.colorScheme.primary,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext ctx) {
     return Row(
@@ -300,6 +453,11 @@ class _NormalActions extends StatelessWidget {
               Get.offAllNamed(AppRoute.pass);
             },
           ),
+        IconButton(
+          tooltip: 'Sort Notes',
+          icon: const Icon(Icons.sort_rounded),
+          onPressed: () => _showSortBottomSheet(context),
+        ),
         IconButton(
           tooltip: 'Search',
           icon: const Icon(Icons.search_rounded),
@@ -316,7 +474,7 @@ class _NormalActions extends StatelessWidget {
                 builder: (_) => AlertDialogWidget(
                   headingText: 'Delete all notes?',
                   contentText:
-                      'This will delete all notes permanently. You cannot undo this action.',
+                      'All notes will be moved to the Recycle Bin. You can restore them within 30 days.',
                   confirmFunction: () {
                     controller.deleteAllNotes();
                     Get.back();

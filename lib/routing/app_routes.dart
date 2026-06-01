@@ -15,6 +15,7 @@ import 'package:my_note_app/screens/pass_screen/forget_pass_screen.dart';
 import 'package:my_note_app/screens/pass_screen/pass_screen.dart';
 import 'package:my_note_app/screens/appearance_screen.dart';
 import 'package:my_note_app/screens/profile_screen.dart';
+import 'package:my_note_app/screens/recycle_bin_screen.dart';
 
 class AppRoute {
   static const String SPLASH = '/';
@@ -30,6 +31,7 @@ class AppRoute {
   static const String NOTE_DETAILS = '/note_details';
   static const String APPEARANCE = '/appearance';
   static const String PROFILE = '/profile';
+  static const String RECYCLE_BIN = '/recycle_bin';
 
   static String getNoteDetailsPage(Note note) {
     List<int> encoded = utf8.encode(jsonEncode(note.toJson()));
@@ -63,5 +65,6 @@ class AppRoute {
       return NoteDetailPage(note: data);
     }),
     GetPage(name: AppRoute.PROFILE, page: () => const ProfileScreen()),
+    GetPage(name: AppRoute.RECYCLE_BIN, page: () => const RecycleBinScreen()),
   ];
 }

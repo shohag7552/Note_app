@@ -183,6 +183,15 @@ class SyncService extends GetxController implements GetxService {
             cloudNote.id = localNote.id;
             cloudNote.syncStatus = 'synced';
             await _db.updateNote(cloudNote);
+          } else if (localNote.syncStatus != 'pending') {
+            // Even if timestamps match, sync isDeleted state from cloud
+            // so trash operations from other devices are reflected locally.
+            if ((cloudNote.isDeleted ?? 0) != (localNote.isDeleted ?? 0)) {
+              localNote.isDeleted = cloudNote.isDeleted;
+              localNote.deletedAt = cloudNote.deletedAt;
+              localNote.syncStatus = 'synced';
+              await _db.updateNote(localNote);
+            }
           }
           // If local is newer or has pending changes, leave it — it will push.
         }
@@ -191,6 +200,7 @@ class SyncService extends GetxController implements GetxService {
       }
     }
   }
+
 
   /// Fetches ALL cloud notes using offset pagination.
   /// Loops until a page with fewer than 100 results is returned.

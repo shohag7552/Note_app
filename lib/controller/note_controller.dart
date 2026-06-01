@@ -17,12 +17,14 @@ class NoteController extends GetxController implements GetxService {
   final SharedPreferences sharedPreferences;
   NoteController({required this.sharedPreferences}) {
     _loadCurrentTheme();
+    _loadSortPreferences();
   }
 
   final titleController = TextEditingController();
   final contentController = TextEditingController();
 
   var notes = <Note>[];
+  var deletedNotes = <Note>[];
   bool appLockStatus = false;
 
   bool _darkTheme = false;
@@ -38,6 +40,12 @@ class NoteController extends GetxController implements GetxService {
   int get cardDesignIndex => _cardDesignIndex;
 
   bool showFavouritesOnly = false;
+
+  String _sortBy = 'edited'; // 'edited' = updatedAt, 'created' = recently added
+  String get sortBy => _sortBy;
+
+  String _sortOrder = 'desc'; // 'desc' = newest first, 'asc' = oldest first
+  String get sortOrder => _sortOrder;
 
   // ── Multi-select ─────────────────────────────────────────────────────────
   final selectedIds = <int>{};
@@ -63,13 +71,21 @@ class NoteController extends GetxController implements GetxService {
   }
 
   Future<void> deleteSelectedNotes() async {
-    final notesToDelete =
-        notes.where((n) => selectedIds.contains(n.id)).toList();
+    final idsToDelete = selectedIds.toList();
     selectedIds.clear();
 
-    for (final note in notesToDelete) {
-      await _deleteNoteWithSync(note);
+    // Soft-delete all selected notes
+    await DatabaseHelper.instance.softDeleteNotesByIds(idsToDelete);
+
+    // Sync each to cloud
+    final notesToSync = notes.where((n) => idsToDelete.contains(n.id)).toList();
+    for (final note in notesToSync) {
+      note.isDeleted = 1;
+      note.deletedAt = DateTime.now().toUtc().toIso8601String();
+      note.syncStatus = 'pending';
+      _trySyncNote(note);
     }
+
     getAllNotes();
   }
 
@@ -150,9 +166,17 @@ class NoteController extends GetxController implements GetxService {
     _trySyncNote(note);
   }
 
+  /// Soft-deletes a note (moves it to the recycle bin).
   void deleteNote(int id) async {
     final note = notes.firstWhere((n) => n.id == id, orElse: () => Note(id: id));
-    await _deleteNoteWithSync(note);
+    await DatabaseHelper.instance.softDeleteNote(id);
+
+    // Update the in-memory note and sync the soft-delete to cloud
+    note.isDeleted = 1;
+    note.deletedAt = DateTime.now().toUtc().toIso8601String();
+    note.syncStatus = 'pending';
+    _trySyncNote(note);
+
     getAllNotes();
   }
 
@@ -174,25 +198,134 @@ class NoteController extends GetxController implements GetxService {
     _trySyncNote(note);
   }
 
+  /// Soft-deletes all active notes (moves them to the recycle bin).
   Future<void> deleteAllNotes() async {
-    // Push deletes for all cloud-synced notes.
+    // Sync soft-delete for cloud-synced notes
     for (final note in notes) {
-      if (note.cloudId != null) {
-        note.syncStatus = 'pendingDelete';
-        _trySyncNote(note);
-      }
+      note.isDeleted = 1;
+      note.deletedAt = DateTime.now().toUtc().toIso8601String();
+      note.syncStatus = 'pending';
+      _trySyncNote(note);
     }
-    await DatabaseHelper.instance.deleteAllNotes();
+    await DatabaseHelper.instance.softDeleteAllNotes();
     getAllNotes();
   }
 
   Future<void> getAllNotes() async {
-    notes = await DatabaseHelper.instance.getNoteList();
+    final list = await DatabaseHelper.instance.getNoteList();
+    
+    list.sort((a, b) {
+      final aDate = _sortBy == 'edited' ? a.editedDateTime : a.createdDateTime;
+      final bDate = _sortBy == 'edited' ? b.editedDateTime : b.createdDateTime;
+      
+      if (_sortOrder == 'desc') {
+        return bDate.compareTo(aDate);
+      } else {
+        return aDate.compareTo(bDate);
+      }
+    });
+
+    notes = list;
     update();
   }
 
   void shareNote(String content) {
     SharePlus.instance.share(ShareParams(text: content));
+  }
+
+  // ── Recycle Bin ──────────────────────────────────────────────────────────
+
+  /// Loads trashed notes from the database.
+  Future<void> getAllDeletedNotes() async {
+    deletedNotes = await DatabaseHelper.instance.getDeletedNotes();
+    update();
+  }
+
+  /// Restores a single note from the recycle bin back to the active list.
+  Future<void> restoreNote(int id) async {
+    await DatabaseHelper.instance.restoreNote(id);
+
+    // Find the note in the deleted list and sync the restore to cloud
+    final note = deletedNotes.firstWhereOrNull((n) => n.id == id);
+    if (note != null) {
+      note.isDeleted = 0;
+      note.deletedAt = null;
+      note.syncStatus = 'pending';
+      _trySyncNote(note);
+    }
+
+    getAllNotes();
+    getAllDeletedNotes();
+  }
+
+  /// Restores multiple notes from the recycle bin.
+  Future<void> restoreSelectedNotes() async {
+    final idsToRestore = selectedIds.toList();
+    selectedIds.clear();
+    await DatabaseHelper.instance.restoreNotesByIds(idsToRestore);
+
+    // Sync each restored note to cloud
+    final notesToSync = deletedNotes.where((n) => idsToRestore.contains(n.id)).toList();
+    for (final note in notesToSync) {
+      note.isDeleted = 0;
+      note.deletedAt = null;
+      note.syncStatus = 'pending';
+      _trySyncNote(note);
+    }
+
+    getAllNotes();
+    getAllDeletedNotes();
+  }
+
+  /// Permanently deletes a single note from the recycle bin.
+  Future<void> permanentlyDeleteNote(int id) async {
+    final note = deletedNotes.firstWhere((n) => n.id == id, orElse: () => Note(id: id));
+    await _deleteNoteWithSync(note);
+    getAllDeletedNotes();
+  }
+
+  /// Permanently deletes selected notes from the recycle bin.
+  Future<void> permanentlyDeleteSelectedNotes() async {
+    final idsToDelete = selectedIds.toList();
+    selectedIds.clear();
+
+    final notesToDelete = deletedNotes.where((n) => idsToDelete.contains(n.id)).toList();
+    for (final note in notesToDelete) {
+      await _deleteNoteWithSync(note);
+    }
+    getAllDeletedNotes();
+  }
+
+  /// Permanently deletes all notes in the recycle bin.
+  Future<void> emptyTrash() async {
+    // Delete cloud copies first
+    for (final note in deletedNotes) {
+      if (note.cloudId != null) {
+        try {
+          await Get.find<SyncService>().pushNote(
+            note..syncStatus = 'pendingDelete',
+            _getLoggedInEmail() ?? '',
+          );
+        } catch (e) {
+          print('[NoteController] Cloud delete failed for trashed note ${note.id}: $e');
+        }
+      }
+    }
+    // Then remove all from local DB
+    await DatabaseHelper.instance.emptyTrash();
+    getAllDeletedNotes();
+  }
+
+  /// Auto-purges notes that have been in the trash for more than 30 days.
+  /// Called on app startup.
+  Future<void> purgeExpiredTrash() async {
+    final expired = await DatabaseHelper.instance.getExpiredTrashNotes(30);
+    for (final note in expired) {
+      await _deleteNoteWithSync(note);
+    }
+    if (expired.isNotEmpty) {
+      print('[NoteController] Auto-purged ${expired.length} expired trashed note(s).');
+    }
   }
 
   // ── Sync helpers ─────────────────────────────────────────────────────────
@@ -336,5 +469,18 @@ class NoteController extends GetxController implements GetxService {
     _layoutIndex = sharedPreferences.getInt(AppConstants.layoutKey) ?? 0;
     _cardDesignIndex = sharedPreferences.getInt('card_design') ?? 0;
     update();
+  }
+
+  void _loadSortPreferences() {
+    _sortBy = sharedPreferences.getString('sort_by') ?? 'edited';
+    _sortOrder = sharedPreferences.getString('sort_order') ?? 'desc';
+  }
+
+  void changeSortOption(String by, String order) {
+    _sortBy = by;
+    _sortOrder = order;
+    sharedPreferences.setString('sort_by', by);
+    sharedPreferences.setString('sort_order', order);
+    getAllNotes();
   }
 }

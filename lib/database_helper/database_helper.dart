@@ -12,7 +12,7 @@ class DatabaseHelper {
   late Database _database;
 
   static const _dbName = "notes.db";
-  static const _dbVersion = 2; // bumped: added cloudId, syncStatus columns
+  static const _dbVersion = 3; // bumped: added isDeleted, deletedAt columns
   static const _tableName = "notes";
 
   Future<Database> get database async {
@@ -42,18 +42,26 @@ class DatabaseHelper {
         dateTimeEdited TEXT NOT NULL,
         dateTimeCreated TEXT NOT NULL,
         isFavorite INTEGER NOT NULL DEFAULT 0,
-        color TEXT NOT NULL
+        color TEXT NOT NULL,
+        isDeleted INTEGER NOT NULL DEFAULT 0,
+        deletedAt TEXT
       )
       ''');
   }
 
-  /// Migrate existing installs to schema v2 — safely adds new columns.
+  /// Migrate existing installs — safely adds new columns.
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       await db.execute(
           "ALTER TABLE $_tableName ADD COLUMN cloudId TEXT");
       await db.execute(
           "ALTER TABLE $_tableName ADD COLUMN syncStatus TEXT NOT NULL DEFAULT 'synced'");
+    }
+    if (oldVersion < 3) {
+      await db.execute(
+          "ALTER TABLE $_tableName ADD COLUMN isDeleted INTEGER NOT NULL DEFAULT 0");
+      await db.execute(
+          "ALTER TABLE $_tableName ADD COLUMN deletedAt TEXT");
     }
   }
 
@@ -103,7 +111,7 @@ class DatabaseHelper {
 
   /// Update Note
   Future<int> updateNote(Note note) async {
-    print('=====sss===> ${note.toJson()}');
+    print('=====sss===>${note.toJson()}');
     Database db = await instance.database;
     return await db.update(
       _tableName,
@@ -113,10 +121,15 @@ class DatabaseHelper {
     );
   }
 
+  /// Returns only active (non-deleted) notes.
   Future<List<Note>> getNoteList() async {
     Database db = await instance.database;
-    final List<Map<String, dynamic>> maps =
-        await db.query(_tableName, orderBy: 'dateTimeCreated DESC');
+    final List<Map<String, dynamic>> maps = await db.query(
+      _tableName,
+      where: 'isDeleted = ?',
+      whereArgs: [0],
+      orderBy: 'dateTimeCreated DESC',
+    );
     return List.generate(
       maps.length,
       (index) {
@@ -130,10 +143,157 @@ class DatabaseHelper {
           dateTimeCreated: maps[index]['dateTimeCreated'],
           isFavorite: maps[index]['isFavorite'],
           color: maps[index]['color'],
+          isDeleted: maps[index]['isDeleted'] as int? ?? 0,
+          deletedAt: maps[index]['deletedAt'] as String?,
         );
       },
     );
   }
+
+  // ── Recycle Bin queries ──────────────────────────────────────────────────
+
+  /// Returns only soft-deleted (trashed) notes, newest trash first.
+  Future<List<Note>> getDeletedNotes() async {
+    final db = await instance.database;
+    final maps = await db.query(
+      _tableName,
+      where: 'isDeleted = ?',
+      whereArgs: [1],
+      orderBy: 'deletedAt DESC',
+    );
+    return maps
+        .map((m) => Note(
+              id: m['note_id'] as int?,
+              cloudId: m['cloudId'] as String?,
+              syncStatus: m['syncStatus'] as String? ?? 'synced',
+              title: m['title'] as String?,
+              content: m['content'] as String?,
+              dateTimeEdited: m['dateTimeEdited'] as String?,
+              dateTimeCreated: m['dateTimeCreated'] as String?,
+              isFavorite: m['isFavorite'] as int?,
+              color: m['color'] as String?,
+              isDeleted: m['isDeleted'] as int? ?? 1,
+              deletedAt: m['deletedAt'] as String?,
+            ))
+        .toList();
+  }
+
+  /// Soft-delete a note — moves it to the recycle bin.
+  Future<void> softDeleteNote(int noteId) async {
+    final db = await instance.database;
+    await db.update(
+      _tableName,
+      {
+        'isDeleted': 1,
+        'deletedAt': DateTime.now().toUtc().toIso8601String(),
+        'syncStatus': 'pending',
+      },
+      where: 'note_id = ?',
+      whereArgs: [noteId],
+    );
+  }
+
+  /// Soft-delete multiple notes by IDs.
+  Future<void> softDeleteNotesByIds(List<int> ids) async {
+    if (ids.isEmpty) return;
+    final db = await instance.database;
+    final placeholders = List.filled(ids.length, '?').join(',');
+    await db.update(
+      _tableName,
+      {
+        'isDeleted': 1,
+        'deletedAt': DateTime.now().toUtc().toIso8601String(),
+        'syncStatus': 'pending',
+      },
+      where: 'note_id IN ($placeholders)',
+      whereArgs: ids,
+    );
+  }
+
+  /// Soft-delete ALL active notes (move all to trash).
+  Future<void> softDeleteAllNotes() async {
+    final db = await instance.database;
+    await db.update(
+      _tableName,
+      {
+        'isDeleted': 1,
+        'deletedAt': DateTime.now().toUtc().toIso8601String(),
+        'syncStatus': 'pending',
+      },
+      where: 'isDeleted = ?',
+      whereArgs: [0],
+    );
+  }
+
+  /// Restore a soft-deleted note back to the active list.
+  Future<void> restoreNote(int noteId) async {
+    final db = await instance.database;
+    await db.update(
+      _tableName,
+      {
+        'isDeleted': 0,
+        'deletedAt': null,
+        'syncStatus': 'pending',
+      },
+      where: 'note_id = ?',
+      whereArgs: [noteId],
+    );
+  }
+
+  /// Restore multiple soft-deleted notes by IDs.
+  Future<void> restoreNotesByIds(List<int> ids) async {
+    if (ids.isEmpty) return;
+    final db = await instance.database;
+    final placeholders = List.filled(ids.length, '?').join(',');
+    await db.update(
+      _tableName,
+      {
+        'isDeleted': 0,
+        'deletedAt': null,
+        'syncStatus': 'pending',
+      },
+      where: 'note_id IN ($placeholders)',
+      whereArgs: ids,
+    );
+  }
+
+  /// Returns trashed notes older than [days] days.
+  Future<List<Note>> getExpiredTrashNotes(int days) async {
+    final db = await instance.database;
+    final cutoff = DateTime.now().toUtc().subtract(Duration(days: days)).toIso8601String();
+    final maps = await db.query(
+      _tableName,
+      where: 'isDeleted = ? AND deletedAt IS NOT NULL AND deletedAt < ?',
+      whereArgs: [1, cutoff],
+    );
+    return maps
+        .map((m) => Note(
+              id: m['note_id'] as int?,
+              cloudId: m['cloudId'] as String?,
+              syncStatus: m['syncStatus'] as String?,
+              title: m['title'] as String?,
+              content: m['content'] as String?,
+              dateTimeEdited: m['dateTimeEdited'] as String?,
+              dateTimeCreated: m['dateTimeCreated'] as String?,
+              isFavorite: m['isFavorite'] as int?,
+              color: m['color'] as String?,
+              isDeleted: m['isDeleted'] as int? ?? 1,
+              deletedAt: m['deletedAt'] as String?,
+            ))
+        .toList();
+  }
+
+  /// Permanently delete all trashed notes.
+  Future<int> emptyTrash() async {
+    final db = await instance.database;
+    return await db.delete(
+      _tableName,
+      where: 'isDeleted = ?',
+      whereArgs: [1],
+    );
+  }
+
+  // ── Sync queries (unchanged behavior) ──────────────────────────────────
 
   /// Fetch only notes that haven't been synced to the cloud yet.
   Future<List<Note>> getPendingNotes() async {
@@ -154,6 +314,8 @@ class DatabaseHelper {
               dateTimeCreated: m['dateTimeCreated'] as String?,
               isFavorite: m['isFavorite'] as int?,
               color: m['color'] as String?,
+              isDeleted: m['isDeleted'] as int? ?? 0,
+              deletedAt: m['deletedAt'] as String?,
             ))
         .toList();
   }
@@ -205,6 +367,8 @@ class DatabaseHelper {
       dateTimeCreated: m['dateTimeCreated'] as String?,
       isFavorite: m['isFavorite'] as int?,
       color: m['color'] as String?,
+      isDeleted: m['isDeleted'] as int? ?? 0,
+      deletedAt: m['deletedAt'] as String?,
     );
   }
 }

@@ -51,7 +51,7 @@ class _NoteCartState extends State<NoteCart>
     final raw = widget.note.dateTimeEdited;
     if (raw == null || raw.isEmpty) return '';
     try {
-      final dt = DateFormat('dd-MM-yyyy hh:mm a').parse(raw);
+      final dt = widget.note.editedDateTime;
       final now = DateTime.now();
       final diff = now.difference(dt);
       if (diff.inMinutes < 1) return 'Just now';
@@ -439,7 +439,7 @@ class _NoteCartState extends State<NoteCart>
       builder: (context) => AlertDialogWidget(
         headingText: 'Delete this note?',
         contentText:
-            'This will delete the note permanently. You cannot undo this action.',
+            'This note will be moved to the Recycle Bin. You can restore it within 30 days.',
         confirmFunction: () {
           Get.find<NoteController>().deleteNote(widget.note.id!);
           Get.back();

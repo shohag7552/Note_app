@@ -136,7 +136,7 @@ class _NoteDetailPageState extends State<NoteDetailPage> {
       context: context,
       builder: (context) => AlertDialogWidget(
         headingText: 'Delete this note?',
-        contentText: 'This will delete the note permanently. You cannot undo this action.',
+        contentText: 'This note will be moved to the Recycle Bin. You can restore it within 30 days.',
         confirmFunction: () {
           Get.find<NoteController>().deleteNote(id);
           Get.offAllNamed(AppRoute.HOME);

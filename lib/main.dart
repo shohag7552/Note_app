@@ -16,6 +16,10 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await di.init();
+
+  // Auto-purge trashed notes older than 30 days (fire-and-forget).
+  Get.find<NoteController>().purgeExpiredTrash();
+
   runApp(const MyApp());
 }
 

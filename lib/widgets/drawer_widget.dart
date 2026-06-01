@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:my_note_app/controller/auth_controller.dart';
 import 'package:my_note_app/controller/note_controller.dart';
+import 'package:my_note_app/database_helper/database_helper.dart';
+import 'package:my_note_app/model/note_model.dart';
 import 'package:my_note_app/routing/app_routes.dart';
 import 'package:my_note_app/screens/setting_screen/font_style_screen.dart';
 import 'package:my_note_app/services/sync_service.dart';
@@ -45,7 +47,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                   // ── Sync row (logged-in only) ───────────────────────
                   if (loggedIn) _SyncRow(theme: theme),
 
-                  Divider(
+                  if (loggedIn) Divider(
                       color: theme.dividerColor,
                       height: 16,
                       indent: 16,
@@ -73,6 +75,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                         Get.back();
                         Get.toNamed(AppRoute.appLock);
                       }),
+                  _recycleBinRow(context, noteCtrl),
                   _toggleRow(
                     context,
                     icon: noteCtrl.darkTheme
@@ -143,6 +146,52 @@ class _DrawerWidgetState extends State<DrawerWidget> {
       onTap: () => onChanged(!value),
       contentPadding: const EdgeInsets.symmetric(horizontal: 20),
       visualDensity: const VisualDensity(vertical: -1),
+    );
+  }
+
+  Widget _recycleBinRow(BuildContext context, NoteController noteCtrl) {
+    final theme = Theme.of(context);
+    return FutureBuilder<List<Note>>(
+      future: DatabaseHelper.instance.getDeletedNotes(),
+      builder: (context, snapshot) {
+        final count = snapshot.data?.length ?? 0;
+        return ListTile(
+          leading: Icon(Icons.delete_outline_rounded,
+              size: 20, color: theme.colorScheme.onSurface),
+          title: Row(
+            children: [
+              Text('Recycle Bin',
+                  style: theme.textTheme.bodyMedium
+                      ?.copyWith(fontWeight: FontWeight.w500)),
+              if (count > 0) ...[
+                const SizedBox(width: 8),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.error.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    '$count',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.error,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 11,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          onTap: () {
+            Get.back();
+            Get.toNamed(AppRoute.RECYCLE_BIN);
+          },
+          contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+          visualDensity: const VisualDensity(vertical: -1),
+        );
+      },
     );
   }
 }
