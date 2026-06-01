@@ -47,6 +47,7 @@ class AuthController extends GetxController implements GetxService {
 
       // Step 2: Derive a deterministic Appwrite password from the Google ID.
       final password = _generateAppwritePassword(googleAccount.id);
+      log('[AuthController] Derived Appwrite password for ${googleAccount.email} (not shown for security)');
 
       // Step 3: Create or resume an Appwrite session.
       final userId = await _createOrLoginAppwriteAccount(
