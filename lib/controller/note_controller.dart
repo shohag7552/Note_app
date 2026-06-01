@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ui';
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
@@ -464,7 +465,8 @@ class NoteController extends GetxController implements GetxService {
   }
 
   void _loadCurrentTheme() {
-    _darkTheme = sharedPreferences.getBool(AppConstants.theme) ?? false;
+    final systemIsDark = PlatformDispatcher.instance.platformBrightness == Brightness.dark;
+    _darkTheme = sharedPreferences.getBool(AppConstants.theme) ?? systemIsDark;
     _currentFont = sharedPreferences.getString(AppConstants.fontKey) ?? 'Inter';
     _layoutIndex = sharedPreferences.getInt(AppConstants.layoutKey) ?? 0;
     _cardDesignIndex = sharedPreferences.getInt('card_design') ?? 0;
