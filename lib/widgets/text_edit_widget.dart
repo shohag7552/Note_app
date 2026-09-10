@@ -12,7 +12,6 @@ import 'package:my_note_app/helper/quill_helper.dart';
 import 'package:my_note_app/model/note_model.dart';
 import 'package:my_note_app/utils/padding_size.dart';
 import 'package:my_note_app/widgets/color_picker_sheet.dart';
-import 'package:flutter_quill_extensions/flutter_quill_extensions.dart';
 import 'package:my_note_app/widgets/custom_image_embed.dart';
 
 class TextEditWidget extends StatefulWidget {
