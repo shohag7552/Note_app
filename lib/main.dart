@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:my_note_app/controller/auth_controller.dart';
@@ -35,6 +33,10 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+
+    final sync = Get.find<SyncService>();
+    sync.onDriveAccessNeeded = _showConnectDrivePrompt;
+    WidgetsBinding.instance.addPostFrameCallback((_) => sync.syncNow());
   }
 
   @override
@@ -63,28 +65,25 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         Get.offAllNamed(AppRoute.pass);
       }
 
-      // ── Auto-Retry: push any pending notes when app returns to foreground.
-      // Also re-checks the Appwrite session and re-authenticates if expired.
-      _onAppResumed();
+      // ── Auto-Retry: sync pending notes and pick up changes from other devices.
+      Get.find<SyncService>().syncOnResume();
     }
   }
 
-  void _onAppResumed() async {
-    try {
-      final authCtrl = Get.find<AuthController>();
-      if (!authCtrl.isLoggedIn()) return;
-      // Ensure Appwrite session is still valid (re-auth silently if expired).
-      await authCtrl.ensureSession();
-      // Push any notes that were created/edited while offline.
-      final email = authCtrl.getUserToken();
-      if (email != null) {
-        await Get.find<SyncService>().pushAllPending(email);
-        // Refresh the notes list to reflect any sync status changes.
-        Get.find<NoteController>().getAllNotes();
-      }
-    } catch (e) {
-      log('[main] App resume sync error: $e');
-    }
+  void _showConnectDrivePrompt() {
+    Get.snackbar(
+      'Back up your notes',
+      'Connect Google Drive to keep your notes safe and on all your devices.',
+      snackPosition: SnackPosition.BOTTOM,
+      duration: const Duration(seconds: 8),
+      mainButton: TextButton(
+        onPressed: () {
+          Get.closeCurrentSnackbar();
+          Get.find<AuthController>().connectDrive();
+        },
+        child: const Text('Connect'),
+      ),
+    );
   }
 
   @override

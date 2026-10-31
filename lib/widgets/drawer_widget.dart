@@ -409,7 +409,10 @@ class _SyncRow extends StatelessWidget {
                       color: theme.colorScheme.primary,
                     ),
                   )
-                : Icon(Icons.cloud_done_outlined,
+                : Icon(
+                    sync.syncStatus == 'done'
+                        ? Icons.cloud_done_outlined
+                        : Icons.cloud_off_outlined,
                     key: const ValueKey('done'), size: 20),
           ),
           title: Text(lastLabel,
@@ -418,14 +421,17 @@ class _SyncRow extends StatelessWidget {
           trailing: isSyncing
               ? null
               : TextButton(
-                  onPressed: () => Get.find<AuthController>().syncNow(),
+                  onPressed: sync.syncStatus == 'needsDriveAccess'
+                      ? Get.find<AuthController>().connectDrive
+                      : Get.find<AuthController>().syncNow,
                   style: TextButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 10, vertical: 4),
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
-                  child: const Text('Sync now',
+                  child: Text(
+                      sync.syncStatus == 'needsDriveAccess' ? 'Connect' : 'Sync now',
                       style: TextStyle(
                           fontSize: 12, fontWeight: FontWeight.w600)),
                 ),
@@ -439,6 +445,8 @@ class _SyncRow extends StatelessWidget {
   String _lastSyncLabel(String status) {
     if (status == 'done') return 'Synced';
     if (status == 'error') return 'Sync had issues';
+    if (status == 'needsDriveAccess') return 'Connect Google Drive to back up';
+    if (status == 'quotaFull') return 'Google storage is full';
     return 'Not synced yet';
   }
 }

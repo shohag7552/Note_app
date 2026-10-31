@@ -2,6 +2,9 @@ import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
+import 'package:get/get.dart';
+import 'package:my_note_app/helper/note_image_helper.dart';
+import 'package:my_note_app/services/sync_service.dart';
 
 class CustomImageEmbedBuilder extends EmbedBuilder {
   @override
@@ -65,6 +68,13 @@ class _ResizableImageWidgetState extends State<_ResizableImageWidget> {
     widget.controller.replaceText(offset, length, BlockEmbed.image(newUrl), null);
   }
 
+  Widget _placeholder(BuildContext context) => SizedBox(
+        height: 120,
+        child: Center(
+          child: Icon(Icons.image_outlined, color: Theme.of(context).hintColor),
+        ),
+      );
+
   Offset _dragOffset = Offset.zero;
   int _originalOffset = 0;
 
@@ -78,9 +88,17 @@ class _ResizableImageWidgetState extends State<_ResizableImageWidget> {
           width: 2,
         ),
       ),
-      child: Image.file(
-        File(_filePath),
-        fit: BoxFit.contain,
+      // Rebuilds after sync, so an image downloaded from Drive appears.
+      child: GetBuilder<SyncService>(
+        builder: (_) {
+          final file = File(NoteImageHelper.resolve(_filePath));
+          if (!file.existsSync()) return _placeholder(context);
+          return Image.file(
+            file,
+            fit: BoxFit.contain,
+            errorBuilder: (context, _, _) => _placeholder(context),
+          );
+        },
       ),
     );
 

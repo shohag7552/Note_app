@@ -313,10 +313,10 @@ class ProfileScreen extends StatelessWidget {
           ],
         ),
         content: const Text(
-          'Are you sure you want to delete your account?\n\n'
-          'All your synchronized cloud notes will be permanently erased. '
-          'You will be signed out, and you will not be able to log '
-          'back into this account.',
+          'Are you sure you want to delete your account data?\n\n'
+          'All your notes will be permanently erased from Google Drive and '
+          'this device, and this app\'s access to your Google account will '
+          'be removed. You can sign in again later to start fresh.',
         ),
         actions: [
           TextButton(
@@ -332,7 +332,7 @@ class ProfileScreen extends StatelessWidget {
                 onPressed: authController.isLoading
                     ? null
                     : () async {
-                        final success = await authController.deactivateAccount();
+                        final success = await authController.deleteAccountData();
                         if (!success) {
                           Get.back();
                           Get.snackbar(

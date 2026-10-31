@@ -10,7 +10,7 @@ A feature-rich, beautiful, and secure note-taking application built with Flutter
 - **Organization:** Pin favorite notes, powerful search functionality, and delete management.
 - **Customizable Appearance:** Light & Dark mode support, dynamic background images, and custom note colors (Classic, Minimalist, Tinted Pastel designs).
 - **Responsive Layouts:** Beautiful masonry grid layouts using `flutter_staggered_grid_view`.
-- **Cloud Sync:** Backend integration powered by Appwrite for data synchronization.
+- **Cloud Sync:** Notes and images sync to the user's own Google Drive (hidden app folder).
 - **Sharing:** Easily share your notes with others.
 
 ## 🛠️ Tech Stack & Architecture
@@ -19,7 +19,7 @@ A feature-rich, beautiful, and secure note-taking application built with Flutter
 - **State Management:** [GetX](https://pub.dev/packages/get)
 - **Architecture:** MVC (Model-View-Controller) Pattern
 - **Local Storage:** `sqflite` (SQLite) & `shared_preferences`
-- **Backend/BaaS:** `appwrite`
+- **Backend/BaaS:** Google Drive API (`googleapis`)
 - **Typography & UI:** `google_fonts`, `cupertino_icons`
 
 ## 📦 Key Dependencies
@@ -27,7 +27,7 @@ A feature-rich, beautiful, and secure note-taking application built with Flutter
 - `get` - State management, routing, and dependency injection.
 - `flutter_quill` & `flutter_quill_extensions` - Rich text editor.
 - `sqflite` - Local SQLite database for offline storage.
-- `appwrite` - Cloud backend integration.
+- Google Drive API (`googleapis`) - Cloud backend integration.
 - `pin_code_fields` & `local_auth` - Security and authentication.
 - `image_picker` & `image_cropper` - Media handling.
 - `flutter_staggered_grid_view` - Staggered UI layouts.

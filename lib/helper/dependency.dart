@@ -1,8 +1,9 @@
 import 'package:get/get.dart';
-import 'package:my_note_app/appwrite/repository/app_write_repository.dart';
 import 'package:my_note_app/controller/auth_controller.dart';
 import 'package:my_note_app/controller/background_controller.dart';
 import 'package:my_note_app/controller/note_controller.dart';
+import 'package:my_note_app/drive/drive_repository.dart';
+import 'package:my_note_app/helper/note_image_helper.dart';
 import 'package:my_note_app/services/sync_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -11,9 +12,16 @@ Future<void> init() async {
 
   // Core dependencies.
   Get.lazyPut(() => prefs);
+  await NoteImageHelper.init();
 
   // Services — must be registered before controllers that depend on them.
-  Get.lazyPut(() => AppWriteRepository(), fenix: true);
+  Get.lazyPut(
+    () => DriveRepository(
+      clientProvider: ({bool forceRefresh = false}) =>
+          Get.find<AuthController>().driveClient(forceRefresh: forceRefresh),
+    ),
+    fenix: true,
+  );
   Get.lazyPut(() => SyncService(), fenix: true);
 
   // Controllers.

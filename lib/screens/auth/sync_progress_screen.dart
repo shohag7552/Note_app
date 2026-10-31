@@ -54,6 +54,10 @@ class _SyncProgressScreenState extends State<SyncProgressScreen>
         return 'All caught up! ✓';
       case 'error':
         return 'Sync completed with warnings';
+      case 'quotaFull':
+        return 'Your Google storage is full';
+      case 'needsDriveAccess':
+        return 'Google Drive access is needed';
       default:
         return 'Setting up your account…';
     }
@@ -67,8 +71,7 @@ class _SyncProgressScreenState extends State<SyncProgressScreen>
       backgroundColor: theme.scaffoldBackgroundColor,
       body: GetBuilder<SyncService>(
         builder: (sync) {
-          final isDone =
-              sync.syncStatus == 'done' || sync.syncStatus == 'error';
+          final isDone = sync.syncStatus != 'syncing' && !sync.isSyncing;
 
           // Auto-navigate after a short celebration delay
           if (isDone && !_done) {

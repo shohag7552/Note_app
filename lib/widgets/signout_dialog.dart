@@ -14,6 +14,33 @@ class SignOutDialog extends StatelessWidget {
     );
   }
 
+  /// Shown when notes couldn't reach Drive. Signing out would lose them.
+  static void _showUnsyncedWarning(AuthController auth) {
+    Get.dialog(
+      AlertDialog(
+        title: const Text('Some notes aren\'t backed up'),
+        content: const Text(
+          'Some notes couldn\'t be uploaded to Google Drive. '
+          'If you sign out now, they will be permanently deleted from this device.\n\n'
+          'Check your connection and try again, or stay signed in to keep them.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text('Stay signed in'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Get.back();
+              await auth.googleLogOut(force: true);
+            },
+            child: const Text('Sign out and delete'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -69,7 +96,7 @@ class SignOutDialog extends StatelessWidget {
               const SizedBox(height: 12),
             ],
             Text(
-              'Your notes are saved on this device and will remain safe.\n\nThey\'ll sync automatically when you sign back in.',
+              'Your notes will be backed up to your Google Drive, then removed from this device.\n\nThey\'ll come back when you sign in again.',
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium
                   ?.copyWith(color: theme.hintColor, height: 1.5),
@@ -97,8 +124,9 @@ class SignOutDialog extends StatelessWidget {
                       onPressed: auth.isLoading
                           ? null
                           : () async {
-                              await auth.googleLogOut();
+                              final signedOut = await auth.googleLogOut();
                               Get.back();
+                              if (!signedOut) _showUnsyncedWarning(auth);
                             },
                       style: FilledButton.styleFrom(
                         backgroundColor: theme.colorScheme.error,

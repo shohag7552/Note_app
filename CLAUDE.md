@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-My Note App is a Flutter-based note-taking application with rich text editing, password protection, light/dark theme support, and cloud sync via Appwrite. The project uses GetX for state management and MVC pattern for architecture.
+My Note App is a Flutter-based note-taking application with rich text editing, password protection, light/dark theme support, and cloud sync to the user's Google Drive. The project uses GetX for state management and MVC pattern for architecture.
 
 ## Build & Run Commands
 
@@ -87,10 +87,9 @@ The project follows an MVC-inspired pattern with GetX dependency injection:
 - Order by dateTimeCreated DESC for note listing
 
 **Cloud Integration**
-- Appwrite backend configured in `lib/appwrite/app_write_config.dart` (endpoint: fra.cloud.appwrite.io, projectId: 68c477bd0025144ebd1c)
-- `AppwriteService` singleton for database operations
-- `AppWriteRepository` wraps Appwrite API calls
-- Supports sync of notes to cloud with author email tracking
+- Notes and images sync to the user's hidden Google Drive `appDataFolder` (`drive.appdata` scope), with no server
+- `DriveRepository` (`lib/drive/drive_repository.dart`) wraps Drive API calls
+- `SyncService` runs serialized sync; merge rules are pure functions in `lib/services/sync_merge.dart`
 
 **Routing**
 - GetX-based routing in `lib/routing/app_routes.dart`
@@ -115,7 +114,7 @@ The project follows an MVC-inspired pattern with GetX dependency injection:
 - **sqflite** (2.0.0+4): Local SQLite database
 - **shared_preferences** (2.2.3): Persistent app settings (password, theme, auth tokens)
 - **google_sign_in** (6.2.1): Google authentication
-- **appwrite** (19.0.0): Cloud backend
+- **googleapis**: Google Drive API
 - **image_picker** (1.1.2): Background image selection
 - **speech_to_text** (7.0.0): Voice input (integrated but not fully utilized)
 - **flutter_quill** localizations via FlutterQuillLocalizations delegate
@@ -186,7 +185,7 @@ backgroundImage: selected background image path
 **Theme**: `lib/theme/`
 **Utils**: `lib/utils/`
 **Helpers**: `lib/helper/`
-**Cloud**: `lib/appwrite/`
+**Cloud**: `lib/drive/`, `lib/services/`
 **Assets**: `assets/` (contains no_note.jpg placeholder)
 
 ## Development Notes
@@ -195,5 +194,5 @@ backgroundImage: selected background image path
 - NoteController is a GetxService (singleton) - accessed via `Get.find<NoteController>()`
 - Print statements throughout codebase for debugging (consider replacing with logger)
 - flutter_quill requires FlutterQuillLocalizations delegate for multi-language support
-- Appwrite TablesDB API used for note sync (newer API vs traditional Databases)
+- Never treat an empty Drive listing as user deletion (see `planSync`), and keep `pendingDelete` rows until the Drive file is removed
 - Google Sign-In requires platform-specific setup (iOS: GoogleService-Info.plist, Android: google-services.json)

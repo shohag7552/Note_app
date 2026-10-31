@@ -8,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:my_note_app/controller/note_controller.dart';
 import 'package:my_note_app/helper/color_extension.dart';
+import 'package:my_note_app/helper/note_image_helper.dart';
 import 'package:my_note_app/helper/quill_helper.dart';
 import 'package:my_note_app/model/note_model.dart';
 import 'package:my_note_app/utils/padding_size.dart';
@@ -179,7 +180,11 @@ class _TextEditWidgetState extends State<TextEditWidget> {
                 }
 
                 final picker = ImagePicker();
-                final image = await picker.pickImage(source: ImageSource.gallery);
+                final image = await picker.pickImage(
+                  source: ImageSource.gallery,
+                  maxWidth: 1600,
+                  imageQuality: 80,
+                );
                 if (image != null && mounted) {
                   final croppedFile = await ImageCropper().cropImage(
                     sourcePath: image.path,
@@ -197,10 +202,11 @@ class _TextEditWidgetState extends State<TextEditWidget> {
                     ],
                   );
                   if (croppedFile != null) {
+                    final imagePath = await NoteImageHelper.importPicked(croppedFile.path);
                     controller.replaceText(
                       index,
                       length,
-                      BlockEmbed.image('${croppedFile.path}?w=300'),
+                      BlockEmbed.image('$imagePath?w=300'),
                       null,
                     );
                     
@@ -260,12 +266,6 @@ class _TextEditWidgetState extends State<TextEditWidget> {
                   Get.find<NoteController>().updateNote(
                     Note(
                       id: widget.note!.id,
-                      // ✅ CRITICAL: carry cloudId & syncStatus forward so
-                      // SyncService knows this is an UPDATE (not a new create).
-                      // Without cloudId, pushNote() would call createRow()
-                      // and add a duplicate document in Appwrite.
-                      cloudId: widget.note!.cloudId,
-                      syncStatus: widget.note!.syncStatus,
                       title: widget.note!.title,
                       content: json,
                       dateTimeEdited: DateFormat("dd-MM-yyyy hh:mm a").format(DateTime.now()),

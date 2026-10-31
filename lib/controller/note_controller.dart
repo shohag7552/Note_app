@@ -78,14 +78,7 @@ class NoteController extends GetxController implements GetxService {
     // Soft-delete all selected notes
     await DatabaseHelper.instance.softDeleteNotesByIds(idsToDelete);
 
-    // Sync each to cloud
-    final notesToSync = notes.where((n) => idsToDelete.contains(n.id)).toList();
-    for (final note in notesToSync) {
-      note.isDeleted = 1;
-      note.deletedAt = DateTime.now().toUtc().toIso8601String();
-      note.syncStatus = 'pending';
-      _trySyncNote(note);
-    }
+    _requestSync();
 
     getAllNotes();
   }
@@ -150,12 +143,10 @@ class NoteController extends GetxController implements GetxService {
     }
 
     // 2. Push to cloud in background (fire-and-forget).
-    _trySyncNote(note);
+    _requestSync();
   }
 
   void updateNote(Note note) async {
-    note.syncStatus = 'pending';
-
     // 1. Update locally first.
     await DatabaseHelper.instance.updateNote(note);
     titleController.text = '';
@@ -164,19 +155,13 @@ class NoteController extends GetxController implements GetxService {
     Get.offAllNamed(AppRoute.HOME);
 
     // 2. Push to cloud in background.
-    _trySyncNote(note);
+    _requestSync();
   }
 
   /// Soft-deletes a note (moves it to the recycle bin).
   void deleteNote(int id) async {
-    final note = notes.firstWhere((n) => n.id == id, orElse: () => Note(id: id));
     await DatabaseHelper.instance.softDeleteNote(id);
-
-    // Update the in-memory note and sync the soft-delete to cloud
-    note.isDeleted = 1;
-    note.deletedAt = DateTime.now().toUtc().toIso8601String();
-    note.syncStatus = 'pending';
-    _trySyncNote(note);
+    _requestSync();
 
     getAllNotes();
   }
@@ -184,32 +169,24 @@ class NoteController extends GetxController implements GetxService {
   Future<void> updateNoteColor(int id, String color) async {
     final note = notes.firstWhere((n) => n.id == id);
     note.color = color;
-    note.syncStatus = 'pending';
     await DatabaseHelper.instance.updateNote(note);
     getAllNotes();
-    _trySyncNote(note);
+    _requestSync();
   }
 
   void favoriteNote(int id) async {
     final note = notes.firstWhere((n) => n.id == id);
     note.isFavorite = note.isFavorite == 1 ? 0 : 1;
-    note.syncStatus = 'pending';
     await DatabaseHelper.instance.updateNote(note);
     getAllNotes();
-    _trySyncNote(note);
+    _requestSync();
   }
 
   /// Soft-deletes all active notes (moves them to the recycle bin).
   Future<void> deleteAllNotes() async {
-    // Sync soft-delete for cloud-synced notes
-    for (final note in notes) {
-      note.isDeleted = 1;
-      note.deletedAt = DateTime.now().toUtc().toIso8601String();
-      note.syncStatus = 'pending';
-      _trySyncNote(note);
-    }
     await DatabaseHelper.instance.softDeleteAllNotes();
     getAllNotes();
+    _requestSync();
   }
 
   Future<void> getAllNotes() async {
@@ -245,15 +222,7 @@ class NoteController extends GetxController implements GetxService {
   /// Restores a single note from the recycle bin back to the active list.
   Future<void> restoreNote(int id) async {
     await DatabaseHelper.instance.restoreNote(id);
-
-    // Find the note in the deleted list and sync the restore to cloud
-    final note = deletedNotes.firstWhereOrNull((n) => n.id == id);
-    if (note != null) {
-      note.isDeleted = 0;
-      note.deletedAt = null;
-      note.syncStatus = 'pending';
-      _trySyncNote(note);
-    }
+    _requestSync();
 
     getAllNotes();
     getAllDeletedNotes();
@@ -264,15 +233,7 @@ class NoteController extends GetxController implements GetxService {
     final idsToRestore = selectedIds.toList();
     selectedIds.clear();
     await DatabaseHelper.instance.restoreNotesByIds(idsToRestore);
-
-    // Sync each restored note to cloud
-    final notesToSync = deletedNotes.where((n) => idsToRestore.contains(n.id)).toList();
-    for (final note in notesToSync) {
-      note.isDeleted = 0;
-      note.deletedAt = null;
-      note.syncStatus = 'pending';
-      _trySyncNote(note);
-    }
+    _requestSync();
 
     getAllNotes();
     getAllDeletedNotes();
@@ -283,6 +244,7 @@ class NoteController extends GetxController implements GetxService {
     final note = deletedNotes.firstWhere((n) => n.id == id, orElse: () => Note(id: id));
     await _deleteNoteWithSync(note);
     getAllDeletedNotes();
+    _requestSync();
   }
 
   /// Permanently deletes selected notes from the recycle bin.
@@ -295,26 +257,18 @@ class NoteController extends GetxController implements GetxService {
       await _deleteNoteWithSync(note);
     }
     getAllDeletedNotes();
+    _requestSync();
   }
 
   /// Permanently deletes all notes in the recycle bin.
   Future<void> emptyTrash() async {
-    // Delete cloud copies first
-    for (final note in deletedNotes) {
-      if (note.cloudId != null) {
-        try {
-          await Get.find<SyncService>().pushNote(
-            note..syncStatus = 'pendingDelete',
-            _getLoggedInEmail() ?? '',
-          );
-        } catch (e) {
-          print('[NoteController] Cloud delete failed for trashed note ${note.id}: $e');
-        }
-      }
+    if (_getLoggedInEmail() != null) {
+      await DatabaseHelper.instance.markTrashPendingDelete();
+    } else {
+      await DatabaseHelper.instance.emptyTrash();
     }
-    // Then remove all from local DB
-    await DatabaseHelper.instance.emptyTrash();
     getAllDeletedNotes();
+    _requestSync();
   }
 
   /// Auto-purges notes that have been in the trash for more than 30 days.
@@ -326,41 +280,24 @@ class NoteController extends GetxController implements GetxService {
     }
     if (expired.isNotEmpty) {
       print('[NoteController] Auto-purged ${expired.length} expired trashed note(s).');
+      _requestSync();
     }
   }
 
   // ── Sync helpers ─────────────────────────────────────────────────────────
 
-  /// Attempts to sync [note] to Appwrite if the user is logged in.
-  /// Silently fails — the note stays 'pending' and will be retried next sync.
-  void _trySyncNote(Note note) async {
-    final email = _getLoggedInEmail();
-    if (email == null) return;
-    try {
-      await Get.find<SyncService>().pushNote(note, email);
-      // Refresh list to show updated syncStatus.
-      getAllNotes();
-    } catch (e) {
-      print('[NoteController] Background sync failed for note ${note.id}: $e');
-    }
-  }
+  /// Queues a Drive sync if the user is logged in. If it can't run now, notes
+  /// stay 'pending' and are retried on the next sync.
+  void _requestSync() => Get.find<SyncService>().requestSync();
 
-  /// Deletes a note locally and marks it for cloud deletion.
+  /// Logged-in users keep the row until sync has removed the Drive file, so a
+  /// failed cloud delete can't bring the note back.
   Future<void> _deleteNoteWithSync(Note note) async {
-    if (note.cloudId != null) {
-      // If it has a cloud counterpart, try to delete it too.
-      try {
-        await Get.find<SyncService>().pushNote(
-          note..syncStatus = 'pendingDelete',
-          _getLoggedInEmail() ?? '',
-        );
-        return; // SyncService.pushNote handles local deletion in this case.
-      } catch (e) {
-        print('[NoteController] Cloud delete failed for note ${note.id}: $e');
-      }
+    if (_getLoggedInEmail() != null) {
+      await DatabaseHelper.instance.markPendingDelete(note.id!);
+    } else {
+      await DatabaseHelper.instance.deleteNote(note);
     }
-    // Fall back to local-only delete.
-    await DatabaseHelper.instance.deleteNote(note);
   }
 
   String? _getLoggedInEmail() {

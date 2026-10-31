@@ -1,14 +1,15 @@
-import 'dart:convert';
 import 'dart:developer';
 
-import 'package:appwrite/appwrite.dart';
-import 'package:crypto/crypto.dart';
-import 'package:flutter/material.dart';
+import 'package:extension_google_sign_in_as_googleapis_auth/extension_google_sign_in_as_googleapis_auth.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:my_note_app/appwrite/app_write_service.dart';
+import 'package:googleapis/drive/v3.dart' show DriveApi;
+import 'package:http/http.dart' as http;
 import 'package:my_note_app/controller/note_controller.dart';
 import 'package:my_note_app/database_helper/database_helper.dart';
+import 'package:my_note_app/drive/drive_repository.dart';
+import 'package:my_note_app/helper/note_image_helper.dart';
 import 'package:my_note_app/model/user_model.dart';
 import 'package:my_note_app/routing/app_routes.dart';
 import 'package:my_note_app/services/sync_service.dart';
@@ -26,7 +27,7 @@ class AuthController extends GetxController implements GetxService {
   bool get isSyncing => _isSyncing;
 
   final GoogleSignIn _googleSignIn = GoogleSignIn(
-    scopes: ['email', 'profile'],
+    scopes: ['email', 'profile', DriveApi.driveAppdataScope],
   );
 
   // ── Login ──────────────────────────────────────────────────────────────────
@@ -45,54 +46,28 @@ class AuthController extends GetxController implements GetxService {
         return;
       }
 
-      // Step 2: Derive a deterministic Appwrite password from the Google ID.
-      final password = _generateAppwritePassword(googleAccount.id);
-      log('[AuthController] Derived Appwrite password for ${googleAccount.email} (not shown for security)');
+      // Step 2: Make sure the Drive permission was actually granted.
+      final driveGranted =
+          await _googleSignIn.requestScopes([DriveApi.driveAppdataScope]);
 
-      // Step 3: Create or resume an Appwrite session.
-      final userId = await _createOrLoginAppwriteAccount(
-        email: googleAccount.email,
-        password: password,
-        name: googleAccount.displayName ?? '',
-      );
-
-      // Check if user account was previously deactivated
-      final prefs = await AppwriteService().account.getPrefs();
-      if (prefs.data['status'] == 'deactivated') {
-        // Immediately terminate session & log out
-        await AppwriteService().deleteCurrentSession();
-        await _googleSignIn.signOut();
-        
-        _isLoading = false;
-        update();
-
-        // Show deactivated warning toaster/dialog
-        Get.defaultDialog(
-          title: 'Account Deactivated',
-          middleText: 'This account has been deactivated/scheduled for deletion.\n\n'
-              'If you wish to restore your account, please contact support.',
-          textConfirm: 'OK',
-          confirmTextColor: Colors.white,
-          onConfirm: () => Get.back(),
-        );
-        return;
-      }
-
-      // Step 4: Persist user info locally.
-      await sharedPreferences.setString(AppConstants.authKey, googleAccount.email);
-      await sharedPreferences.setString(AppConstants.authName, googleAccount.displayName ?? '');
-      await sharedPreferences.setString(AppConstants.authImage, googleAccount.photoUrl ?? '');
-      await sharedPreferences.setString(AppConstants.authId, userId);
+      // Step 3: Persist user info locally.
+      await _saveAccount(googleAccount);
 
       _isLoading = false;
       update();
 
-      // Step 5: Navigate to sync progress screen for visual feedback.
+      if (!driveGranted) {
+        // Local notes keep working. The drawer offers to connect Drive later.
+        Get.offAllNamed(AppRoute.HOME);
+        Get.find<SyncService>().syncNow();
+        return;
+      }
+
+      // Step 4: Navigate to sync progress screen for visual feedback.
       Get.offAllNamed(AppRoute.SYNC_PROGRESS);
 
-      // Step 6: Start real-time subscription + trigger full sync (background).
-      Get.find<SyncService>().startRealtimeSync(googleAccount.email);
-      _triggerSync(googleAccount.email);
+      // Step 5: Upload local notes and download notes from Drive.
+      _triggerSync();
     } catch (e) {
       print('[AuthController] Login error: $e');
       _isLoading = false;
@@ -100,55 +75,104 @@ class AuthController extends GetxController implements GetxService {
     }
   }
 
-  // ── Logout & Deactivation ──────────────────────────────────────────────────
-
-  Future<void> googleLogOut() async {
+  /// Asks for Drive access for a user who is logged in without it, such as
+  /// someone who logged in before the app moved to Google Drive.
+  Future<bool> connectDrive() async {
     try {
-      Get.find<SyncService>().stopRealtimeSync();
-      await AppwriteService().deleteCurrentSession();
-      await _googleSignIn.signOut();
-      await sharedPreferences.remove(AppConstants.authKey);
-      await sharedPreferences.remove(AppConstants.authName);
-      await sharedPreferences.remove(AppConstants.authImage);
-      await sharedPreferences.remove(AppConstants.authId);
-    } catch (error) {
-      print('[AuthController] Logout error: $error');
+      final account = _googleSignIn.currentUser ??
+          await _googleSignIn.signInSilently() ??
+          await _googleSignIn.signIn();
+      if (account == null) return false;
+      if (!await _googleSignIn.requestScopes([DriveApi.driveAppdataScope])) {
+        return false;
+      }
+
+      // Notes linked to another account's Drive must upload as new files.
+      if (account.email != getUserToken()) {
+        await DatabaseHelper.instance.markAllForReupload();
+      }
+      await _saveAccount(account);
+
+      Get.find<SyncService>().clearDriveAccessPrompt();
+      _triggerSync();
+      return true;
+    } catch (e) {
+      print('[AuthController] Connect Drive error: $e');
+      return false;
     }
-    update();
   }
 
-  Future<bool> deactivateAccount() async {
+  /// Authenticated client for [DriveRepository]. Throws [DriveAuthRequired]
+  /// when only the user can fix access. Other errors, such as being offline,
+  /// pass through so they aren't mistaken for lost access.
+  Future<http.Client> driveClient({bool forceRefresh = false}) async {
+    try {
+      final account = _googleSignIn.currentUser ??
+          await _googleSignIn.signInSilently(suppressErrors: false);
+      if (account == null) throw DriveAuthRequired();
+      if (forceRefresh) await account.clearAuthCache();
+      final client = await _googleSignIn.authenticatedClient();
+      if (client == null) throw DriveAuthRequired();
+      return client;
+    } on PlatformException catch (e) {
+      const accessErrors = {
+        GoogleSignIn.kSignInRequiredError,
+        GoogleSignIn.kSignInFailedError,
+        'failed_to_recover_auth',
+        'user_recoverable_auth',
+      };
+      if (accessErrors.contains(e.code)) throw DriveAuthRequired();
+      rethrow;
+    }
+  }
+
+  // ── Logout & Data Deletion ─────────────────────────────────────────────────
+
+  /// Uploads pending changes, then signs out and clears this device, so the
+  /// next person to log in can't see these notes.
+  ///
+  /// Returns false, without signing out, if notes couldn't be uploaded and
+  /// [force] is false. Forcing permanently loses those notes on this device.
+  Future<bool> googleLogOut({bool force = false}) async {
+    _isLoading = true;
+    update();
+    try {
+      final sync = Get.find<SyncService>();
+      if (!force) {
+        await sync.syncNow();
+        final pending = await DatabaseHelper.instance.getPendingNotes();
+        if (pending.isNotEmpty) return false;
+      }
+      await sync.reset();
+      await _googleSignIn.signOut();
+      await _clearLocalData();
+      return true;
+    } catch (error) {
+      print('[AuthController] Logout error: $error');
+      return false;
+    } finally {
+      _isLoading = false;
+      update();
+    }
+  }
+
+  /// Permanently deletes the user's notes from Drive and this device, then
+  /// revokes the app's access to their Google account.
+  Future<bool> deleteAccountData() async {
     _isLoading = true;
     update();
 
     try {
-      // 1. Update preferences to mark status as deactivated in Appwrite
-      await AppwriteService().account.updatePrefs(prefs: {
-        'status': 'deactivated',
-        'deactivatedAt': DateTime.now().toIso8601String(),
-      });
+      final sync = Get.find<SyncService>();
+      await sync.reset();
 
-      // 2. Stop real-time sync subscription
-      Get.find<SyncService>().stopRealtimeSync();
+      // Cloud data goes first. If this fails, nothing local has been lost.
+      final drive = Get.find<DriveRepository>();
+      await drive.deleteAllAppData();
+      drive.endSession();
 
-      // 3. Delete Appwrite session & sign out from Google
-      await AppwriteService().deleteCurrentSession();
-      await _googleSignIn.signOut();
-
-      // 4. Wipe local offline SQLite notes for privacy
-      await DatabaseHelper.instance.deleteAllNotes();
-
-      // 5. Clear GetX NoteController's cached notes
-      if (Get.isRegistered<NoteController>()) {
-        Get.find<NoteController>().notes.clear();
-        Get.find<NoteController>().update();
-      }
-
-      // 6. Delete all auth credentials from SharedPreferences
-      await sharedPreferences.remove(AppConstants.authKey);
-      await sharedPreferences.remove(AppConstants.authName);
-      await sharedPreferences.remove(AppConstants.authImage);
-      await sharedPreferences.remove(AppConstants.authId);
+      await _googleSignIn.disconnect();
+      await _clearLocalData();
 
       _isLoading = false;
       update();
@@ -157,110 +181,49 @@ class AuthController extends GetxController implements GetxService {
       Get.offAllNamed(AppRoute.WELCOME);
       return true;
     } catch (e) {
-      print('[AuthController] Deactivation error: $e');
+      print('[AuthController] Delete data error: $e');
       _isLoading = false;
       update();
       return false;
     }
   }
 
-  // ── Session Management ─────────────────────────────────────────────────────
-
-  /// Ensures an Appwrite session is active. Called on app resume.
-  /// If session expired, re-authenticates silently via Google.
-  Future<void> ensureSession() async {
-    if (!isLoggedIn()) return;
-    final hasSession = await AppwriteService().hasActiveSession();
-    if (hasSession) return;
-
-    try {
-      // Try silent Google re-sign-in (no UI shown if already signed in).
-      final googleAccount = await _googleSignIn.signInSilently();
-      if (googleAccount == null) return;
-      final password = _generateAppwritePassword(googleAccount.id);
-      await _createOrLoginAppwriteAccount(
-        email: googleAccount.email,
-        password: password,
-        name: googleAccount.displayName ?? '',
-      );
-    } catch (e) {
-      print('[AuthController] Silent re-auth failed: $e');
-    }
-  }
-
   // ── Manual Sync ────────────────────────────────────────────────────────────
 
   Future<void> syncNow() async {
-    final email = getUserToken();
-    if (email == null) return;
-    await ensureSession();
-    _triggerSync(email);
+    if (getUserToken() == null) return;
+    _triggerSync();
   }
 
   // ── Private helpers ────────────────────────────────────────────────────────
 
-  /// Tries to create an Appwrite session. If account doesn't exist,
-  /// creates it first, then creates the session. Returns the Appwrite user.$id.
-  Future<String> _createOrLoginAppwriteAccount({
-    required String email,
-    required String password,
-    required String name,
-  }) async {
-    final acc = AppwriteService().account;
-
-    log('[AuthController] Attempting Appwrite login for $email');
-    // Fast path: session for existing account.
-    try {
-      await acc.createEmailPasswordSession(email: email, password: password);
-      final user = await acc.get();
-      return user.$id;
-    } on AppwriteException catch (e) {
-      // Only continue if it's a "user not found" or "invalid credentials" error.
-      if (e.code != 401 &&
-          e.type != 'user_not_found' &&
-          e.type != 'user_invalid_credentials') {
-        rethrow;
-      }
-    }
-
-    // Slow path: account doesn't exist yet — create it.
-    try {
-      await acc.create(
-        userId: ID.unique(),
-        email: email,
-        password: password,
-        name: name,
-      );
-    } on AppwriteException catch (e) {
-      // Ignore "user already exists" — can happen on concurrent logins.
-      if (e.code != 409 && e.type != 'user_already_exists') rethrow;
-    }
-
-    await acc.createEmailPasswordSession(email: email, password: password);
-    final user = await acc.get();
-    return user.$id;
+  Future<void> _saveAccount(GoogleSignInAccount account) async {
+    await sharedPreferences.setString(AppConstants.authKey, account.email);
+    await sharedPreferences.setString(AppConstants.authName, account.displayName ?? '');
+    await sharedPreferences.setString(AppConstants.authImage, account.photoUrl ?? '');
   }
 
-  /// Generates a deterministic Appwrite password from [googleId].
-  ///
-  /// Uses HMAC-SHA256 with a private salt. Always produces the same
-  /// 64-char hex string for the same Google account on any device.
-  ///
-  /// ⚠️ NEVER change the salt after the app has been published — doing so
-  /// will lock all existing users out of their Appwrite accounts.
-  String _generateAppwritePassword(String googleId) {
-    const salt = 'my_note_app_v1_2025';
-    final hmac = Hmac(sha256, utf8.encode(salt));
-    return hmac.convert(utf8.encode(googleId)).toString();
+  Future<void> _clearLocalData() async {
+    await DatabaseHelper.instance.deleteAllNotes();
+    await NoteImageHelper.deleteAll();
+
+    if (Get.isRegistered<NoteController>()) {
+      final notes = Get.find<NoteController>();
+      notes.notes.clear();
+      notes.deletedNotes.clear();
+      notes.update();
+    }
+
+    await sharedPreferences.remove(AppConstants.authKey);
+    await sharedPreferences.remove(AppConstants.authName);
+    await sharedPreferences.remove(AppConstants.authImage);
   }
 
-  void _triggerSync(String email) async {
+  void _triggerSync() async {
     _isSyncing = true;
     update();
     try {
-      await Get.find<SyncService>().syncOnLogin(email);
-    } catch (e) {
-      print('[AuthController] Sync error: $e');
+      await Get.find<SyncService>().syncNow();
     } finally {
       _isSyncing = false;
       update();
@@ -272,9 +235,6 @@ class AuthController extends GetxController implements GetxService {
   bool isLoggedIn() => sharedPreferences.containsKey(AppConstants.authKey);
 
   String? getUserToken() => sharedPreferences.getString(AppConstants.authKey);
-
-  String? getAppwriteUserId() =>
-      sharedPreferences.getString(AppConstants.authId);
 
   UserModel? getUser() {
     return UserModel(
