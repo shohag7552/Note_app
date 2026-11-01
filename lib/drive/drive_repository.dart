@@ -63,6 +63,18 @@ class DriveRepository {
     return files;
   }
 
+  /// The file's current version, or null if it no longer exists.
+  Future<String?> getVersion(String fileId) async {
+    try {
+      final file = await _call(
+        (api) => api.files.get(fileId, $fields: 'version'),
+      );
+      return (file as drive.File).version ?? '';
+    } on DriveFileNotFound {
+      return null;
+    }
+  }
+
   Future<Map<String, dynamic>> downloadJson(String fileId) async {
     final bytes = await downloadBytes(fileId);
     return jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;

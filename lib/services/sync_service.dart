@@ -47,6 +47,12 @@ class SyncService extends GetxController implements GetxService {
   bool _runAgain = false;
   DateTime? _lastRunAt;
 
+  // Notes open on screen. Their text is on screen, so changing the row now
+  // would be overwritten without notice when the screen saves.
+  final List<int> _heldNotes = [];
+  // Notes that need merging first, so uploading them would overwrite Drive.
+  final Set<int> _blockedNotes = {};
+
   // ── Public API ──────────────────────────────────────────────────────────────
 
   /// Schedules a sync shortly after a local change, batching quick edits.
@@ -85,6 +91,15 @@ class SyncService extends GetxController implements GetxService {
     await _currentRun;
     _driveAccessPromptShown = false;
     _setStatus(false, 'idle');
+  }
+
+  /// Keeps sync from changing a note while a screen shows it.
+  void holdNote(int id) => _heldNotes.add(id);
+
+  /// Ends [holdNote] and picks up anything that was waiting.
+  void releaseNote(int id) {
+    _heldNotes.remove(id);
+    requestSync();
   }
 
   /// Allows the Drive access prompt to appear again after access was granted.
@@ -144,6 +159,8 @@ class SyncService extends GetxController implements GetxService {
     };
 
     var hadFailures = await _merge(remoteFiles);
+    // A screen opened from now on must start from the merged text.
+    _refreshNoteLists();
     if (await _pushPending(remoteFiles, remoteImages)) hadFailures = true;
     if (await _downloadMissingImages(remoteImages)) hadFailures = true;
     if (!hadFailures) await _deleteUnusedImages(remoteImages);
@@ -155,6 +172,7 @@ class SyncService extends GetxController implements GetxService {
   Future<bool> _merge(List<RemoteFile> remoteFiles) async {
     final plan = planSync(await _db.getAllNotesForSync(), remoteFiles);
     var hadFailures = false;
+    _blockedNotes.clear();
 
     Future<void> guarded(String label, Future<void> Function() step) async {
       try {
@@ -173,21 +191,35 @@ class SyncService extends GetxController implements GetxService {
       });
     }
     for (final (local, remote) in plan.toOverwrite) {
+      if (_heldNotes.contains(local.id)) continue;
       await guarded('Overwrite ${remote.name}', () async {
         await _db.overwriteFromRemote(local.id!, await _download(remote));
       });
     }
     for (final (local, remote) in plan.conflicts) {
+      _blockedNotes.add(local.id!);
+      if (_heldNotes.contains(local.id)) continue;
       await guarded('Conflict ${remote.name}', () async {
         final resolved = resolveConflict(local, await _download(remote));
-        await _db.saveConflict(winner: resolved.winner, copy: resolved.copy);
+        final saved = await _db.saveConflict(
+          winner: resolved.winner,
+          copy: resolved.copy,
+          expectedUpdatedAt: local.updatedAt,
+        );
+        if (saved) _blockedNotes.remove(local.id);
       });
     }
     for (final (local, remote) in plan.toLink) {
       await _db.linkRemote(local.id!, remote.id, remote.version);
     }
     for (final note in plan.toDeleteLocally) {
-      await _db.deleteNote(note);
+      if (_heldNotes.contains(note.id)) continue;
+      await guarded('Delete ${note.syncId}', () async {
+        // A listing can lag behind Drive, so confirm before removing the note.
+        if (await _repo.getVersion(note.cloudId!) == null) {
+          await _db.deleteSyncedNote(note.id!);
+        }
+      });
     }
     await _db.markForReupload(plan.toReupload.map((n) => n.id!).toList());
     for (final duplicate in plan.duplicates) {
@@ -215,6 +247,7 @@ class SyncService extends GetxController implements GetxService {
     final remoteNames = {for (final file in remoteFiles) file.name: file};
 
     for (final note in await _db.getPendingNotes()) {
+      if (_blockedNotes.contains(note.id)) continue;
       try {
         if (note.syncStatus == 'pendingDelete') {
           final fileId =
@@ -244,7 +277,7 @@ class SyncService extends GetxController implements GetxService {
     final localized = await NoteImageHelper.localizeContent(note.content);
     if (localized != null && localized != note.content) {
       note.content = localized;
-      await _db.updateContentForSync(note.id!, localized);
+      await _db.updateContentForSync(note.id!, localized, note.updatedAt);
     }
     for (final path in NoteImageHelper.referencedImages(note.content)) {
       final name = NoteImageHelper.driveName(path);
@@ -259,6 +292,15 @@ class SyncService extends GetxController implements GetxService {
   }
 
   Future<void> _uploadNote(Note note) async {
+    final fileId = note.cloudId;
+    if (fileId != null) {
+      final current = await _repo.getVersion(fileId);
+      if (current != null && current != note.remoteVersion) {
+        // Drive changed since the listing. Merge first on the next run.
+        _runAgain = true;
+        return;
+      }
+    }
     final data = note.toDriveJson();
     RemoteFile uploaded;
     try {
@@ -274,6 +316,7 @@ class SyncService extends GetxController implements GetxService {
       cloudId: uploaded.id,
       remoteVersion: uploaded.version,
       uploadedUpdatedAt: note.updatedAt,
+      syncBase: note.syncState,
     );
   }
 

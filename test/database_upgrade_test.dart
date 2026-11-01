@@ -39,7 +39,7 @@ Future<Database> _openOld(int version, String columns, void Function(Batch) seed
   final batch = db.batch();
   seed(batch);
   await batch.commit();
-  await DatabaseHelper.upgradeSchema(db, version, 4);
+  await DatabaseHelper.upgradeSchema(db, version, 5);
   return db;
 }
 
@@ -154,6 +154,20 @@ void main() {
     expect(row['syncId'], isNotNull);
     expect(row['syncStatus'], 'pending');
     await db.close();
+  });
+
+  test('v4 notes get a sync base only if they match Drive', () async {
+    final db = await _openOld(3, _v3Columns, (b) => b.insert('notes', _userFields));
+    await db.update('notes', {'syncBase': null, 'syncStatus': 'synced'});
+    await db.execute('ALTER TABLE notes RENAME COLUMN syncBase TO oldBase');
+    await db.insert('notes', {..._userFields, 'syncStatus': 'pending'});
+
+    await DatabaseHelper.upgradeSchema(db, 4, 5);
+
+    final rows = await db.query('notes', orderBy: 'note_id');
+    expect(rows[0]['syncBase'], Note.fromJson(rows[0]).syncState);
+    expect(rows[1]['syncBase'], isNull);
+    _expectUserFieldsUnchanged(rows[0]);
   });
 
   test('rows already waiting for deletion are not kept', () async {

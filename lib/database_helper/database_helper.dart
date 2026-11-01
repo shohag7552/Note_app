@@ -13,7 +13,7 @@ class DatabaseHelper {
   late Database _database;
 
   static const _dbName = "notes.db";
-  static const _dbVersion = 4; // bumped: added Drive sync columns
+  static const _dbVersion = 5; // bumped: added syncBase for merging
   static const _tableName = "notes";
 
   Future<Database> get database async {
@@ -41,6 +41,7 @@ class DatabaseHelper {
         remoteVersion TEXT,
         updatedAt INTEGER,
         syncStatus TEXT NOT NULL DEFAULT 'synced',
+        syncBase TEXT,
         title TEXT NOT NULL,
         content TEXT NOT NULL,
         dateTimeEdited TEXT NOT NULL,
@@ -72,6 +73,21 @@ class DatabaseHelper {
       await db.execute("ALTER TABLE $_tableName ADD COLUMN remoteVersion TEXT");
       await db.execute("ALTER TABLE $_tableName ADD COLUMN updatedAt INTEGER");
       await _prepareNotesForDrive(db);
+    }
+    if (oldVersion < 5) {
+      await db.execute("ALTER TABLE $_tableName ADD COLUMN syncBase TEXT");
+      // A synced note matches Drive, so its current state is the base.
+      final rows = await db.query(_tableName, where: "syncStatus = 'synced'");
+      final batch = db.batch();
+      for (final row in rows) {
+        batch.update(
+          _tableName,
+          {'syncBase': Note.fromJson(row).syncState},
+          where: 'note_id = ?',
+          whereArgs: [row['note_id']],
+        );
+      }
+      await batch.commit(noResult: true);
     }
   }
 
@@ -105,22 +121,16 @@ class DatabaseHelper {
     await batch.commit(noResult: true);
   }
 
-  Future<int> getNextId() async {
-   final db = await instance.database;
-   final result = await db.rawQuery('SELECT MAX(note_id) as maxId FROM $_tableName');
-   int? maxId = result.first['maxId'] as int?;
-  return (maxId ?? 0) + 1;
- }
-
   /// Add Note
   Future<int> addNote(Note note) async {
-    // int newId = await getNextId();
-    note.id = await getNextId();
+    // SQLite assigns the id, so inserts from the editor and sync can't collide.
+    note.id = null;
     note.syncId ??= const Uuid().v4();
     note.updatedAt ??= DateTime.now().toUtc().millisecondsSinceEpoch;
-    print('=====new id: ${note.id}');
     Database db = await instance.database;
-    return await db.insert(_tableName, note.toJson());
+    note.id = await db.insert(_tableName, note.toJson());
+    print('=====new id: ${note.id}');
+    return note.id!;
   }
 
   /// Delete Note
@@ -160,7 +170,8 @@ class DatabaseHelper {
     final values = note.toJson()
       ..remove('syncId')
       ..remove('cloudId')
-      ..remove('remoteVersion');
+      ..remove('remoteVersion')
+      ..remove('syncBase');
     print('=====sss===>$values');
     Database db = await instance.database;
     return await db.update(
@@ -168,6 +179,22 @@ class DatabaseHelper {
       values,
       where: "note_id = ?",
       whereArgs: [note.id],
+    );
+  }
+
+  /// Changes only the given columns, because a list held by a screen can be
+  /// older than the row and must not write its old text back.
+  Future<void> updateNoteFields(int noteId, Map<String, Object?> fields) async {
+    final db = await instance.database;
+    await db.update(
+      _tableName,
+      {
+        ...fields,
+        'syncStatus': 'pending',
+        'updatedAt': DateTime.now().toUtc().millisecondsSinceEpoch,
+      },
+      where: 'note_id = ?',
+      whereArgs: [noteId],
     );
   }
 
@@ -330,13 +357,14 @@ class DatabaseHelper {
     required String cloudId,
     required String remoteVersion,
     required int? uploadedUpdatedAt,
+    required String syncBase,
   }) async {
     final db = await instance.database;
     await db.rawUpdate(
-      "UPDATE $_tableName SET cloudId = ?, remoteVersion = ?, "
+      "UPDATE $_tableName SET cloudId = ?, remoteVersion = ?, syncBase = ?, "
       "syncStatus = CASE WHEN updatedAt IS ? THEN 'synced' ELSE syncStatus END "
       "WHERE note_id = ?",
-      [cloudId, remoteVersion, uploadedUpdatedAt, localId],
+      [cloudId, remoteVersion, syncBase, uploadedUpdatedAt, localId],
     );
   }
 
@@ -349,6 +377,17 @@ class DatabaseHelper {
     await db.update(
       _tableName,
       values,
+      where: "note_id = ? AND syncStatus = 'synced'",
+      whereArgs: [localId],
+    );
+  }
+
+  /// Removes a note deleted on another device, unless the user changed it
+  /// meanwhile.
+  Future<void> deleteSyncedNote(int localId) async {
+    final db = await instance.database;
+    await db.delete(
+      _tableName,
       where: "note_id = ? AND syncStatus = 'synced'",
       whereArgs: [localId],
     );
@@ -372,7 +411,7 @@ class DatabaseHelper {
     final placeholders = List.filled(ids.length, '?').join(',');
     await db.update(
       _tableName,
-      {'cloudId': null, 'remoteVersion': null, 'syncStatus': 'pending'},
+      {'cloudId': null, 'remoteVersion': null, 'syncBase': null, 'syncStatus': 'pending'},
       where: 'note_id IN ($placeholders)',
       whereArgs: ids,
     );
@@ -383,7 +422,7 @@ class DatabaseHelper {
     final db = await instance.database;
     await db.update(
       _tableName,
-      {'cloudId': null, 'remoteVersion': null, 'syncStatus': 'pending'},
+      {'cloudId': null, 'remoteVersion': null, 'syncBase': null, 'syncStatus': 'pending'},
       where: "syncStatus != 'pendingDelete'",
     );
     await db.delete(
@@ -393,33 +432,39 @@ class DatabaseHelper {
   }
 
   /// Saves a sync-side content rewrite. updatedAt stays the same on purpose,
-  /// because rewriting an image path is not a user edit.
-  Future<void> updateContentForSync(int localId, String content) async {
+  /// because rewriting an image path is not a user edit. It is skipped if the
+  /// user changed the note meanwhile, so their newer text isn't replaced.
+  Future<void> updateContentForSync(int localId, String content, int? expectedUpdatedAt) async {
     final db = await instance.database;
     await db.update(
       _tableName,
       {'content': content},
-      where: 'note_id = ?',
-      whereArgs: [localId],
+      where: 'note_id = ? AND updatedAt IS ?',
+      whereArgs: [localId, expectedUpdatedAt],
     );
   }
 
   /// Applies both sides of a conflict in one transaction, so a crash can't
-  /// overwrite the row without also saving the conflict copy.
-  Future<void> saveConflict({required Note winner, Note? copy}) async {
+  /// overwrite the row without also saving the conflict copy. Returns false and
+  /// changes nothing if the user edited the note since [expectedUpdatedAt].
+  Future<bool> saveConflict({
+    required Note winner,
+    Note? copy,
+    required int? expectedUpdatedAt,
+  }) async {
     final db = await instance.database;
-    await db.transaction((txn) async {
-      await txn.update(
+    return db.transaction((txn) async {
+      final updated = await txn.update(
         _tableName,
         winner.toJson()..remove('note_id'),
-        where: 'note_id = ?',
-        whereArgs: [winner.id],
+        where: 'note_id = ? AND updatedAt IS ?',
+        whereArgs: [winner.id, expectedUpdatedAt],
       );
+      if (updated == 0) return false;
       if (copy != null) {
-        final result = await txn.rawQuery('SELECT MAX(note_id) as maxId FROM $_tableName');
-        copy.id = ((result.first['maxId'] as int?) ?? 0) + 1;
-        await txn.insert(_tableName, copy.toJson());
+        copy.id = await txn.insert(_tableName, copy.toJson());
       }
+      return true;
     });
   }
 

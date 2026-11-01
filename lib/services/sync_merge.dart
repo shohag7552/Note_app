@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:my_note_app/drive/drive_repository.dart';
 import 'package:my_note_app/model/note_model.dart';
 
@@ -94,40 +96,67 @@ SyncPlan planSync(List<Note> locals, List<RemoteFile> remoteFiles) {
   return plan;
 }
 
-/// Result of resolving a conflict: the row to keep and, when the text differs,
-/// a copy of the older version so nothing the user wrote is lost.
+/// Result of merging a note changed on both sides: the row to keep and, when
+/// both sides changed the text, a copy of the older text so nothing is lost.
 class ConflictResolution {
   final Note winner;
   final Note? copy;
   const ConflictResolution(this.winner, this.copy);
 }
 
-/// Resolves a note changed on both sides. The newer [Note.updatedAt] wins, and
-/// [Note.content] differences keep the older text as a separate note.
+/// Merges a note whose local row and Drive file both differ from the last sync.
+/// A field changed on one side keeps that change. A field changed on both sides
+/// takes the newer [Note.updatedAt]. Without a [Note.syncBase], for example at
+/// the first sync of an upgraded note, every difference counts as both sides.
 ConflictResolution resolveConflict(Note local, Note remote) {
-  final localWins = (local.updatedAt ?? 0) > (remote.updatedAt ?? 0);
-
-  // Build the copy first, because the winner below is the same object.
-  final Note? copy =
-      local.content == remote.content
+  final newer =
+      (local.updatedAt ?? 0) > (remote.updatedAt ?? 0) ? local : remote;
+  final older = identical(newer, local) ? remote : local;
+  final base =
+      local.syncBase == null
           ? null
-          : (localWins ? remote : local).toConflictCopy();
+          : jsonDecode(local.syncBase!) as Map<String, dynamic>;
 
-  if (localWins && !_sameUserData(local, remote)) {
-    return ConflictResolution(
-      local
-        ..cloudId = remote.cloudId
-        ..remoteVersion = remote.remoteVersion
-        ..syncStatus = 'pending',
-      copy,
-    );
+  bool changed(Note note, String field) =>
+      base == null || note.syncStateFields[field] != base[field];
+
+  Note sideFor(String field) {
+    final localChanged = changed(local, field);
+    if (localChanged == changed(remote, field)) return newer;
+    return localChanged ? local : remote;
   }
-  return ConflictResolution(
-    remote
-      ..id = local.id
-      ..syncStatus = 'synced',
-    copy,
+
+  final text = sideFor('content');
+  final trash = sideFor('isDeleted');
+  final textConflict =
+      local.content != remote.content &&
+      changed(local, 'content') &&
+      changed(remote, 'content');
+
+  final merged = Note(
+    id: local.id,
+    syncId: remote.syncId ?? local.syncId,
+    cloudId: remote.cloudId,
+    remoteVersion: remote.remoteVersion,
+    syncBase: remote.syncState,
+    updatedAt: newer.updatedAt,
+    title: text.title,
+    content: text.content,
+    dateTimeEdited: text.dateTimeEdited,
+    dateTimeCreated: remote.dateTimeCreated,
+    isFavorite: sideFor('isFavorite').isFavorite,
+    color: sideFor('color').color,
+    isDeleted: trash.isDeleted,
+    deletedAt: trash.deletedAt,
   );
+  if (_sameUserData(merged, remote)) {
+    merged
+      ..updatedAt = remote.updatedAt
+      ..syncStatus = 'synced';
+  } else {
+    merged.syncStatus = 'pending';
+  }
+  return ConflictResolution(merged, textConflict ? older.toConflictCopy() : null);
 }
 
 bool _sameUserData(Note a, Note b) =>

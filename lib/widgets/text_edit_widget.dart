@@ -12,6 +12,7 @@ import 'package:my_note_app/helper/note_image_helper.dart';
 import 'package:my_note_app/helper/quill_helper.dart';
 import 'package:my_note_app/model/note_model.dart';
 import 'package:my_note_app/routing/app_routes.dart';
+import 'package:my_note_app/services/sync_service.dart';
 import 'package:my_note_app/utils/padding_size.dart';
 import 'package:my_note_app/widgets/color_picker_sheet.dart';
 import 'package:my_note_app/widgets/custom_image_embed.dart';
@@ -54,12 +55,16 @@ class _TextEditWidgetState extends State<TextEditWidget> with WidgetsBindingObse
     _savedColor = _selectedColor;
     _noteId = widget.note?.id;
     _createdAt = widget.note?.dateTimeCreated;
-    if (!widget.readOnly) WidgetsBinding.instance.addObserver(this);
+    if (!widget.readOnly) {
+      WidgetsBinding.instance.addObserver(this);
+      if (_noteId != null) Get.find<SyncService>().holdNote(_noteId!);
+    }
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    if (!widget.readOnly && _noteId != null) Get.find<SyncService>().releaseNote(_noteId!);
     super.dispose();
   }
 
@@ -100,6 +105,7 @@ class _TextEditWidgetState extends State<TextEditWidget> with WidgetsBindingObse
       print('[TextEditWidget] Save failed: $e');
       return false;
     }
+    if (_noteId == null) Get.find<SyncService>().holdNote(note.id!);
     _noteId = note.id;
     _createdAt = note.dateTimeCreated;
     _savedContent = content;

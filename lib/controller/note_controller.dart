@@ -125,9 +125,7 @@ class NoteController extends GetxController implements GetxService {
   }
 
   Future<void> updateNoteColor(int id, String color) async {
-    final note = notes.firstWhere((n) => n.id == id);
-    note.color = color;
-    await DatabaseHelper.instance.updateNote(note);
+    await DatabaseHelper.instance.updateNoteFields(id, {'color': color});
     getAllNotes();
     _requestSync();
   }
@@ -135,7 +133,7 @@ class NoteController extends GetxController implements GetxService {
   void favoriteNote(int id) async {
     final note = notes.firstWhere((n) => n.id == id);
     note.isFavorite = note.isFavorite == 1 ? 0 : 1;
-    await DatabaseHelper.instance.updateNote(note);
+    await DatabaseHelper.instance.updateNoteFields(id, {'isFavorite': note.isFavorite});
     getAllNotes();
     _requestSync();
   }

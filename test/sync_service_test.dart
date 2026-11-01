@@ -35,6 +35,10 @@ class FakeDrive extends DriveRepository {
   Exception? failCreates;
   Exception? failLists;
   Completer<void>? holdList;
+  Exception? failDownloads;
+  Completer<void>? holdDownload;
+  Set<String> hiddenFromList = {};
+  void Function()? afterList;
 
   @override
   Future<List<RemoteFile>> listFiles() async {
@@ -43,12 +47,38 @@ class FakeDrive extends DriveRepository {
     if (running > maxRunning) maxRunning = running;
     await holdList?.future;
     running--;
-    return files.values.toList();
+    final listed = files.values.where((f) => !hiddenFromList.contains(f.id)).toList();
+    afterList?.call();
+    afterList = null;
+    return listed;
   }
 
   @override
-  Future<Map<String, dynamic>> downloadJson(String fileId) async =>
-      jsonDecode(utf8.decode(contents[fileId]!)) as Map<String, dynamic>;
+  Future<Map<String, dynamic>> downloadJson(String fileId) async {
+    if (failDownloads != null) throw failDownloads!;
+    await holdDownload?.future;
+    return jsonDecode(utf8.decode(contents[fileId]!)) as Map<String, dynamic>;
+  }
+
+  @override
+  Future<String?> getVersion(String fileId) async => files[fileId]?.version;
+
+  /// Drive raises a file's version for changes that aren't edits to its text.
+  void bumpVersion(String fileId) {
+    final file = files[fileId]!;
+    files[fileId] = RemoteFile(
+      id: file.id,
+      name: file.name,
+      version: '${int.parse(file.version) + 1}',
+      modifiedTime: DateTime.now(),
+    );
+  }
+
+  /// Simulates another device saving its version of a note to Drive.
+  void writeFromOtherDevice(Note row, Map<String, dynamic> changes) {
+    contents[row.cloudId!] = utf8.encode(jsonEncode({...row.toDriveJson(), ...changes}));
+    bumpVersion(row.cloudId!);
+  }
 
   @override
   Future<List<int>> downloadBytes(String fileId) async => contents[fileId]!;
@@ -226,6 +256,7 @@ void main() {
       cloudId: 'f',
       remoteVersion: '1',
       uploadedUpdatedAt: note.updatedAt! - 1,
+      syncBase: 'base',
     );
     expect((await _row(note.syncId!)).syncStatus, 'pending');
   });
@@ -327,6 +358,176 @@ void main() {
     expect(contents, contains('theirs'));
     expect(contents.where((c) => c!.contains('mine')), hasLength(1));
     expect(drive.noteFiles, hasLength(2));
+  });
+
+  group('no false conflicts or lost changes', () {
+    Future<Note> uploaded(String content) async {
+      final note = _note(content);
+      await _db.addNote(note);
+      await sync.syncNow();
+      return _row(note.syncId!);
+    }
+
+    test('a Drive version bump with no text change makes no conflict copy', () async {
+      final row = await uploaded('base');
+      drive.bumpVersion(row.cloudId!);
+      await _db.updateNote(row..content = 'mine');
+
+      await sync.syncNow();
+
+      final notes = await _db.getAllNotesForSync();
+      expect(notes.single.content, 'mine');
+      expect(notes.single.syncStatus, 'synced');
+      expect(drive.noteJson(row.syncId!)['content'], 'mine');
+    });
+
+    test('a favorite here and a text edit elsewhere merge with no copy', () async {
+      final row = await uploaded('base');
+      drive.writeFromOtherDevice(row, {'content': 'theirs', 'updatedAt': row.updatedAt! + 1000});
+      await _db.updateNote(row..isFavorite = 1);
+
+      await sync.syncNow();
+
+      final merged = (await _db.getAllNotesForSync()).single;
+      expect(merged.content, 'theirs');
+      expect(merged.isFavorite, 1);
+      expect(drive.noteJson(row.syncId!)['content'], 'theirs');
+      expect(drive.noteJson(row.syncId!)['isFavorite'], 1);
+    });
+
+    test('a text edit here and a color change elsewhere merge with no copy', () async {
+      final row = await uploaded('base');
+      await _db.updateNote(row..content = 'mine');
+      drive.writeFromOtherDevice(row, {
+        'content': 'base',
+        'color': '#FF445566',
+        'updatedAt': row.updatedAt! + 1000,
+      });
+
+      await sync.syncNow();
+
+      final merged = (await _db.getAllNotesForSync()).single;
+      expect(merged.content, 'mine');
+      expect(merged.color, '#FF445566');
+      expect(drive.noteJson(row.syncId!)['content'], 'mine');
+    });
+
+    test('a failed conflict download does not overwrite the Drive edit', () async {
+      final row = await uploaded('base');
+      await _db.updateNote(row..content = 'mine');
+      drive.writeFromOtherDevice(row, {'content': 'theirs', 'updatedAt': row.updatedAt! + 1000});
+
+      drive.failDownloads = Exception('offline');
+      await sync.syncNow();
+      expect(drive.noteJson(row.syncId!)['content'], 'theirs');
+      expect(sync.syncStatus, 'error');
+
+      drive.failDownloads = null;
+      await sync.syncNow();
+      final contents = (await _db.getAllNotesForSync()).map((n) => n.content).toList();
+      expect(contents, contains('theirs'));
+      expect(contents.where((c) => c!.contains('mine')), hasLength(1));
+    });
+
+    test('Drive changing after the listing is merged, not overwritten', () async {
+      final row = await uploaded('base');
+      await _db.updateNote(row..content = 'mine');
+      drive.afterList = () => drive.writeFromOtherDevice(
+          row, {'content': 'theirs', 'updatedAt': row.updatedAt! + 1000});
+
+      await sync.syncNow();
+
+      final contents = (await _db.getAllNotesForSync()).map((n) => n.content).toList();
+      expect(contents, contains('theirs'));
+      expect(contents.where((c) => c!.contains('mine')), hasLength(1));
+    });
+
+    test('an edit made while a conflict downloads is not overwritten', () async {
+      final row = await uploaded('base');
+      await _db.updateNote(row..content = 'first edit');
+      drive.writeFromOtherDevice(row, {'content': 'theirs', 'updatedAt': row.updatedAt! + 1000});
+
+      final hold = drive.holdDownload = Completer<void>();
+      final run = sync.syncNow();
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      await _db.updateNote((await _row(row.syncId!))..content = 'second edit');
+      hold.complete();
+      await run;
+      drive.holdDownload = null;
+      await sync.syncNow();
+
+      final contents = (await _db.getAllNotesForSync()).map((n) => n.content).toList();
+      expect(contents.where((c) => c!.contains('second edit')), hasLength(1));
+      expect(contents, contains('theirs'));
+    });
+
+    test('a note missing from a late listing is kept while its file exists', () async {
+      final kept = await uploaded('kept');
+      await uploaded('other');
+      drive.hiddenFromList = {kept.cloudId!};
+
+      await sync.syncNow();
+
+      expect((await _db.getAllNotesForSync()).map((n) => n.content), contains('kept'));
+    });
+
+    test('a note is removed once its Drive file is really gone', () async {
+      final gone = await uploaded('gone');
+      await uploaded('other');
+      await drive.deleteFile(gone.cloudId!);
+
+      await sync.syncNow();
+
+      expect((await _db.getAllNotesForSync()).map((n) => n.content), isNot(contains('gone')));
+    });
+
+    test('a note open on screen is not changed until it is released', () async {
+      final row = await uploaded('base');
+      drive.writeFromOtherDevice(row, {'content': 'theirs', 'updatedAt': row.updatedAt! + 1000});
+
+      sync.holdNote(row.id!);
+      await sync.syncNow();
+      expect((await _row(row.syncId!)).content, 'base');
+
+      sync.releaseNote(row.id!);
+      await sync.syncNow();
+      expect((await _row(row.syncId!)).content, 'theirs');
+    });
+
+    test('saving an open note made stale by Drive keeps both versions', () async {
+      final row = await uploaded('base');
+      sync.holdNote(row.id!);
+      drive.writeFromOtherDevice(row, {'content': 'theirs', 'updatedAt': row.updatedAt! + 1000});
+      await sync.syncNow();
+
+      await _db.updateNote((await _row(row.syncId!))..content = 'mine');
+      await sync.syncNow();
+      expect(drive.noteJson(row.syncId!)['content'], 'theirs');
+
+      sync.releaseNote(row.id!);
+      await sync.syncNow();
+      final contents = (await _db.getAllNotesForSync()).map((n) => n.content).toList();
+      expect(contents, hasLength(2));
+      expect(contents.where((c) => c!.contains('mine')), hasLength(1));
+      expect(contents, contains('theirs'));
+    });
+
+    test('a favorite saved from a stale list keeps the newer text', () async {
+      final stale = await uploaded('base');
+      await _db.updateNote((await _row(stale.syncId!))..content = 'newer');
+
+      await _db.updateNoteFields(stale.id!, {'isFavorite': 1});
+
+      final row = await _row(stale.syncId!);
+      expect(row.content, 'newer');
+      expect(row.isFavorite, 1);
+      expect(row.syncStatus, 'pending');
+    });
+
+    test('two notes added at the same moment both save', () async {
+      await Future.wait([_db.addNote(_note('a')), _db.addNote(_note('b'))]);
+      expect(await _db.getAllNotesForSync(), hasLength(2));
+    });
   });
 
   group('images', () {

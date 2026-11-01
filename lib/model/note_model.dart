@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:crypto/crypto.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 
@@ -10,6 +11,7 @@ class Note {
   String? remoteVersion; // Drive file version this row was last synced with
   int? updatedAt;     // UTC milliseconds of the last change, used for conflicts
   String? syncStatus; // 'synced' | 'pending' | 'pendingDelete'
+  String? syncBase;   // [syncState] at the last sync, shows which side changed
   String? title;
   String? dateTimeEdited;
   String? dateTimeCreated;
@@ -26,6 +28,7 @@ class Note {
     this.remoteVersion,
     this.updatedAt,
     this.syncStatus = 'synced',
+    this.syncBase,
     this.title,
     this.content,
     this.dateTimeEdited,
@@ -44,6 +47,7 @@ class Note {
     remoteVersion = json['remoteVersion'] as String?;
     updatedAt = json['updatedAt'] as int?;
     syncStatus = (json['syncStatus'] as String?) ?? 'synced';
+    syncBase = json['syncBase'] as String?;
     title = json['title'];
     content = json['content'];
     dateTimeEdited = json['dateTimeEdited'];
@@ -60,7 +64,7 @@ class Note {
     required String fileId,
     required String version,
   }) {
-    return Note(
+    final note = Note(
       syncId: data['syncId'] as String?,
       cloudId: fileId,
       remoteVersion: version,
@@ -75,7 +79,19 @@ class Note {
       isDeleted: data['isDeleted'] as int? ?? 0,
       deletedAt: data['deletedAt'] as String?,
     );
+    return note..syncBase = note.syncState;
   }
+
+  /// The fields users change, compared against [syncBase] when both sides
+  /// changed. The text is hashed to keep the stored value small.
+  String get syncState => jsonEncode(syncStateFields);
+
+  Map<String, dynamic> get syncStateFields => {
+    'content': sha256.convert(utf8.encode(content ?? '')).toString(),
+    'color': color,
+    'isFavorite': isFavorite ?? 0,
+    'isDeleted': isDeleted ?? 0,
+  };
 
   /// Serialise for local SQLite (includes all local fields).
   Map<String, dynamic> toJson() {
@@ -86,6 +102,7 @@ class Note {
       'remoteVersion': remoteVersion,
       'updatedAt': updatedAt,
       'syncStatus': syncStatus ?? 'synced',
+      'syncBase': syncBase,
       'title': title,
       'content': content,
       'dateTimeEdited': dateTimeEdited,

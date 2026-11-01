@@ -8,6 +8,7 @@ import 'package:my_note_app/controller/background_controller.dart';
 import 'package:my_note_app/helper/quill_helper.dart';
 import 'package:my_note_app/model/note_model.dart';
 import 'package:my_note_app/routing/app_routes.dart';
+import 'package:my_note_app/services/sync_service.dart';
 import 'package:my_note_app/widgets/text_edit_widget.dart';
 
 import '../../controller/note_controller.dart';
@@ -25,6 +26,14 @@ class _NoteDetailPageState extends State<NoteDetailPage> {
   @override
   void initState() {
     super.initState();
+    // The edit screen opens from this copy of the note, so it must stay current.
+    Get.find<SyncService>().holdNote(widget.note.id!);
+  }
+
+  @override
+  void dispose() {
+    Get.find<SyncService>().releaseNote(widget.note.id!);
+    super.dispose();
   }
 
   String _editedLabel() {
