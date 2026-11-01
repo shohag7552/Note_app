@@ -4,7 +4,6 @@ import 'dart:ui';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
 import 'package:my_note_app/model/note_model.dart';
 import 'package:my_note_app/services/sync_service.dart';
 import 'package:my_note_app/utils/app_constants.dart';
@@ -12,7 +11,6 @@ import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../database_helper/database_helper.dart';
-import '../routing/app_routes.dart';
 
 class NoteController extends GetxController implements GetxService {
   final SharedPreferences sharedPreferences;
@@ -103,58 +101,18 @@ class NoteController extends GetxController implements GetxService {
     update();
   }
 
-  Future<void> addNoteToDatabase({
-    required String title,
-    required String content,
-    String? color,
-    Note? cloudNote,
-  }) async {
-    final now = DateFormat("dd-MM-yyyy hh:mm a").format(DateTime.now());
-
-    final Note note = cloudNote != null
-        ? Note(
-            title: cloudNote.title,
-            content: cloudNote.content.toString(),
-            dateTimeEdited: cloudNote.dateTimeEdited,
-            dateTimeCreated: cloudNote.dateTimeCreated,
-            isFavorite: cloudNote.isFavorite,
-            color: cloudNote.color,
-            syncStatus: 'pending',
-          )
-        : Note(
-            title: title,
-            content: content,
-            dateTimeEdited: now,
-            dateTimeCreated: now,
-            isFavorite: 0,
-            color: color,
-            syncStatus: 'pending',
-          );
-
+  /// Inserts a new note or updates an existing one, without navigating, so the
+  /// editor can also save while it stays open. A new note gets its id here.
+  Future<void> saveNote(Note note) async {
     // 1. Save locally first — UI updates instantly.
-    await DatabaseHelper.instance.addNote(note);
-
-    titleController.text = '';
-    contentController.text = '';
-
-    if (cloudNote == null) {
-      getAllNotes();
-      Get.offAllNamed(AppRoute.HOME);
+    if (note.id == null) {
+      await DatabaseHelper.instance.addNote(note);
+    } else {
+      await DatabaseHelper.instance.updateNote(note);
     }
+    getAllNotes();
 
     // 2. Push to cloud in background (fire-and-forget).
-    _requestSync();
-  }
-
-  void updateNote(Note note) async {
-    // 1. Update locally first.
-    await DatabaseHelper.instance.updateNote(note);
-    titleController.text = '';
-    contentController.text = '';
-    getAllNotes();
-    Get.offAllNamed(AppRoute.HOME);
-
-    // 2. Push to cloud in background.
     _requestSync();
   }
 

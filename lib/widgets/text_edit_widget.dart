@@ -11,6 +11,7 @@ import 'package:my_note_app/helper/color_extension.dart';
 import 'package:my_note_app/helper/note_image_helper.dart';
 import 'package:my_note_app/helper/quill_helper.dart';
 import 'package:my_note_app/model/note_model.dart';
+import 'package:my_note_app/routing/app_routes.dart';
 import 'package:my_note_app/utils/padding_size.dart';
 import 'package:my_note_app/widgets/color_picker_sheet.dart';
 import 'package:my_note_app/widgets/custom_image_embed.dart';
@@ -26,11 +27,20 @@ class TextEditWidget extends StatefulWidget {
   State<TextEditWidget> createState() => _TextEditWidgetState();
 }
 
-class _TextEditWidgetState extends State<TextEditWidget> {
+class _TextEditWidgetState extends State<TextEditWidget> with WidgetsBindingObserver {
 
   final GlobalKey _editorKey = GlobalKey();
   final QuillController controller = QuillController.basic();
   late String _selectedColor;
+
+  // What the database holds, so only real changes are saved.
+  late String _savedContent;
+  late String _savedColor;
+  int? _noteId;
+  String? _createdAt;
+  bool _savedThisSession = false;
+  // Saves run one at a time, so a new note can't be inserted twice.
+  Future<bool> _lastSave = Future.value(true);
 
   @override
   void initState() {
@@ -38,6 +48,80 @@ class _TextEditWidgetState extends State<TextEditWidget> {
     controller.readOnly = widget.readOnly;
     controller.document = widget.content != null ? widget.content! : controller.document;
     _selectedColor = widget.note?.color ?? '#FFA0A4A8';
+    _savedContent = _currentContent();
+    _savedColor = _selectedColor;
+    _noteId = widget.note?.id;
+    _createdAt = widget.note?.dateTimeCreated;
+    if (!widget.readOnly) WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  // inactive comes first when the app is swiped away from recents.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.inactive || state == AppLifecycleState.paused) {
+      _save();
+    }
+  }
+
+  String _currentContent() => jsonEncode(controller.document.toDelta().toJson());
+
+  Future<bool> _save() => _lastSave = _lastSave.then((_) => _saveIfChanged());
+
+  /// Returns false only if the changes could not be stored.
+  Future<bool> _saveIfChanged() async {
+    final content = _currentContent();
+    final color = _selectedColor;
+    if (content == _savedContent && color == _savedColor) return true;
+    if (_noteId == null && controller.document.isEmpty()) return true;
+
+    final now = DateFormat("dd-MM-yyyy hh:mm a").format(DateTime.now());
+    final (title, _) = QuillHelper.deriveTitleAndBody(content);
+    final note = Note(
+      id: _noteId,
+      title: title,
+      content: content,
+      dateTimeEdited: now,
+      dateTimeCreated: _createdAt ?? now,
+      isFavorite: widget.note?.isFavorite ?? 0,
+      color: color,
+      syncStatus: 'pending',
+    );
+    try {
+      await Get.find<NoteController>().saveNote(note);
+    } catch (e) {
+      print('[TextEditWidget] Save failed: $e');
+      return false;
+    }
+    _noteId = note.id;
+    _createdAt = note.dateTimeCreated;
+    _savedContent = content;
+    _savedColor = color;
+    _savedThisSession = true;
+    return true;
+  }
+
+  /// Stays on the screen if saving failed, so the text isn't lost.
+  Future<bool> _saveBeforeLeaving() async {
+    if (await _save()) return true;
+    Get.snackbar('Note not saved', 'Could not save this note. Please try again.',
+        snackPosition: SnackPosition.BOTTOM);
+    return false;
+  }
+
+  Future<void> _onBack() async {
+    if (!await _saveBeforeLeaving() || !mounted) return;
+    // The note detail page underneath still shows the old content after a save.
+    if (_savedThisSession) {
+      Get.offAllNamed(AppRoute.HOME);
+    } else {
+      Navigator.of(context).pop();
+    }
   }
 
   void _showColorPicker(BuildContext context) {
@@ -67,7 +151,12 @@ class _TextEditWidgetState extends State<TextEditWidget> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Padding(
+    return PopScope(
+      canPop: widget.readOnly,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _onBack();
+      },
+      child: Padding(
       padding: const EdgeInsets.symmetric(horizontal: PaddingSize.medium),
       child: Column(children: [
 
@@ -253,34 +342,14 @@ class _TextEditWidgetState extends State<TextEditWidget> {
             IconButton(
               icon: const Icon(Icons.check),
               onPressed: () async {
-                final json = jsonEncode(controller.document.toDelta().toJson());
-
-                if(widget.isAddNote) {
-                  final (title, _) = QuillHelper.deriveTitleAndBody(json);
-                  Get.find<NoteController>().addNoteToDatabase(
-                    title: title,
-                    content: json,
-                    color: _selectedColor,
-                  );
-                } else {
-                  Get.find<NoteController>().updateNote(
-                    Note(
-                      id: widget.note!.id,
-                      title: widget.note!.title,
-                      content: json,
-                      dateTimeEdited: DateFormat("dd-MM-yyyy hh:mm a").format(DateTime.now()),
-                      dateTimeCreated: widget.note!.dateTimeCreated,
-                      isFavorite: widget.note!.isFavorite ?? 0,
-                      color: _selectedColor,
-                    ),
-                  );
-                }
+                if (await _saveBeforeLeaving()) Get.offAllNamed(AppRoute.HOME);
               },
             ),
           ]) : const SizedBox(),
         ),
 
       ]),
+      ),
     );
   }
 }
