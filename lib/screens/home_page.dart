@@ -94,8 +94,14 @@ class HomePage extends StatelessWidget {
                           letterSpacing: -0.2,
                         ),
                       )
-                    : Row(
+                    // Scales down instead of overflowing when the app bar is tight.
+                    : FittedBox(
+                        key: const ValueKey('title-fit'),
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Row(
                         key: const ValueKey('title'),
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
                             'Notes',
@@ -132,38 +138,22 @@ class HomePage extends StatelessWidget {
                             builder: (sync) => AnimatedSwitcher(
                               duration: const Duration(milliseconds: 250),
                               child: sync.isSyncing
+                                  // Icon only: the app bar has no room for a label.
                                   ? Padding(
                                       key: const ValueKey('syncing'),
                                       padding: const EdgeInsets.only(left: 8),
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 8, vertical: 3),
-                                        decoration: BoxDecoration(
-                                          color: theme.colorScheme.primary
-                                              .withValues(alpha: 0.1),
-                                          borderRadius:
-                                              BorderRadius.circular(20),
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            SizedBox(
-                                              width: 10,
-                                              height: 10,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 1.5,
-                                                color: theme.colorScheme.primary,
-                                              ),
+                                      child: Tooltip(
+                                        message: 'Syncing',
+                                        child: Semantics(
+                                          label: 'Syncing',
+                                          child: SizedBox(
+                                            width: 12,
+                                            height: 12,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 1.5,
+                                              color: theme.colorScheme.primary,
                                             ),
-                                            const SizedBox(width: 5),
-                                            Text('syncing',
-                                                style: theme.textTheme.labelSmall
-                                                    ?.copyWith(
-                                                        color: theme
-                                                            .colorScheme.primary,
-                                                        fontWeight:
-                                                            FontWeight.w600)),
-                                          ],
+                                          ),
                                         ),
                                       ),
                                     )
@@ -172,6 +162,7 @@ class HomePage extends StatelessWidget {
                             ),
                           ),
                         ],
+                      ),
                       ),
               ),
               // ── Actions: normal ↔ selection ────────────────────────────
