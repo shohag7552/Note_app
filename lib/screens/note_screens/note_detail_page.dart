@@ -121,6 +121,10 @@ class _NoteDetailPageState extends State<NoteDetailPage> {
                       readOnly: true,
                       content: Document.fromJson(jsonDecode(widget.note.content!)),
                       isAddNote: true,
+                      onTextTap: (offset) => Get.toNamed(
+                        AppRoute.getEditNotePage(widget.note),
+                        arguments: offset,
+                      ),
                     ),
                   ),
                 ],

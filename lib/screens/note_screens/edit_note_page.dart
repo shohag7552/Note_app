@@ -11,7 +11,9 @@ import '../../controller/note_controller.dart';
 
 class EditNotePage extends StatefulWidget {
   final Note note;
-  const EditNotePage({super.key, required this.note});
+  // Where the cursor starts. Null means the end of the note.
+  final int? initialOffset;
+  const EditNotePage({super.key, required this.note, this.initialOffset});
 
   @override
   State<EditNotePage> createState() => _EditNotePageState();
@@ -28,9 +30,12 @@ class _EditNotePageState extends State<EditNotePage> {
     Get.find<NoteController>().titleController.text = widget.note.title!;
     Get.find<NoteController>().contentController.text = widget.note.content!;
     _document = Document.fromJson(jsonDecode(widget.note.content!));
+    final end = _document.length - 1;
     _controller = QuillController(
       document: _document,
-      selection: const TextSelection.collapsed(offset: 0),
+      selection: TextSelection.collapsed(
+        offset: (widget.initialOffset ?? end).clamp(0, end),
+      ),
     );
   }
 
@@ -68,6 +73,7 @@ class _EditNotePageState extends State<EditNotePage> {
             isAddNote: false,
             note: widget.note,
             controller: _controller,
+            autoFocus: true,
           );
         },
       ),

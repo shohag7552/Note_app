@@ -57,7 +57,8 @@ class AppRoute {
     GetPage(name: AppRoute.EDIT_NOTE, page: () {
       List<int> decode = base64Decode(Get.parameters['note']!.replaceAll(' ', '+'));
       Note data = Note.fromJson(jsonDecode(utf8.decode(decode)));
-      return EditNotePage(note: data);
+      final offset = Get.arguments;
+      return EditNotePage(note: data, initialOffset: offset is int ? offset : null);
     }),
     GetPage(name: AppRoute.NOTE_DETAILS, page: () {
       List<int> decode = base64Decode(Get.parameters['note']!.replaceAll(' ', '+'));

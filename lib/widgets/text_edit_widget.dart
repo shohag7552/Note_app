@@ -24,7 +24,10 @@ class TextEditWidget extends StatefulWidget {
   final Note? note;
   // Lets the page drive the editor from its app bar.
   final QuillController? controller;
-  const TextEditWidget({super.key, required this.readOnly, required this.content, required this.isAddNote, this.note, this.controller});
+  final bool autoFocus;
+  // Called with the text position when a read-only note is tapped.
+  final void Function(int offset)? onTextTap;
+  const TextEditWidget({super.key, required this.readOnly, required this.content, required this.isAddNote, this.note, this.controller, this.autoFocus = false, this.onTextTap});
 
   @override
   State<TextEditWidget> createState() => _TextEditWidgetState();
@@ -49,7 +52,9 @@ class _TextEditWidgetState extends State<TextEditWidget> with WidgetsBindingObse
   void initState() {
     super.initState();
     controller.readOnly = widget.readOnly;
-    controller.document = widget.content != null ? widget.content! : controller.document;
+    // A controller from the page already has its document, and setting it again
+    // would move the cursor back to the start.
+    if (widget.controller == null && widget.content != null) controller.document = widget.content!;
     _selectedColor = widget.note?.color ?? '#FFA0A4A8';
     _savedContent = _currentContent();
     _savedColor = _selectedColor;
@@ -145,6 +150,18 @@ class _TextEditWidgetState extends State<TextEditWidget> with WidgetsBindingObse
     );
   }
 
+  /// A tap below the last line means the end of the note, not that line's start.
+  int _tappedOffset(Offset global, TextPosition Function(Offset) positionAt) {
+    final end = controller.document.length - 1;
+    final dynamic editor = _findRenderEditor(_editorKey.currentContext?.findRenderObject());
+    if (editor != null) {
+      final Offset local = editor.globalToLocal(global);
+      final Rect lastLine = editor.getLocalRectForCaret(TextPosition(offset: end));
+      if (local.dy > lastLine.bottom) return end;
+    }
+    return positionAt(global).offset;
+  }
+
   RenderObject? _findRenderEditor(RenderObject? root) {
     if (root == null) return null;
     if (root.runtimeType.toString() == 'RenderEditor') return root;
@@ -208,6 +225,15 @@ class _TextEditWidgetState extends State<TextEditWidget> with WidgetsBindingObse
                 controller: controller,
                 config: QuillEditorConfig(
                   placeholder: widget.isAddNote ? 'Type here...' : null,
+                  autoFocus: widget.autoFocus,
+                  // Fills the screen, so tapping below short text also works.
+                  expands: widget.onTextTap != null,
+                  onTapUp: widget.onTextTap == null ? null : (details, positionAt) {
+                    // Let a tap clear a selection made for copying.
+                    if (!controller.selection.isCollapsed) return false;
+                    widget.onTextTap!(_tappedOffset(details.globalPosition, positionAt));
+                    return true;
+                  },
                   embedBuilders: [
                     CustomImageEmbedBuilder(),
                   ],
