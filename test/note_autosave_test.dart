@@ -6,7 +6,9 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
+import 'package:my_note_app/controller/background_controller.dart';
 import 'package:my_note_app/controller/note_controller.dart';
+import 'package:my_note_app/screens/note_screens/edit_note_page.dart';
 import 'package:my_note_app/database_helper/database_helper.dart';
 import 'package:my_note_app/model/note_model.dart';
 import 'package:my_note_app/routing/app_routes.dart';
@@ -123,6 +125,57 @@ void main() {
     final notes = await tester.runAsync(_db.getNoteList);
     expect(notes!.single.title, 'Second');
     expect(find.byType(TextEditWidget), findsOneWidget);
+  });
+
+  testWidgets('edit screen undo and redo change the text and what gets saved', (tester) async {
+    Get.put(BackgroundController(sharedPreferences: Get.find<NoteController>().sharedPreferences));
+    final existing = Note(
+      title: 'Old',
+      content: jsonEncode(_doc('Old').toDelta().toJson()),
+      dateTimeEdited: '01-01-2026 10:00 AM',
+      dateTimeCreated: '01-01-2026 10:00 AM',
+      isFavorite: 0,
+      color: '#FF000000',
+      syncStatus: 'pending',
+    );
+    await tester.runAsync(() => _db.addNote(existing));
+    await tester.pumpWidget(GetMaterialApp(
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        FlutterQuillLocalizations.delegate,
+      ],
+      initialRoute: '/under',
+      getPages: [
+        GetPage(name: '/under', page: () => const Scaffold(body: Text('under'))),
+        GetPage(name: AppRoute.HOME, page: () => const Scaffold(body: Text('home'))),
+      ],
+    ));
+    Get.to(() => EditNotePage(note: existing));
+    await tester.pumpAndSettle();
+
+    final undo = find.byIcon(Icons.undo_outlined);
+    final redo = find.byIcon(Icons.redo_outlined);
+    final controller = _controller(tester);
+    controller.replaceText(3, 0, ' text', null);
+    await tester.pump();
+    expect(controller.document.toPlainText(), 'Old text\n');
+
+    await tester.tap(undo.first);
+    await tester.pump();
+    expect(controller.document.toPlainText(), 'Old\n');
+
+    await tester.tap(redo.first);
+    await tester.pump();
+    expect(controller.document.toPlainText(), 'Old text\n');
+
+    await tester.tap(undo.first);
+    await tester.pump();
+    controller.replaceText(0, 0, 'Very ', null);
+    await tester.pump();
+    await _pressBack(tester);
+    expect((await tester.runAsync(_db.getNoteList))!.single.title, 'Very Old');
   });
 
   testWidgets('back updates an edited note, and unchanged notes are left alone', (tester) async {

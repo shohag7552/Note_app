@@ -19,12 +19,25 @@ class EditNotePage extends StatefulWidget {
 
 class _EditNotePageState extends State<EditNotePage> {
   double bgOpacity = 0.1;
+  late final Document _document;
+  late final QuillController _controller;
 
   @override
   void initState() {
     super.initState();
     Get.find<NoteController>().titleController.text = widget.note.title!;
     Get.find<NoteController>().contentController.text = widget.note.content!;
+    _document = Document.fromJson(jsonDecode(widget.note.content!));
+    _controller = QuillController(
+      document: _document,
+      selection: const TextSelection.collapsed(offset: 0),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   @override
@@ -42,6 +55,8 @@ class _EditNotePageState extends State<EditNotePage> {
           ),
         ),
         actions: [
+          QuillToolbarHistoryButton(isUndo: true, controller: _controller),
+          QuillToolbarHistoryButton(isUndo: false, controller: _controller),
           const SizedBox(width: 4),
         ],
       ),
@@ -49,9 +64,10 @@ class _EditNotePageState extends State<EditNotePage> {
         builder: (_) {
           return TextEditWidget(
             readOnly: false,
-            content: Document.fromJson(jsonDecode(widget.note.content!)),
+            content: _document,
             isAddNote: false,
             note: widget.note,
+            controller: _controller,
           );
         },
       ),

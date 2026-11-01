@@ -21,7 +21,9 @@ class TextEditWidget extends StatefulWidget {
   final Document? content;
   final bool isAddNote;
   final Note? note;
-  const TextEditWidget({super.key, required this.readOnly, required this.content, required this.isAddNote, this.note});
+  // Lets the page drive the editor from its app bar.
+  final QuillController? controller;
+  const TextEditWidget({super.key, required this.readOnly, required this.content, required this.isAddNote, this.note, this.controller});
 
   @override
   State<TextEditWidget> createState() => _TextEditWidgetState();
@@ -30,7 +32,7 @@ class TextEditWidget extends StatefulWidget {
 class _TextEditWidgetState extends State<TextEditWidget> with WidgetsBindingObserver {
 
   final GlobalKey _editorKey = GlobalKey();
-  final QuillController controller = QuillController.basic();
+  late final QuillController controller = widget.controller ?? QuillController.basic();
   late String _selectedColor;
 
   // What the database holds, so only real changes are saved.
